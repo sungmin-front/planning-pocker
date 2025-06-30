@@ -5,4 +5,4 @@
 ## Workflow
 
 - Plan first before write code.
-- Commit after finish each feature or request.
+- Commit after finish each feature or request or subTask.

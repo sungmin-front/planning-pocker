@@ -1,0 +1,33 @@
+{
+  "name": "planning-poker",
+  "version": "1.0.0",
+  "description": "A Planning Poker application with real-time collaboration",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "pnpm run --parallel dev",
+    "build": "pnpm run --recursive build",
+    "test": "pnpm run --recursive test",
+    "lint": "pnpm run --recursive lint",
+    "clean": "pnpm run --recursive clean",
+    "install-deps": "pnpm install"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

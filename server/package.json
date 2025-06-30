@@ -1,0 +1,25 @@
+{
+  "name": "@planning-poker/server",
+  "version": "1.0.0",
+  "description": "Planning Poker WebSocket server",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@planning-poker/shared": "workspace:*",
+    "ws": "^8.13.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.5.0",
+    "@types/uuid": "^9.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}
