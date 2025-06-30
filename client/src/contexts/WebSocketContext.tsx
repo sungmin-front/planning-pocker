@@ -80,6 +80,10 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
     connect,
     disconnect,
     sendMessage,
+    // Add methods expected by tests
+    send: sendMessage,
+    on: (event: string, handler: Function) => socketInstance.on(event, handler),
+    off: (event: string, handler: Function) => socketInstance.off(event, handler),
   };
 
   return (

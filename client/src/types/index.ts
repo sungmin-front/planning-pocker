@@ -8,6 +8,10 @@ export interface WebSocketContextType {
   connect: (url?: string) => Promise<void>;
   disconnect: () => void;
   sendMessage: (message: any) => void;
+  // Additional methods expected by tests
+  send: (message: any) => void;
+  on: (event: string, handler: Function) => void;
+  off: (event: string, handler: Function) => void;
 }
 
 export interface RoomContextType {
