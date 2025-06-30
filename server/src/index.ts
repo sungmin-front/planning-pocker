@@ -192,6 +192,27 @@ wss.on('connection', function connection(ws) {
           break;
         }
 
+        case 'ROOM_SYNC': {
+          const result = roomManager.syncRoom(socketId);
+          
+          if (result.success && result.playerState) {
+            // Send the current room state to the requesting client
+            ws.send(JSON.stringify({
+              type: 'room:state',
+              payload: result.playerState
+            }));
+          }
+          
+          ws.send(JSON.stringify({
+            type: 'room:sync:response',
+            payload: { 
+              success: result.success,
+              error: result.error
+            }
+          }));
+          break;
+        }
+
         case 'JOIN_ROOM':
         case 'LEAVE_ROOM':
         case 'VOTE':

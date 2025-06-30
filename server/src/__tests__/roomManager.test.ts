@@ -298,6 +298,98 @@ describe('RoomManager', () => {
     });
   });
 
+  describe('room sync functionality', () => {
+    let roomId: string;
+    let storyId: string;
+
+    beforeEach(() => {
+      const room = roomManager.createRoom('Alice', 'socket-1');
+      roomManager.joinRoom(room.id, 'Bob', 'socket-2');
+      roomId = room.id;
+      
+      const story = roomManager.addStory(roomId, 'Test Story', 'Description');
+      storyId = story!.id;
+      
+      // Add some votes for testing
+      roomManager.vote('socket-1', storyId, '5' as VoteValue);
+      roomManager.vote('socket-2', storyId, '8' as VoteValue);
+    });
+
+    describe('syncRoom', () => {
+      it('should return full room state for valid player', () => {
+        const result = roomManager.syncRoom('socket-1');
+        
+        expect(result.success).toBe(true);
+        expect(result.playerState).toBeDefined();
+        expect(result.roomState).toBeDefined();
+        
+        // Check player-specific data
+        expect(result.playerState?.isHost).toBe(true);
+        expect(result.playerState?.myNickname).toBe('Alice');
+        expect(result.playerState?.myId).toBeDefined();
+        
+        // Check room data
+        expect(result.playerState?.roomId).toBe(roomId);
+        expect(result.playerState?.players).toHaveLength(2);
+        expect(result.playerState?.stories).toHaveLength(1);
+      });
+
+      it('should return correct host status for non-host player', () => {
+        const result = roomManager.syncRoom('socket-2');
+        
+        expect(result.success).toBe(true);
+        expect(result.playerState?.isHost).toBe(false);
+        expect(result.playerState?.myNickname).toBe('Bob');
+      });
+
+      it('should reject sync for player not in room', () => {
+        const result = roomManager.syncRoom('invalid-socket');
+        
+        expect(result.success).toBe(false);
+        expect(result.error).toBe('Not in a room');
+      });
+
+      it('should reject sync for non-existent room', () => {
+        // Remove player first to simulate room not found
+        roomManager.removePlayer('socket-1');
+        roomManager.removePlayer('socket-2');
+        
+        const result = roomManager.syncRoom('socket-1');
+        
+        expect(result.success).toBe(false);
+        expect(result.error).toBe('Not in a room');
+      });
+
+      it('should include current voting status in sync', () => {
+        const result = roomManager.syncRoom('socket-1');
+        
+        expect(result.success).toBe(true);
+        expect(result.playerState?.stories[0].status).toBe('voting');
+        expect(result.playerState?.stories[0].votes).toBeDefined();
+      });
+
+      it('should include revealed votes after host reveals', () => {
+        roomManager.revealVotes('socket-1', storyId);
+        const result = roomManager.syncRoom('socket-2');
+        
+        expect(result.success).toBe(true);
+        expect(result.playerState?.stories[0].status).toBe('revealed');
+        expect(Object.keys(result.playerState?.stories[0].votes || {})).toHaveLength(2);
+      });
+
+      it('should include final point after host sets it', () => {
+        roomManager.revealVotes('socket-1', storyId);
+        roomManager.setFinalPoint('socket-1', storyId, '13' as VoteValue);
+        
+        const result = roomManager.syncRoom('socket-2');
+        
+        expect(result.success).toBe(true);
+        expect(result.playerState?.stories[0].status).toBe('closed');
+        expect(result.playerState?.stories[0].final_point).toBe('13');
+      });
+    });
+  });
+
   describe('room cleanup', () => {
     it('should remove player and clean up empty room', () => {
       const room = roomManager.createRoom('Alice', 'socket-1');
