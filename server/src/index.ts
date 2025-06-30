@@ -146,6 +146,52 @@ wss.on('connection', function connection(ws) {
           break;
         }
 
+        case 'ROOM_TRANSFER_HOST': {
+          const { toNickname } = message.payload;
+          const result = roomManager.transferHost(socketId, toNickname);
+          
+          if (result.success && result.newHost) {
+            const roomId = roomManager.getUserRoom(socketId);
+            if (roomId) {
+              // Broadcast host change to all clients in room
+              wss.clients.forEach(client => {
+                const clientSocketId = getSocketId(client);
+                if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                  client.send(JSON.stringify({
+                    type: 'room:hostChanged',
+                    payload: {
+                      newHostId: result.newHost?.id,
+                      newHostNickname: result.newHost?.nickname,
+                      oldHostId: result.oldHost?.id,
+                      oldHostNickname: result.oldHost?.nickname
+                    }
+                  }));
+                }
+              });
+
+              // Also send updated room state
+              const roomState = roomManager.getRoomState(roomId);
+              if (roomState) {
+                wss.clients.forEach(client => {
+                  const clientSocketId = getSocketId(client);
+                  if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                    client.send(JSON.stringify({
+                      type: 'room:updated',
+                      payload: roomState
+                    }));
+                  }
+                });
+              }
+            }
+          }
+          
+          ws.send(JSON.stringify({
+            type: 'room:transferHost:response',
+            payload: result
+          }));
+          break;
+        }
+
         case 'JOIN_ROOM':
         case 'LEAVE_ROOM':
         case 'VOTE':
@@ -168,6 +214,40 @@ wss.on('connection', function connection(ws) {
 
   ws.on('close', function close() {
     console.log(`Client disconnected: ${socketId}`);
-    roomManager.removePlayer(socketId);
+    const result = roomManager.removePlayer(socketId);
+    
+    // Handle automatic host reassignment on disconnect
+    if (result.hostChanged && result.newHost && result.roomId) {
+      console.log(`Host disconnected, reassigning to: ${result.newHost.nickname}`);
+      
+      // Broadcast host change to all remaining clients in room
+      wss.clients.forEach(client => {
+        const clientSocketId = getSocketId(client);
+        if (roomManager.getUserRoom(clientSocketId) === result.roomId) {
+          client.send(JSON.stringify({
+            type: 'room:hostChanged',
+            payload: {
+              newHostId: result.newHost?.id,
+              newHostNickname: result.newHost?.nickname,
+              reason: 'host_disconnected'
+            }
+          }));
+        }
+      });
+
+      // Also send updated room state
+      const roomState = roomManager.getRoomState(result.roomId);
+      if (roomState) {
+        wss.clients.forEach(client => {
+          const clientSocketId = getSocketId(client);
+          if (roomManager.getUserRoom(clientSocketId) === result.roomId) {
+            client.send(JSON.stringify({
+              type: 'room:updated',
+              payload: roomState
+            }));
+          }
+        });
+      }
+    }
   });
 });
