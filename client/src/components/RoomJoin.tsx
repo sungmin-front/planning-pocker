@@ -1,0 +1,215 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRoom } from '@/contexts/RoomContext';
+import { useWebSocket } from '@/contexts/WebSocketContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+interface FormData {
+  roomId: string;
+  nickname: string;
+}
+
+interface FormErrors {
+  roomId?: string;
+  nickname?: string;
+  general?: string;
+}
+
+export const RoomJoin: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { joinRoom } = useRoom();
+  const { isConnected } = useWebSocket();
+  
+  const [formData, setFormData] = useState<FormData>({
+    roomId: searchParams.get('roomId') || '',
+    nickname: ''
+  });
+  
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Focus on nickname input if room ID is preset
+  useEffect(() => {
+    if (formData.roomId && !formData.nickname) {
+      const nicknameInput = document.getElementById('nickname') as HTMLInputElement;
+      if (nicknameInput) {
+        nicknameInput.focus();
+      }
+    }
+  }, [formData.roomId, formData.nickname]);
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    // Validate room ID
+    const trimmedRoomId = formData.roomId.trim();
+    if (!trimmedRoomId) {
+      newErrors.roomId = 'Room ID is required';
+    }
+
+    // Validate nickname
+    const trimmedNickname = formData.nickname.trim();
+    if (!trimmedNickname) {
+      newErrors.nickname = 'Nickname is required';
+    } else if (trimmedNickname.length < 2) {
+      newErrors.nickname = 'Nickname must be at least 2 characters';
+    } else if (trimmedNickname.length > 30) {
+      newErrors.nickname = 'Nickname must be less than 30 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!isConnected) {
+      return;
+    }
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      const trimmedRoomId = formData.roomId.trim().toUpperCase();
+      const trimmedNickname = formData.nickname.trim();
+
+      const success = await joinRoom(trimmedRoomId, trimmedNickname);
+      
+      if (success) {
+        navigate(`/room/${trimmedRoomId}?nickname=${encodeURIComponent(trimmedNickname)}`);
+      } else {
+        setErrors({
+          general: 'Failed to join room. Please check the room ID and try again.'
+        });
+      }
+    } catch (error) {
+      setErrors({
+        general: 'An unexpected error occurred. Please try again.'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    navigate('/');
+  };
+
+  const handleInputChange = (field: keyof FormData) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }));
+    
+    // Clear field-specific errors when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined
+      }));
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSubmit(e as any);
+    }
+  };
+
+  const isFormDisabled = !isConnected || isLoading;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <h1 className="text-2xl font-semibold leading-none tracking-tight">Join Room</h1>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Room ID Input */}
+            <div className="space-y-2">
+              <Label htmlFor="roomId">Room ID</Label>
+              <Input
+                id="roomId"
+                type="text"
+                value={formData.roomId}
+                onChange={handleInputChange('roomId')}
+                onKeyDown={handleKeyDown}
+                placeholder="Enter room ID"
+                disabled={isFormDisabled}
+                className={errors.roomId ? 'border-red-500' : ''}
+              />
+              {errors.roomId && (
+                <p className="text-sm text-red-500">{errors.roomId}</p>
+              )}
+            </div>
+
+            {/* Nickname Input */}
+            <div className="space-y-2">
+              <Label htmlFor="nickname">Your Nickname</Label>
+              <Input
+                id="nickname"
+                type="text"
+                value={formData.nickname}
+                onChange={handleInputChange('nickname')}
+                onKeyDown={handleKeyDown}
+                placeholder="Enter your nickname"
+                disabled={isFormDisabled}
+                className={errors.nickname ? 'border-red-500' : ''}
+              />
+              {errors.nickname && (
+                <p className="text-sm text-red-500">{errors.nickname}</p>
+              )}
+            </div>
+
+            {/* General Error */}
+            {errors.general && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">{errors.general}</p>
+              </div>
+            )}
+
+            {/* Connection Status */}
+            {!isConnected && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-sm text-yellow-600">Connect to server first</p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex space-x-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isLoading}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isFormDisabled}
+                className="flex-1"
+              >
+                {isLoading ? 'Joining...' : 'Join Room'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
