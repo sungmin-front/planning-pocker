@@ -278,6 +278,40 @@ export class RoomManager {
     };
   }
 
+  syncRoom(socketId: string): { success: boolean; error?: string; roomState?: any; playerState?: any } {
+    const userInfo = this.socketUserMap[socketId];
+    if (!userInfo?.roomId) {
+      return { success: false, error: 'Not in a room' };
+    }
+
+    const room = this.rooms.get(userInfo.roomId);
+    if (!room) {
+      return { success: false, error: 'Room not found' };
+    }
+
+    const player = room.players.find(p => p.socketId === socketId);
+    if (!player) {
+      return { success: false, error: 'Player not found in room' };
+    }
+
+    // Get full room state
+    const roomState = this.getRoomState(userInfo.roomId);
+    
+    // Add player-specific data
+    const playerState = {
+      ...roomState,
+      isHost: player.isHost,
+      myId: player.id,
+      myNickname: player.nickname
+    };
+
+    return { 
+      success: true, 
+      roomState,
+      playerState 
+    };
+  }
+
   getRoomState(roomId: string) {
     const room = this.rooms.get(roomId);
     if (!room) return null;
