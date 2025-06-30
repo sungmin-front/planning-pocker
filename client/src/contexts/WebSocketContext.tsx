@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { WebSocketContextType } from '@/types';
+import { getWebSocketInstance } from '@/socket';
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
@@ -16,66 +17,65 @@ interface WebSocketProviderProps {
 }
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
-  const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const socketInstance = getWebSocketInstance();
 
-  const connect = (url: string) => {
+  useEffect(() => {
+    // Configure WebSocket with environment variable
+    const wsUrl = import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8080';
+    socketInstance.configure({ url: wsUrl });
+
+    // Set up event listeners
+    const handleConnected = () => {
+      console.log('WebSocket connected');
+      setIsConnected(true);
+    };
+
+    const handleDisconnected = () => {
+      console.log('WebSocket disconnected');
+      setIsConnected(false);
+    };
+
+    const handleError = (error: any) => {
+      console.error('WebSocket error:', error);
+    };
+
+    socketInstance.on('connected', handleConnected);
+    socketInstance.on('disconnected', handleDisconnected);
+    socketInstance.on('error', handleError);
+
+    return () => {
+      socketInstance.off('connected', handleConnected);
+      socketInstance.off('disconnected', handleDisconnected);
+      socketInstance.off('error', handleError);
+    };
+  }, []);
+
+  const connect = async (url?: string) => {
     try {
-      const ws = new WebSocket(url);
-      
-      ws.onopen = () => {
-        console.log('WebSocket connected');
-        setIsConnected(true);
-        setSocket(ws);
-      };
-
-      ws.onclose = () => {
-        console.log('WebSocket disconnected');
-        setIsConnected(false);
-        setSocket(null);
-        
-        // Auto-reconnect after 3 seconds
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connect(url);
-        }, 3000);
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-
+      if (url) {
+        socketInstance.configure({ url });
+      }
+      await socketInstance.connect();
     } catch (error) {
       console.error('Failed to connect to WebSocket:', error);
     }
   };
 
   const disconnect = () => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-    
-    if (socket) {
-      socket.close();
-    }
+    socketInstance.disconnect();
   };
 
   const sendMessage = (message: any) => {
-    if (socket && isConnected) {
-      socket.send(JSON.stringify(message));
-    } else {
-      console.warn('Cannot send message: WebSocket not connected');
+    try {
+      socketInstance.send(message);
+    } catch (error) {
+      console.warn('Cannot send message:', error);
     }
   };
 
-  useEffect(() => {
-    return () => {
-      disconnect();
-    };
-  }, []);
-
   const value: WebSocketContextType = {
-    socket,
+    socket: null, // We don't expose the raw socket anymore
     isConnected,
     connect,
     disconnect,

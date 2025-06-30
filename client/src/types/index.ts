@@ -5,7 +5,7 @@ export * from '@planning-poker/shared';
 export interface WebSocketContextType {
   socket: WebSocket | null;
   isConnected: boolean;
-  connect: (url: string) => void;
+  connect: (url?: string) => Promise<void>;
   disconnect: () => void;
   sendMessage: (message: any) => void;
 }
