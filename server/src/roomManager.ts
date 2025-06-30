@@ -198,6 +198,32 @@ export class RoomManager {
     return { success: true, story };
   }
 
+  setFinalPoint(socketId: string, storyId: string, point: VoteValue): { success: boolean; error?: string; story?: Story } {
+    const userInfo = this.socketUserMap[socketId];
+    if (!userInfo?.roomId) {
+      return { success: false, error: 'Not in a room' };
+    }
+
+    const room = this.rooms.get(userInfo.roomId);
+    if (!room) {
+      return { success: false, error: 'Room not found' };
+    }
+
+    const player = room.players.find(p => p.socketId === socketId);
+    if (!player?.isHost) {
+      return { success: false, error: 'Only the host can set final points' };
+    }
+
+    const story = room.stories.find(s => s.id === storyId);
+    if (!story) {
+      return { success: false, error: 'Story not found' };
+    }
+
+    story.final_point = point;
+    story.status = 'closed';
+    return { success: true, story };
+  }
+
   getRoomState(roomId: string) {
     const room = this.rooms.get(roomId);
     if (!room) return null;

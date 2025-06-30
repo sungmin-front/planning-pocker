@@ -150,6 +150,56 @@ describe('RoomManager', () => {
         expect(result.error).toBe('Only the host can restart voting');
       });
     });
+
+    describe('setFinalPoint', () => {
+      beforeEach(() => {
+        roomManager.vote('socket-1', storyId, '5' as VoteValue);
+        roomManager.vote('socket-2', storyId, '8' as VoteValue);
+        roomManager.revealVotes('socket-1', storyId);
+      });
+
+      it('should allow host to set final point for story', () => {
+        const result = roomManager.setFinalPoint('socket-1', storyId, '8' as VoteValue);
+        
+        expect(result.success).toBe(true);
+        expect(result.story?.final_point).toBe('8');
+        expect(result.story?.status).toBe('closed');
+      });
+
+      it('should reject non-host attempting to set final point', () => {
+        const result = roomManager.setFinalPoint('socket-2', storyId, '8' as VoteValue);
+        
+        expect(result.success).toBe(false);
+        expect(result.error).toBe('Only the host can set final points');
+      });
+
+      it('should reject setting final point for non-existent story', () => {
+        const result = roomManager.setFinalPoint('socket-1', 'invalid-story', '8' as VoteValue);
+        
+        expect(result.success).toBe(false);
+        expect(result.error).toBe('Story not found');
+      });
+
+      it('should reject setting final point when not in a room', () => {
+        const result = roomManager.setFinalPoint('invalid-socket', storyId, '8' as VoteValue);
+        
+        expect(result.success).toBe(false);
+        expect(result.error).toBe('Not in a room');
+      });
+
+      it('should allow host to override voting results with different point', () => {
+        // Most votes are for '5', but host can set it to '13'
+        const result = roomManager.setFinalPoint('socket-1', storyId, '13' as VoteValue);
+        
+        expect(result.success).toBe(true);
+        expect(result.story?.final_point).toBe('13');
+        expect(result.story?.status).toBe('closed');
+        
+        // Original votes should still be preserved
+        expect(result.story?.votes).toBeDefined();
+        expect(Object.keys(result.story?.votes || {}).length).toBeGreaterThan(0);
+      });
+    });
   });
 
   describe('room cleanup', () => {
