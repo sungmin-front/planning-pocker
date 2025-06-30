@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { RoomContextType, Room, Player, VoteValue } from '@/types';
 import { useWebSocket } from './WebSocketContext';
 import { useToast } from '@/hooks/use-toast';
@@ -22,87 +23,39 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [isHost, setIsHost] = useState(false);
   
-  const { socket, sendMessage, isConnected } = useWebSocket();
+  const { send, on, off, isConnected } = useWebSocket();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Listen for WebSocket messages
   useEffect(() => {
-    if (!socket) return;
-
-    const handleMessage = (event: MessageEvent) => {
-      try {
-        const message = JSON.parse(event.data);
-        
-        switch (message.type) {
-          case 'room:state':
-            setRoom(message.payload);
-            setIsHost(message.payload.isHost);
-            setCurrentPlayer({
-              id: message.payload.myId,
-              nickname: message.payload.myNickname,
-              socketId: '',
-              isHost: message.payload.isHost,
-              isSpectator: false
-            });
-            break;
-            
-          case 'room:updated':
-            setRoom(message.payload);
-            break;
-            
-          case 'room:hostChanged':
-            toast({
-              title: "Host Changed",
-              description: `${message.payload.newHostNickname} is now the host`,
-            });
-            break;
-            
-          case 'story:votesRevealed':
-            if (room) {
-              const updatedRoom = { ...room };
-              const story = updatedRoom.stories.find(s => s.id === message.payload.storyId);
-              if (story) {
-                story.status = 'revealed';
-                story.votes = message.payload.votes;
-              }
-              setRoom(updatedRoom);
-            }
-            break;
-            
-          case 'story:updated':
-            if (room) {
-              const updatedRoom = { ...room };
-              const story = updatedRoom.stories.find(s => s.id === message.payload.storyId);
-              if (story) {
-                if (message.payload.final_point !== undefined) {
-                  story.final_point = message.payload.final_point;
-                }
-                if (message.payload.status) {
-                  story.status = message.payload.status;
-                }
-              }
-              setRoom(updatedRoom);
-            }
-            break;
-            
-          case 'player:voted':
-            toast({
-              title: "Vote Submitted",
-              description: "A player has voted",
-            });
-            break;
-            
-          default:
-            console.log('Unhandled message type:', message.type);
-        }
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
+    const handleMessage = (message: any) => {
+      switch (message.type) {
+        case 'JOIN_ROOM':
+          setRoom(message.payload.room);
+          setCurrentPlayer(message.payload.player);
+          setIsHost(message.payload.player.isHost);
+          break;
+          
+        case 'ROOM_SYNC':
+          setRoom(message.payload.room);
+          break;
+          
+        case 'LEAVE_ROOM':
+          setRoom(null);
+          setCurrentPlayer(null);
+          setIsHost(false);
+          break;
+          
+        default:
+          // Handle unknown message types gracefully
+          break;
       }
     };
 
-    socket.addEventListener('message', handleMessage);
-    return () => socket.removeEventListener('message', handleMessage);
-  }, [socket, room, toast]);
+    on('message', handleMessage);
+    return () => off('message', handleMessage);
+  }, [on, off]);
 
   const joinRoom = async (roomId: string, nickname: string): Promise<boolean> => {
     if (!isConnected) {
@@ -114,7 +67,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
       return false;
     }
 
-    sendMessage({
+    send({
       type: 'JOIN_ROOM',
       payload: { roomId, nickname }
     });
@@ -125,20 +78,21 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
 
   const leaveRoom = () => {
     if (room) {
-      sendMessage({
+      send({
         type: 'LEAVE_ROOM',
-        payload: { roomId: room.id }
+        payload: {}
       });
     }
     setRoom(null);
     setCurrentPlayer(null);
     setIsHost(false);
+    navigate('/');
   };
 
   const createStory = (title: string, description?: string) => {
     if (!room) return;
     
-    sendMessage({
+    send({
       type: 'NEW_STORY',
       payload: { title, description }
     });
@@ -147,16 +101,16 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const vote = (storyId: string, vote: VoteValue) => {
     if (!room) return;
     
-    sendMessage({
+    send({
       type: 'STORY_VOTE',
-      payload: { storyId, point: vote }
+      payload: { storyId, vote }
     });
   };
 
   const revealVotes = (storyId: string) => {
     if (!room || !isHost) return;
     
-    sendMessage({
+    send({
       type: 'STORY_REVEAL_VOTES',
       payload: { storyId }
     });
@@ -165,7 +119,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const restartVoting = (storyId: string) => {
     if (!room || !isHost) return;
     
-    sendMessage({
+    send({
       type: 'STORY_RESTART_VOTING',
       payload: { storyId }
     });
@@ -174,7 +128,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const setFinalPoint = (storyId: string, point: VoteValue) => {
     if (!room || !isHost) return;
     
-    sendMessage({
+    send({
       type: 'STORY_SET_FINAL_POINT',
       payload: { storyId, point }
     });
@@ -183,7 +137,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const transferHost = (toNickname: string) => {
     if (!room || !isHost) return;
     
-    sendMessage({
+    send({
       type: 'ROOM_TRANSFER_HOST',
       payload: { toNickname }
     });
@@ -192,7 +146,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const syncRoom = () => {
     if (!room) return;
     
-    sendMessage({
+    send({
       type: 'ROOM_SYNC',
       payload: {}
     });

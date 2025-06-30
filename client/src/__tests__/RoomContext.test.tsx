@@ -2,26 +2,23 @@ import React from 'react';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, act, waitFor } from '@testing-library/react';
 import { RoomProvider, useRoom } from '@/contexts/RoomContext';
-import { WebSocketProvider } from '@/contexts/WebSocketContext';
-import { getWebSocketInstance } from '@/socket';
 
-// Mock the socket module
-vi.mock('@/socket', () => {
-  const mockInstance = {
-    configure: vi.fn(),
-    connect: vi.fn().mockResolvedValue(undefined),
-    disconnect: vi.fn(),
-    send: vi.fn(),
-    on: vi.fn(),
-    off: vi.fn(),
-    isConnected: vi.fn().mockReturnValue(true),
-    getConnectionState: vi.fn().mockReturnValue(1)
-  };
+// Mock WebSocket context directly
+const mockWebSocketContext = {
+  socket: null,
+  isConnected: true,
+  connect: vi.fn(),
+  disconnect: vi.fn(),
+  sendMessage: vi.fn(),
+  send: vi.fn(),
+  on: vi.fn(),
+  off: vi.fn()
+};
 
-  return {
-    getWebSocketInstance: vi.fn().mockReturnValue(mockInstance)
-  };
-});
+vi.mock('@/contexts/WebSocketContext', () => ({
+  useWebSocket: () => mockWebSocketContext,
+  WebSocketProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+}));
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -75,26 +72,28 @@ const TestComponent = () => {
 };
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <WebSocketProvider>
-    <RoomProvider>
-      {children}
-    </RoomProvider>
-  </WebSocketProvider>
+  <RoomProvider>
+    {children}
+  </RoomProvider>
 );
 
 describe('RoomContext', () => {
-  let mockSocketInstance: any;
   let mockMessageHandlers: Map<string, Function>;
 
   beforeEach(() => {
-    mockSocketInstance = getWebSocketInstance();
     mockMessageHandlers = new Map();
     
     vi.clearAllMocks();
     mockNavigate.mockClear();
     
+    // Reset mock context
+    mockWebSocketContext.isConnected = true;
+    mockWebSocketContext.send.mockClear();
+    mockWebSocketContext.on.mockClear();
+    mockWebSocketContext.off.mockClear();
+    
     // Setup message handler mocking
-    mockSocketInstance.on.mockImplementation((event: string, handler: Function) => {
+    mockWebSocketContext.on.mockImplementation((event: string, handler: Function) => {
       if (event === 'message') {
         mockMessageHandlers.set('message', handler);
       }
@@ -203,7 +202,7 @@ describe('RoomContext', () => {
     });
 
     await waitFor(() => {
-      expect(mockSocketInstance.send).toHaveBeenCalledWith({
+      expect(mockWebSocketContext.send).toHaveBeenCalledWith({
         type: 'JOIN_ROOM',
         payload: {
           roomId: 'test-room',
@@ -214,7 +213,7 @@ describe('RoomContext', () => {
   });
 
   it('should return false for joinRoom when not connected', async () => {
-    mockSocketInstance.isConnected.mockReturnValue(false);
+    mockWebSocketContext.isConnected = false;
     
     const TestJoinComponent = () => {
       const { joinRoom } = useRoom();
@@ -279,7 +278,7 @@ describe('RoomContext', () => {
       leaveBtn.click();
     });
 
-    expect(mockSocketInstance.send).toHaveBeenCalledWith({
+    expect(mockWebSocketContext.send).toHaveBeenCalledWith({
       type: 'LEAVE_ROOM',
       payload: {}
     });
@@ -294,13 +293,29 @@ describe('RoomContext', () => {
       </TestWrapper>
     );
 
+    // First set up a room by simulating JOIN_ROOM message
+    const joinMessage = {
+      type: 'JOIN_ROOM',
+      payload: {
+        room: { id: 'test-room', name: 'Test Room', players: [], stories: [], createdAt: new Date() },
+        player: { id: 'player-1', nickname: 'test-user', isHost: false, isSpectator: false, socketId: 'socket-1' }
+      }
+    };
+
+    act(() => {
+      const messageHandler = mockMessageHandlers.get('message');
+      if (messageHandler) {
+        messageHandler(joinMessage);
+      }
+    });
+
     const voteBtn = screen.getByTestId('vote-btn');
     
     act(() => {
       voteBtn.click();
     });
 
-    expect(mockSocketInstance.send).toHaveBeenCalledWith({
+    expect(mockWebSocketContext.send).toHaveBeenCalledWith({
       type: 'STORY_VOTE',
       payload: {
         storyId: 'story-1',
@@ -316,13 +331,29 @@ describe('RoomContext', () => {
       </TestWrapper>
     );
 
+    // First set up a room by simulating JOIN_ROOM message
+    const joinMessage = {
+      type: 'JOIN_ROOM',
+      payload: {
+        room: { id: 'test-room', name: 'Test Room', players: [], stories: [], createdAt: new Date() },
+        player: { id: 'player-1', nickname: 'test-user', isHost: false, isSpectator: false, socketId: 'socket-1' }
+      }
+    };
+
+    act(() => {
+      const messageHandler = mockMessageHandlers.get('message');
+      if (messageHandler) {
+        messageHandler(joinMessage);
+      }
+    });
+
     const syncBtn = screen.getByTestId('sync-btn');
     
     act(() => {
       syncBtn.click();
     });
 
-    expect(mockSocketInstance.send).toHaveBeenCalledWith({
+    expect(mockWebSocketContext.send).toHaveBeenCalledWith({
       type: 'ROOM_SYNC',
       payload: {}
     });
