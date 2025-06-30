@@ -115,6 +115,37 @@ wss.on('connection', function connection(ws) {
           break;
         }
 
+        case 'STORY_SET_FINAL_POINT': {
+          const { storyId, point } = message.payload;
+          const result = roomManager.setFinalPoint(socketId, storyId, point);
+          
+          if (result.success && result.story) {
+            const roomId = roomManager.getUserRoom(socketId);
+            if (roomId) {
+              // Broadcast the final point to all clients in room
+              wss.clients.forEach(client => {
+                const clientSocketId = getSocketId(client);
+                if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                  client.send(JSON.stringify({
+                    type: 'story:updated',
+                    payload: {
+                      storyId,
+                      final_point: point,
+                      status: 'closed'
+                    }
+                  }));
+                }
+              });
+            }
+          }
+          
+          ws.send(JSON.stringify({
+            type: 'story:setFinalPoint:response',
+            payload: result
+          }));
+          break;
+        }
+
         case 'JOIN_ROOM':
         case 'LEAVE_ROOM':
         case 'VOTE':
