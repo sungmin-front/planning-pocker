@@ -1,6 +1,7 @@
 import { Room, Player, Story, VoteValue } from '@planning-poker/shared';
 import { generateRoomId, releaseRoomId } from './utils';
 import { ServerRoom, SocketUserMap } from './types';
+import { v4 as uuidv4 } from 'uuid';
 
 export class RoomManager {
   private rooms = new Map<string, ServerRoom>();
@@ -9,7 +10,7 @@ export class RoomManager {
   createRoom(hostNickname: string, hostSocketId: string): ServerRoom {
     const roomId = generateRoomId();
     const hostPlayer: Player = {
-      id: Date.now().toString(),
+      id: uuidv4(),
       nickname: hostNickname,
       socketId: hostSocketId,
       isHost: true,
@@ -46,7 +47,7 @@ export class RoomManager {
     }
 
     const player: Player = {
-      id: Date.now().toString(),
+      id: uuidv4(),
       nickname,
       socketId,
       isHost: false,
@@ -79,12 +80,15 @@ export class RoomManager {
     return room?.players.find(p => p.id === userInfo.playerId);
   }
 
-  removePlayer(socketId: string): void {
+  removePlayer(socketId: string): { roomId?: string; hostChanged?: boolean; newHost?: Player } {
     const userInfo = this.socketUserMap[socketId];
-    if (!userInfo?.roomId) return;
+    if (!userInfo?.roomId) return {};
 
     const room = this.rooms.get(userInfo.roomId);
-    if (!room) return;
+    if (!room) return {};
+
+    const leavingPlayer = room.players.find(p => p.socketId === socketId);
+    const wasHost = leavingPlayer?.isHost || false;
 
     room.players = room.players.filter(p => p.socketId !== socketId);
     room.socketIds.delete(socketId);
@@ -93,7 +97,21 @@ export class RoomManager {
     if (room.players.length === 0) {
       this.rooms.delete(userInfo.roomId);
       releaseRoomId(userInfo.roomId);
+      return { roomId: userInfo.roomId };
     }
+
+    // If the host left, assign a new host
+    let newHost: Player | undefined;
+    if (wasHost && room.players.length > 0) {
+      newHost = room.players[0]; // First remaining player becomes host
+      newHost.isHost = true;
+    }
+
+    return {
+      roomId: userInfo.roomId,
+      hostChanged: wasHost && !!newHost,
+      newHost
+    };
   }
 
   addStory(roomId: string, title: string, description?: string): Story | null {
@@ -101,7 +119,7 @@ export class RoomManager {
     if (!room) return null;
 
     const story: Story = {
-      id: Date.now().toString(),
+      id: uuidv4(),
       title,
       description,
       status: 'pending',
@@ -222,6 +240,42 @@ export class RoomManager {
     story.final_point = point;
     story.status = 'closed';
     return { success: true, story };
+  }
+
+  transferHost(socketId: string, toNickname: string): { success: boolean; error?: string; newHost?: Player; oldHost?: Player } {
+    const userInfo = this.socketUserMap[socketId];
+    if (!userInfo?.roomId) {
+      return { success: false, error: 'Not in a room' };
+    }
+
+    const room = this.rooms.get(userInfo.roomId);
+    if (!room) {
+      return { success: false, error: 'Room not found' };
+    }
+
+    const currentHost = room.players.find(p => p.socketId === socketId);
+    if (!currentHost?.isHost) {
+      return { success: false, error: 'Only the host can transfer host role' };
+    }
+
+    const targetPlayer = room.players.find(p => p.nickname === toNickname);
+    if (!targetPlayer) {
+      return { success: false, error: 'Target player not found' };
+    }
+
+    if (targetPlayer.id === currentHost.id) {
+      return { success: false, error: 'Cannot transfer host role to yourself' };
+    }
+
+    // Transfer host role
+    currentHost.isHost = false;
+    targetPlayer.isHost = true;
+
+    return { 
+      success: true, 
+      newHost: targetPlayer,
+      oldHost: currentHost
+    };
   }
 
   getRoomState(roomId: string) {

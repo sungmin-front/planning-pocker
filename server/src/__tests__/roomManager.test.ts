@@ -202,6 +202,102 @@ describe('RoomManager', () => {
     });
   });
 
+  describe('host reassignment', () => {
+    describe('transferHost', () => {
+      let roomId: string;
+
+      beforeEach(() => {
+        const room = roomManager.createRoom('Alice', 'socket-1');
+        roomManager.joinRoom(room.id, 'Bob', 'socket-2');
+        roomManager.joinRoom(room.id, 'Charlie', 'socket-3');
+        roomId = room.id;
+      });
+
+      it('should allow host to transfer role to another player', () => {
+        const result = roomManager.transferHost('socket-1', 'Bob');
+        
+        expect(result.success).toBe(true);
+        expect(result.newHost?.nickname).toBe('Bob');
+        expect(result.newHost?.isHost).toBe(true);
+        expect(result.oldHost?.nickname).toBe('Alice');
+        expect(result.oldHost?.isHost).toBe(false);
+      });
+
+      it('should reject non-host attempting to transfer role', () => {
+        const result = roomManager.transferHost('socket-2', 'Charlie');
+        
+        expect(result.success).toBe(false);
+        expect(result.error).toBe('Only the host can transfer host role');
+      });
+
+      it('should reject transfer to non-existent player', () => {
+        const result = roomManager.transferHost('socket-1', 'Dave');
+        
+        expect(result.success).toBe(false);
+        expect(result.error).toBe('Target player not found');
+      });
+
+      it('should reject transfer to self', () => {
+        const result = roomManager.transferHost('socket-1', 'Alice');
+        
+        expect(result.success).toBe(false);
+        expect(result.error).toBe('Cannot transfer host role to yourself');
+      });
+
+      it('should reject transfer when not in room', () => {
+        const result = roomManager.transferHost('invalid-socket', 'Bob');
+        
+        expect(result.success).toBe(false);
+        expect(result.error).toBe('Not in a room');
+      });
+    });
+
+    describe('automatic host reassignment on disconnect', () => {
+      it('should automatically assign new host when host disconnects', () => {
+        const room = roomManager.createRoom('Alice', 'socket-1');
+        roomManager.joinRoom(room.id, 'Bob', 'socket-2');
+        roomManager.joinRoom(room.id, 'Charlie', 'socket-3');
+        
+        const result = roomManager.removePlayer('socket-1');
+        
+        expect(result.hostChanged).toBe(true);
+        expect(result.newHost?.nickname).toBe('Bob'); // First remaining player
+        expect(result.newHost?.isHost).toBe(true);
+        
+        const updatedRoom = roomManager.getRoom(room.id);
+        expect(updatedRoom?.players).toHaveLength(2);
+        expect(updatedRoom?.players.find(p => p.isHost)?.nickname).toBe('Bob');
+      });
+
+      it('should not change host when non-host disconnects', () => {
+        const room = roomManager.createRoom('Alice', 'socket-1');
+        roomManager.joinRoom(room.id, 'Bob', 'socket-2');
+        roomManager.joinRoom(room.id, 'Charlie', 'socket-3');
+        
+        const result = roomManager.removePlayer('socket-2');
+        
+        expect(result.hostChanged).toBe(false);
+        expect(result.newHost).toBeUndefined();
+        
+        const updatedRoom = roomManager.getRoom(room.id);
+        expect(updatedRoom?.players).toHaveLength(2);
+        expect(updatedRoom?.players.find(p => p.isHost)?.nickname).toBe('Alice');
+      });
+
+      it('should clean up room when last player (host) disconnects', () => {
+        const room = roomManager.createRoom('Alice', 'socket-1');
+        const roomId = room.id;
+        
+        const result = roomManager.removePlayer('socket-1');
+        
+        expect(result.roomId).toBe(roomId);
+        expect(result.hostChanged).toBeUndefined();
+        expect(result.newHost).toBeUndefined();
+        expect(roomManager.getRoom(roomId)).toBeUndefined();
+      });
+    });
+  });
+
   describe('room cleanup', () => {
     it('should remove player and clean up empty room', () => {
       const room = roomManager.createRoom('Alice', 'socket-1');
