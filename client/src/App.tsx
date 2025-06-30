@@ -1,19 +1,24 @@
-import React from 'react'
-import { Player, VOTE_OPTIONS } from '@planning-poker/shared'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { WebSocketProvider } from '@/contexts/WebSocketContext';
+import { RoomProvider } from '@/contexts/RoomContext';
+import { Toaster } from '@/components/ui/toaster';
+import { HomePage } from '@/pages/HomePage';
+import { RoomPage } from '@/pages/RoomPage';
 
 function App() {
   return (
-    <div>
-      <h1>Planning Poker</h1>
-      <p>Welcome to Planning Poker!</p>
-      <div>
-        <h3>Vote Options:</h3>
-        {VOTE_OPTIONS.map(option => (
-          <button key={option}>{option}</button>
-        ))}
-      </div>
-    </div>
-  )
+    <BrowserRouter>
+      <WebSocketProvider>
+        <RoomProvider>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/room/:roomId" element={<RoomPage />} />
+          </Routes>
+          <Toaster />
+        </RoomProvider>
+      </WebSocketProvider>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
