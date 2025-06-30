@@ -1,6 +1,7 @@
 import { WebSocketServer } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
 import { WebSocketMessage, Room, Player } from '@planning-poker/shared';
+import { generateRoomId, releaseRoomId } from './utils';
 
 const wss = new WebSocketServer({ port: 8080 });
 
