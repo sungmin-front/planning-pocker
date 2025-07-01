@@ -222,7 +222,7 @@ describe('HomePage', () => {
     // Should navigate to room page with generated ID
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(
-        expect.stringMatching(/^\/room\/mock-uuid-123\?nickname=TestUser&host=true$/)
+        expect.stringMatching(/^\/mock-uuid-123\?nickname=TestUser&host=true$/)
       );
     });
   });
@@ -246,7 +246,7 @@ describe('HomePage', () => {
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(
-        `/room/ROOM123?nickname=TestUser&host=false`
+        `/ROOM123?nickname=TestUser&host=false`
       );
     });
   });
@@ -293,7 +293,7 @@ describe('HomePage', () => {
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(
-        expect.stringMatching(/^\/room\/mock-uuid-123\?nickname=TestUser&host=true$/)
+        expect.stringMatching(/^\/mock-uuid-123\?nickname=TestUser&host=true$/)
       );
     });
 
@@ -320,7 +320,7 @@ describe('HomePage', () => {
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(
-        `/room/ROOM123?nickname=TestUser&host=false`
+        `/ROOM123?nickname=TestUser&host=false`
       );
     });
   });
@@ -341,7 +341,7 @@ describe('HomePage', () => {
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(
-        expect.stringMatching(/^\/room\/.*\?nickname=TestUser&host=true$/)
+        expect.stringMatching(/^\/.*\?nickname=TestUser&host=true$/)
       );
     });
   });
@@ -364,7 +364,7 @@ describe('HomePage', () => {
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(
-        `/room/ROOM123?nickname=TestUser&host=false`
+        `/ROOM123?nickname=TestUser&host=false`
       );
     });
   });

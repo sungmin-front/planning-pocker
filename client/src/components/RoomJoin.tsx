@@ -23,9 +23,6 @@ export const RoomJoin: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { roomId: urlRoomId } = useParams<{ roomId: string }>();
   const { joinRoom, joinError, nicknameSuggestions, clearJoinError } = useRoom();
-  
-  // Debug log
-  console.log('RoomJoin render - joinError:', joinError, 'nicknameSuggestions:', nicknameSuggestions);
   const { isConnected } = useWebSocket();
   
   const [formData, setFormData] = useState<FormData>({
