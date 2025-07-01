@@ -9,13 +9,15 @@ import type { Room, Player, Story } from '@planning-poker/shared';
 // Mock the contexts
 vi.mock('@/contexts/RoomContext');
 vi.mock('@/contexts/WebSocketContext');
+const mockNavigate = vi.fn();
+
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
     useParams: vi.fn(),
     useSearchParams: vi.fn(),
-    useNavigate: vi.fn()
+    useNavigate: () => mockNavigate
   };
 });
 
@@ -23,7 +25,6 @@ const mockJoinRoom = vi.fn();
 const mockLeaveRoom = vi.fn();
 const mockVote = vi.fn();
 const mockSyncRoom = vi.fn();
-const mockNavigate = vi.fn();
 
 const createMockPlayer = (overrides: Partial<Player> = {}): Player => ({
   id: 'player-1',
@@ -55,12 +56,21 @@ const createMockRoom = (overrides: Partial<Room> = {}): Room => ({
 
 const defaultUseRoom = {
   room: null,
+  currentPlayer: null,
   isHost: false,
   joinRoom: mockJoinRoom,
   leaveRoom: mockLeaveRoom,
   vote: mockVote,
   syncRoom: mockSyncRoom,
-  createRoom: vi.fn()
+  createRoom: vi.fn(),
+  joinError: null,
+  nicknameSuggestions: [],
+  clearJoinError: vi.fn(),
+  createStory: vi.fn(),
+  revealVotes: vi.fn(),
+  restartVoting: vi.fn(),
+  setFinalPoint: vi.fn(),
+  transferHost: vi.fn()
 };
 
 const defaultUseWebSocket = {
@@ -83,10 +93,6 @@ describe('RoomPage Component', () => {
     
     const mockSearchParams = new URLSearchParams('nickname=TestUser');
     vi.mocked(useSearchParams).mockReturnValue([mockSearchParams, vi.fn()]);
-    
-    // Mock useNavigate
-    const { useNavigate } = require('react-router-dom');
-    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
   });
 
   describe('URL Parameter Handling', () => {
@@ -126,6 +132,82 @@ describe('RoomPage Component', () => {
       );
 
       expect(mockNavigate).toHaveBeenCalledWith('/');
+    });
+
+    it('does not redirect when user is already in room (host who created room)', () => {
+      // Simulate host who created room - no nickname in URL but already has room and currentPlayer
+      const mockSearchParams = new URLSearchParams(); // No nickname parameter
+      vi.mocked(useSearchParams).mockReturnValue([mockSearchParams, vi.fn()]);
+      
+      const mockRoom = createMockRoom();
+      const mockCurrentPlayer = createMockPlayer({ isHost: true });
+      
+      vi.mocked(useRoom).mockReturnValue({
+        ...defaultUseRoom,
+        room: mockRoom,
+        currentPlayer: mockCurrentPlayer,
+        isHost: true
+      });
+
+      render(
+        <TestWrapper>
+          <RoomPage />
+        </TestWrapper>
+      );
+
+      // Should NOT redirect to join page
+      expect(mockNavigate).not.toHaveBeenCalledWith('/join/ABC123');
+      // Should NOT attempt to join room again
+      expect(mockJoinRoom).not.toHaveBeenCalled();
+    });
+
+    it('does not redirect when user is already joined as regular player', () => {
+      // Simulate user who is already in room but accessing without nickname in URL
+      const mockSearchParams = new URLSearchParams(); // No nickname parameter
+      vi.mocked(useSearchParams).mockReturnValue([mockSearchParams, vi.fn()]);
+      
+      const mockRoom = createMockRoom();
+      const mockCurrentPlayer = createMockPlayer({ isHost: false });
+      
+      vi.mocked(useRoom).mockReturnValue({
+        ...defaultUseRoom,
+        room: mockRoom,
+        currentPlayer: mockCurrentPlayer,
+        isHost: false
+      });
+
+      render(
+        <TestWrapper>
+          <RoomPage />
+        </TestWrapper>
+      );
+
+      // Should NOT redirect to join page
+      expect(mockNavigate).not.toHaveBeenCalledWith('/join/ABC123');
+      // Should NOT attempt to join room again
+      expect(mockJoinRoom).not.toHaveBeenCalled();
+    });
+
+    it('still redirects when no room or currentPlayer exists and no nickname provided', () => {
+      // Simulate fresh user with no room context and no nickname
+      const mockSearchParams = new URLSearchParams(); // No nickname parameter
+      vi.mocked(useSearchParams).mockReturnValue([mockSearchParams, vi.fn()]);
+      
+      vi.mocked(useRoom).mockReturnValue({
+        ...defaultUseRoom,
+        room: null,
+        currentPlayer: null,
+        isHost: false
+      });
+
+      render(
+        <TestWrapper>
+          <RoomPage />
+        </TestWrapper>
+      );
+
+      // SHOULD redirect to join page
+      expect(mockNavigate).toHaveBeenCalledWith('/join/ABC123');
     });
   });
 
@@ -195,7 +277,8 @@ describe('RoomPage Component', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByText('Host')).toBeInTheDocument();
+      const hostBadges = screen.getAllByText('Host');
+      expect(hostBadges.length).toBeGreaterThan(0);
     });
 
     it('displays all players with their roles', () => {
