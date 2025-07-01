@@ -22,6 +22,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const [room, setRoom] = useState<Room | null>(null);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [isHost, setIsHost] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const [nicknameSuggestions, setNicknameSuggestions] = useState<string[]>([]);
   
   const { send, on, off, isConnected } = useWebSocket();
   const { toast } = useToast();
@@ -36,6 +38,51 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           setCurrentPlayer(message.payload.player);
           setIsHost(message.payload.player.isHost);
           break;
+          
+        case 'room:created':
+          setRoom(message.payload.room);
+          if (message.payload.player) {
+            setCurrentPlayer(message.payload.player);
+            setIsHost(message.payload.player.isHost);
+          }
+          // Navigate to the created room
+          navigate(`/room/${message.payload.room.id}`);
+          break;
+          
+        case 'room:joined':
+          setRoom(message.payload.room);
+          setJoinError(null);
+          setNicknameSuggestions([]);
+          // The server should tell us which player we are
+          if (message.payload.player) {
+            setCurrentPlayer(message.payload.player);
+            setIsHost(message.payload.player.isHost);
+          }
+          
+          toast({
+            title: "Room Joined",
+            description: `Successfully joined ${message.payload.room.name}`,
+          });
+          
+          // Navigate to the joined room
+          navigate(`/room/${message.payload.room.id}`);
+          break;
+
+        case 'room:joinError':
+          const { error, suggestions = [] } = message.payload;
+          setJoinError(error);
+          setNicknameSuggestions(suggestions);
+          
+          // Don't show toast for nickname conflicts - let the component handle it
+          if (!error.includes('already taken')) {
+            toast({
+              title: "Failed to Join Room",
+              description: error,
+              variant: "destructive",
+            });
+          }
+          break;
+          
           
         case 'ROOM_SYNC':
           setRoom(message.payload.room);
@@ -78,6 +125,25 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     on('message', handleMessage);
     return () => off('message', handleMessage);
   }, [on, off, toast]);
+
+  const createRoom = async (nickname: string): Promise<string | null> => {
+    if (!isConnected) {
+      toast({
+        title: "Connection Error",
+        description: "Please connect to the server first",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    send({
+      type: 'ROOM_CREATE',
+      payload: { nickname }
+    });
+
+    // In a real implementation, you'd wait for a response
+    return "pending";
+  };
 
   const joinRoom = async (roomId: string, nickname: string): Promise<boolean> => {
     if (!isConnected) {
@@ -174,10 +240,18 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     });
   };
 
+  const clearJoinError = () => {
+    setJoinError(null);
+    setNicknameSuggestions([]);
+  };
+
   const value: RoomContextType = {
     room,
     currentPlayer,
     isHost,
+    joinError,
+    nicknameSuggestions,
+    createRoom,
     joinRoom,
     leaveRoom,
     createStory,
@@ -187,6 +261,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     setFinalPoint,
     transferHost,
     syncRoom,
+    clearJoinError,
   };
 
   return (

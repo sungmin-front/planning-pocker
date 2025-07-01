@@ -26,6 +26,9 @@ export const RoomPage: React.FC = () => {
 
     if (roomId && nickname) {
       joinRoom(roomId, nickname);
+    } else if (roomId && !nickname) {
+      // Redirect to join page if no nickname provided
+      navigate(`/join/${roomId}`);
     }
   }, [roomId, nickname, isConnected, joinRoom, navigate]);
 

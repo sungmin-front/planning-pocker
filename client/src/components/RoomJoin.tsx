@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,16 +21,27 @@ interface FormErrors {
 export const RoomJoin: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { joinRoom } = useRoom();
+  const { roomId: urlRoomId } = useParams<{ roomId: string }>();
+  const { joinRoom, joinError, nicknameSuggestions, clearJoinError } = useRoom();
   const { isConnected } = useWebSocket();
   
   const [formData, setFormData] = useState<FormData>({
-    roomId: searchParams.get('roomId') || '',
+    roomId: urlRoomId || searchParams.get('roomId') || '',
     nickname: ''
   });
   
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  // Update roomId from URL params
+  useEffect(() => {
+    if (urlRoomId && urlRoomId !== formData.roomId) {
+      setFormData(prev => ({
+        ...prev,
+        roomId: urlRoomId
+      }));
+    }
+  }, [urlRoomId]);
 
   // Focus on nickname input if room ID is preset
   useEffect(() => {
@@ -120,6 +131,19 @@ export const RoomJoin: React.FC = () => {
         [field]: undefined
       }));
     }
+
+    // Clear join error when user starts typing in nickname field
+    if (field === 'nickname' && joinError) {
+      clearJoinError();
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setFormData(prev => ({
+      ...prev,
+      nickname: suggestion
+    }));
+    clearJoinError();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -148,7 +172,8 @@ export const RoomJoin: React.FC = () => {
                 onChange={handleInputChange('roomId')}
                 onKeyDown={handleKeyDown}
                 placeholder="Enter room ID"
-                disabled={isFormDisabled}
+                disabled={isFormDisabled || !!urlRoomId}
+                readOnly={!!urlRoomId}
                 className={errors.roomId ? 'border-red-500' : ''}
               />
               {errors.roomId && (
@@ -167,10 +192,35 @@ export const RoomJoin: React.FC = () => {
                 onKeyDown={handleKeyDown}
                 placeholder="Enter your nickname"
                 disabled={isFormDisabled}
-                className={errors.nickname ? 'border-red-500' : ''}
+                className={errors.nickname || joinError?.includes('already taken') ? 'border-red-500' : ''}
               />
               {errors.nickname && (
                 <p className="text-sm text-red-500">{errors.nickname}</p>
+              )}
+              
+              {/* Nickname conflict error and suggestions */}
+              {joinError?.includes('already taken') && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-sm text-yellow-800 mb-2">{joinError}</p>
+                  {nicknameSuggestions.length > 0 && (
+                    <div>
+                      <p className="text-sm text-yellow-700 mb-2">Try these suggestions:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {nicknameSuggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => handleSuggestionClick(suggestion)}
+                            className="px-2 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 rounded transition-colors"
+                            disabled={isFormDisabled}
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -178,6 +228,13 @@ export const RoomJoin: React.FC = () => {
             {errors.general && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-sm text-red-600">{errors.general}</p>
+              </div>
+            )}
+
+            {/* Other join errors (non-nickname conflicts) */}
+            {joinError && !joinError.includes('already taken') && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">{joinError}</p>
               </div>
             )}
 

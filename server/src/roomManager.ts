@@ -8,10 +8,12 @@ export class RoomManager {
   private socketUserMap: SocketUserMap = {};
 
   createRoom(hostNickname: string, hostSocketId: string): ServerRoom {
-    const roomId = generateRoomId();
+    const roomId = generateRoomId(); // Already uppercase from utils
+    const trimmedNickname = hostNickname.trim();
+    
     const hostPlayer: Player = {
       id: uuidv4(),
-      nickname: hostNickname,
+      nickname: trimmedNickname,
       socketId: hostSocketId,
       isHost: true,
       isSpectator: false
@@ -19,7 +21,7 @@ export class RoomManager {
 
     const room: ServerRoom = {
       id: roomId,
-      name: `${hostNickname}'s Room`,
+      name: `${trimmedNickname}'s Room`,
       players: [hostPlayer],
       stories: [],
       createdAt: new Date(),
@@ -35,23 +37,40 @@ export class RoomManager {
     return room;
   }
 
-  joinRoom(roomId: string, nickname: string, socketId: string): { success: boolean; room?: ServerRoom; error?: string } {
-    const room = this.rooms.get(roomId);
+  joinRoom(roomId: string, nickname: string, socketId: string, isSpectator?: boolean): { success: boolean; room?: ServerRoom; error?: string; suggestions?: string[] } {
+    // Trim and validate nickname
+    const trimmedNickname = nickname.trim();
+    if (!trimmedNickname) {
+      return { success: false, error: 'Nickname is required' };
+    }
+
+    // Find room (case-insensitive roomId)
+    const room = this.rooms.get(roomId.toUpperCase());
     if (!room) {
       return { success: false, error: 'Room not found' };
     }
 
-    const existingPlayer = room.players.find(p => p.nickname === nickname);
+    const existingPlayer = room.players.find(p => p.nickname.toLowerCase() === trimmedNickname.toLowerCase());
     if (existingPlayer) {
-      return { success: false, error: 'Nickname already taken' };
+      const suggestions = this.generateNicknameSuggestions(trimmedNickname, room);
+      return { 
+        success: false, 
+        error: 'Nickname already taken',
+        suggestions 
+      };
     }
+
+    // Auto-detect spectators based on nickname or explicit flag
+    const shouldBeSpectator = isSpectator || 
+      trimmedNickname.toLowerCase().includes('spectator') ||
+      trimmedNickname.toLowerCase().includes('observer');
 
     const player: Player = {
       id: uuidv4(),
-      nickname,
+      nickname: trimmedNickname,
       socketId,
       isHost: false,
-      isSpectator: false
+      isSpectator: shouldBeSpectator
     };
 
     room.players.push(player);
@@ -62,6 +81,58 @@ export class RoomManager {
     };
 
     return { success: true, room };
+  }
+
+  private generateNicknameSuggestions(originalNickname: string, room: ServerRoom): string[] {
+    const suggestions: string[] = [];
+    const existingNicknames = new Set(room.players.map(p => p.nickname.toLowerCase()));
+    
+    // Strategy 1: Add numbers (John2, John3, etc.) - limit to 1 suggestion
+    for (let i = 2; i <= 10; i++) {
+      const suggestion = `${originalNickname}${i}`;
+      if (!existingNicknames.has(suggestion.toLowerCase())) {
+        suggestions.push(suggestion);
+        break; // Only take first numbered suggestion
+      }
+    }
+    
+    // Strategy 2: Add underscores (John_, John_1, etc.) - limit to 1 suggestion  
+    if (suggestions.length < 3) {
+      for (let i = 0; i < 5; i++) {
+        const suffix = i === 0 ? '_' : `_${i}`;
+        const suggestion = `${originalNickname}${suffix}`;
+        if (!existingNicknames.has(suggestion.toLowerCase())) {
+          suggestions.push(suggestion);
+          break; // Only take first underscore suggestion
+        }
+      }
+    }
+    
+    // Strategy 3: Add prefixes (New_John, Player_John, etc.) - limit to 1 suggestion
+    if (suggestions.length < 3) {
+      const prefixes = ['New_', 'Player_', 'User_'];
+      for (const prefix of prefixes) {
+        const suggestion = `${prefix}${originalNickname}`;
+        if (!existingNicknames.has(suggestion.toLowerCase())) {
+          suggestions.push(suggestion);
+          break; // Only take first prefix suggestion
+        }
+      }
+    }
+    
+    // Strategy 4: Random suffixes - fill remaining slots
+    if (suggestions.length < 3) {
+      const suffixes = ['Pro', 'Plus', 'X', 'Star', 'Max'];
+      for (const suffix of suffixes) {
+        const suggestion = `${originalNickname}${suffix}`;
+        if (!existingNicknames.has(suggestion.toLowerCase())) {
+          suggestions.push(suggestion);
+        }
+        if (suggestions.length >= 3) break;
+      }
+    }
+    
+    return suggestions.slice(0, 3); // Return max 3 suggestions
   }
 
   getUserRoom(socketId: string): string | undefined {
@@ -114,21 +185,32 @@ export class RoomManager {
     };
   }
 
-  addStory(roomId: string, title: string, description?: string): Story | null {
+  addStory(roomId: string, title: string, description?: string, hostSocketId?: string): Story | null {
     const room = this.rooms.get(roomId);
     if (!room) return null;
+
+    // Check if the requester is the host
+    if (hostSocketId) {
+      const player = room.players.find(p => p.socketId === hostSocketId);
+      if (!player?.isHost) {
+        return null; // Only host can create stories
+      }
+    }
 
     const story: Story = {
       id: uuidv4(),
       title,
       description,
-      status: 'pending',
+      status: 'voting',
       votes: {}
     };
 
     room.stories.push(story);
     return story;
   }
+
+
+
 
   vote(socketId: string, storyId: string, vote: VoteValue): { success: boolean; error?: string } {
     const userInfo = this.socketUserMap[socketId];
@@ -146,6 +228,11 @@ export class RoomManager {
       return { success: false, error: 'Player not found' };
     }
 
+    // Check if player is a spectator
+    if (player.isSpectator) {
+      return { success: false, error: 'Spectators cannot vote' };
+    }
+
     const story = room.stories.find(s => s.id === storyId);
     if (!story) {
       return { success: false, error: 'Story not found' };
@@ -155,11 +242,17 @@ export class RoomManager {
       return { success: false, error: 'Voting not allowed for this story' };
     }
 
+    // Validate vote value
+    const validVotes: VoteValue[] = ['1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', '☕'];
+    if (!validVotes.includes(vote)) {
+      return { success: false, error: 'Invalid vote value' };
+    }
+
     if (!story.votes) story.votes = {};
     story.votes[player.id] = vote;
 
-    if (story.status === 'pending') {
-      story.status = 'voting';
+    if (story.status === 'voting') {
+      // Story is already in voting state
     }
 
     return { success: true };
@@ -242,7 +335,7 @@ export class RoomManager {
     return { success: true, story };
   }
 
-  transferHost(socketId: string, toNickname: string): { success: boolean; error?: string; newHost?: Player; oldHost?: Player } {
+  transferHost(socketId: string, toNickname: string): { success: boolean; error?: string; newHost?: Player; oldHost?: Player; roomId?: string } {
     const userInfo = this.socketUserMap[socketId];
     if (!userInfo?.roomId) {
       return { success: false, error: 'Not in a room' };
@@ -274,7 +367,8 @@ export class RoomManager {
     return { 
       success: true, 
       newHost: targetPlayer,
-      oldHost: currentHost
+      oldHost: currentHost,
+      roomId: userInfo.roomId
     };
   }
 
@@ -299,10 +393,15 @@ export class RoomManager {
     
     // Add player-specific data
     const playerState = {
-      ...roomState,
-      isHost: player.isHost,
-      myId: player.id,
-      myNickname: player.nickname
+      room: {
+        id: room.id,
+        name: room.name,
+        players: room.players,
+        stories: room.stories,
+        createdAt: room.createdAt,
+        currentStoryId: room.currentStoryId || null
+      },
+      currentPlayer: player
     };
 
     return { 

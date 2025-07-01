@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useWebSocket } from '@/contexts/WebSocketContext';
+import { useRoom } from '@/contexts/RoomContext';
 
 export const HomePage: React.FC = () => {
   const [roomId, setRoomId] = useState('');
@@ -13,28 +14,38 @@ export const HomePage: React.FC = () => {
   
   const navigate = useNavigate();
   const { isConnected, connect } = useWebSocket();
+  const { createRoom, joinRoom } = useRoom();
 
   const handleConnect = () => {
     connect('ws://localhost:8080');
   };
 
-  const handleCreateRoom = (e?: React.FormEvent) => {
+  const handleCreateRoom = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!nickname.trim()) return;
     setIsCreating(true);
-    // Generate a unique room ID
-    const newRoomId = crypto.randomUUID();
     
-    // In a real app, this would be async but for tests we navigate immediately
-    setTimeout(() => {
-      navigate(`/room/${newRoomId}?nickname=${encodeURIComponent(nickname.trim())}&host=true`);
-    }, 0);
+    try {
+      // Create room via WebSocket
+      await createRoom(nickname.trim());
+      // Navigation will happen when we receive room:created message
+    } catch (error) {
+      console.error('Failed to create room:', error);
+      setIsCreating(false);
+    }
   };
 
-  const handleJoinRoom = (e?: React.FormEvent) => {
+  const handleJoinRoom = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!roomId.trim() || !nickname.trim()) return;
-    navigate(`/room/${roomId.trim()}?nickname=${encodeURIComponent(nickname.trim())}&host=false`);
+    
+    try {
+      // Join room via WebSocket
+      await joinRoom(roomId.trim(), nickname.trim());
+      // Navigation will happen when we receive room:joined message
+    } catch (error) {
+      console.error('Failed to join room:', error);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
