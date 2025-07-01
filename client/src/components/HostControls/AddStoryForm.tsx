@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useWebSocket } from '@/contexts/WebSocketContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface AddStoryFormProps {
   onClose: () => void;
@@ -14,26 +15,40 @@ export const AddStoryForm: React.FC<AddStoryFormProps> = ({ onClose }) => {
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { socket } = useWebSocket();
+  const { send, isConnected } = useWebSocket();
+  const { toast } = useToast();
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !socket) return;
+    if (!title.trim() || !isConnected) {
+      toast({
+        title: "Error",
+        description: "Please ensure you're connected and enter a title",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     
-    socket.emit('story:add', {
-      title: title.trim(),
-      description: description.trim() || undefined
-    }, (response: { success: boolean; error?: string }) => {
-      setIsSubmitting(false);
-      if (response.success) {
-        onClose();
-      } else {
-        // Handle error
-        console.error(response.error);
+    // Use the same message type as the server expects
+    send({
+      type: 'STORY_CREATE',
+      payload: {
+        title: title.trim(),
+        description: description.trim() || undefined
       }
     });
+    
+    // Close the form and show success message
+    setTimeout(() => {
+      setIsSubmitting(false);
+      onClose();
+      toast({
+        title: "Story Added",
+        description: `Story "${title.trim()}" has been created`,
+      });
+    }, 500);
   };
   
   const isTitleValid = title.trim().length > 0;

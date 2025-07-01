@@ -13,6 +13,7 @@ import { CurrentStory } from '@/components/CurrentStory';
 import { StoryList } from '@/components/StoryList';
 import { VotingResults } from '@/components/VotingResults';
 import { HostDelegation } from '@/components/HostDelegation';
+import { AddStoryModal } from '@/components/HostControls/AddStoryModal';
 import { SyncButton } from '@/components/SyncButton';
 import { LayoutToggle } from '@/components/LayoutToggle';
 // import { VOTE_OPTIONS } from '@planning-poker/shared';
@@ -26,6 +27,7 @@ export const RoomPage: React.FC = () => {
   const nickname = searchParams.get('nickname');
   const [nicknameInput, setNicknameInput] = useState(nickname || '');
   const [isJoining, setIsJoining] = useState(false);
+  const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
   
   const { room, currentPlayer, isHost, joinRoom, leaveRoom, vote, syncRoom, joinError, nicknameSuggestions, clearJoinError } = useRoom();
   const { isConnected, send } = useWebSocket();
@@ -217,19 +219,10 @@ export const RoomPage: React.FC = () => {
                 <CardContent className="p-4">
                   <div className="space-y-2">
                     <Button 
-                      onClick={() => {
-                        // Quick test story creation
-                        send({
-                          type: 'STORY_CREATE',
-                          payload: {
-                            title: 'Test Story',
-                            description: 'A test story for voting'
-                          }
-                        });
-                      }}
+                      onClick={() => setIsAddStoryModalOpen(true)}
                       className="w-full"
                     >
-                      + Add Test Story
+                      + Add Story
                     </Button>
                     {room.stories.length > 0 && (
                       <Button 
@@ -259,6 +252,12 @@ export const RoomPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Add Story Modal */}
+      <AddStoryModal 
+        isOpen={isAddStoryModalOpen} 
+        onClose={() => setIsAddStoryModalOpen(false)} 
+      />
     </div>
   );
 };
