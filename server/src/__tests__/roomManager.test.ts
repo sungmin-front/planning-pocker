@@ -324,22 +324,22 @@ describe('RoomManager', () => {
         expect(result.roomState).toBeDefined();
         
         // Check player-specific data
-        expect(result.playerState?.isHost).toBe(true);
-        expect(result.playerState?.myNickname).toBe('Alice');
-        expect(result.playerState?.myId).toBeDefined();
+        expect(result.playerState?.currentPlayer?.isHost).toBe(true);
+        expect(result.playerState?.currentPlayer?.nickname).toBe('Alice');
+        expect(result.playerState?.currentPlayer?.id).toBeDefined();
         
         // Check room data
-        expect(result.playerState?.roomId).toBe(roomId);
-        expect(result.playerState?.players).toHaveLength(2);
-        expect(result.playerState?.stories).toHaveLength(1);
+        expect(result.playerState?.room?.id).toBe(roomId);
+        expect(result.playerState?.room?.players).toHaveLength(2);
+        expect(result.playerState?.room?.stories).toHaveLength(1);
       });
 
       it('should return correct host status for non-host player', () => {
         const result = roomManager.syncRoom('socket-2');
         
         expect(result.success).toBe(true);
-        expect(result.playerState?.isHost).toBe(false);
-        expect(result.playerState?.myNickname).toBe('Bob');
+        expect(result.playerState?.currentPlayer?.isHost).toBe(false);
+        expect(result.playerState?.currentPlayer?.nickname).toBe('Bob');
       });
 
       it('should reject sync for player not in room', () => {
@@ -364,8 +364,8 @@ describe('RoomManager', () => {
         const result = roomManager.syncRoom('socket-1');
         
         expect(result.success).toBe(true);
-        expect(result.playerState?.stories[0].status).toBe('voting');
-        expect(result.playerState?.stories[0].votes).toBeDefined();
+        expect(result.playerState?.room?.stories[0].status).toBe('voting');
+        expect(result.playerState?.room?.stories[0].votes).toBeDefined();
       });
 
       it('should include revealed votes after host reveals', () => {
@@ -373,8 +373,8 @@ describe('RoomManager', () => {
         const result = roomManager.syncRoom('socket-2');
         
         expect(result.success).toBe(true);
-        expect(result.playerState?.stories[0].status).toBe('revealed');
-        expect(Object.keys(result.playerState?.stories[0].votes || {})).toHaveLength(2);
+        expect(result.playerState?.room?.stories[0].status).toBe('revealed');
+        expect(Object.keys(result.playerState?.room?.stories[0].votes || {})).toHaveLength(2);
       });
 
       it('should include final point after host sets it', () => {
@@ -384,8 +384,183 @@ describe('RoomManager', () => {
         const result = roomManager.syncRoom('socket-2');
         
         expect(result.success).toBe(true);
-        expect(result.playerState?.stories[0].status).toBe('closed');
-        expect(result.playerState?.stories[0].final_point).toBe('13');
+        expect(result.playerState?.room?.stories[0].status).toBe('closed');
+        expect(result.playerState?.room?.stories[0].final_point).toBe('13');
+      });
+    });
+  });
+
+  describe('voluntary leave scenarios', () => {
+    describe('host leaves voluntarily', () => {
+      it('should reassign host when original host leaves voluntarily', () => {
+        const room = roomManager.createRoom('Alice', 'socket-1');
+        roomManager.joinRoom(room.id, 'Bob', 'socket-2');
+        roomManager.joinRoom(room.id, 'Charlie', 'socket-3');
+        
+        // Simulate voluntary leave (same as disconnect, but initiated by user)
+        const result = roomManager.removePlayer('socket-1');
+        
+        expect(result.hostChanged).toBe(true);
+        expect(result.newHost?.nickname).toBe('Bob');
+        expect(result.newHost?.isHost).toBe(true);
+        expect(result.roomId).toBe(room.id);
+        
+        const updatedRoom = roomManager.getRoom(room.id);
+        expect(updatedRoom?.players).toHaveLength(2);
+        expect(updatedRoom?.players.find(p => p.isHost)?.nickname).toBe('Bob');
+        expect(updatedRoom?.players.find(p => p.nickname === 'Alice')).toBeUndefined();
+      });
+
+      it('should handle host leaving with ongoing voting', () => {
+        const room = roomManager.createRoom('Alice', 'socket-1');
+        roomManager.joinRoom(room.id, 'Bob', 'socket-2');
+        
+        // Add story and start voting
+        const story = roomManager.addStory(room.id, 'Test Story', 'Description', 'socket-1');
+        roomManager.selectStory(room.id, story!.id, 'socket-1');
+        roomManager.vote('socket-1', story!.id, '5' as VoteValue);
+        roomManager.vote('socket-2', story!.id, '8' as VoteValue);
+        
+        // Host leaves during voting
+        const result = roomManager.removePlayer('socket-1');
+        
+        expect(result.hostChanged).toBe(true);
+        expect(result.newHost?.nickname).toBe('Bob');
+        
+        const updatedRoom = roomManager.getRoom(room.id);
+        expect(updatedRoom?.stories[0].status).toBe('voting');
+        expect(updatedRoom?.currentStoryId).toBe(story!.id);
+        
+        // Bob should now be able to reveal votes as new host
+        const revealResult = roomManager.revealVotes('socket-2', story!.id);
+        expect(revealResult.success).toBe(true);
+      });
+    });
+
+    describe('non-host leaves voluntarily', () => {
+      it('should remove player without host change when non-host leaves', () => {
+        const room = roomManager.createRoom('Alice', 'socket-1');
+        roomManager.joinRoom(room.id, 'Bob', 'socket-2');
+        roomManager.joinRoom(room.id, 'Charlie', 'socket-3');
+        
+        const result = roomManager.removePlayer('socket-2');
+        
+        expect(result.hostChanged).toBe(false);
+        expect(result.newHost).toBeUndefined();
+        expect(result.roomId).toBe(room.id);
+        
+        const updatedRoom = roomManager.getRoom(room.id);
+        expect(updatedRoom?.players).toHaveLength(2);
+        expect(updatedRoom?.players.find(p => p.isHost)?.nickname).toBe('Alice');
+        expect(updatedRoom?.players.find(p => p.nickname === 'Bob')).toBeUndefined();
+      });
+
+      it('should preserve voting state when non-host leaves during voting', () => {
+        const room = roomManager.createRoom('Alice', 'socket-1');
+        roomManager.joinRoom(room.id, 'Bob', 'socket-2');
+        roomManager.joinRoom(room.id, 'Charlie', 'socket-3');
+        
+        // Add story and start voting
+        const story = roomManager.addStory(room.id, 'Test Story', 'Description', 'socket-1');
+        roomManager.selectStory(room.id, story!.id, 'socket-1');
+        roomManager.vote('socket-1', story!.id, '5' as VoteValue);
+        roomManager.vote('socket-2', story!.id, '8' as VoteValue);
+        roomManager.vote('socket-3', story!.id, '13' as VoteValue);
+        
+        // Non-host Bob leaves during voting
+        roomManager.removePlayer('socket-2');
+        
+        const updatedRoom = roomManager.getRoom(room.id);
+        expect(updatedRoom?.stories[0].status).toBe('voting');
+        expect(updatedRoom?.currentStoryId).toBe(story!.id);
+        
+        // Bob's vote should be removed from ongoing voting
+        expect(updatedRoom?.stories[0].votes).toBeDefined();
+        const votes = updatedRoom?.stories[0].votes || {};
+        const playerIds = updatedRoom?.players.map(p => p.id) || [];
+        
+        // Only Alice and Charlie's votes should remain
+        expect(Object.keys(votes).length).toBe(2);
+        expect(Object.keys(votes).every(voterId => playerIds.includes(voterId))).toBe(true);
+      });
+
+      it('should preserve completed votes when player leaves after voting is done', () => {
+        const room = roomManager.createRoom('Alice', 'socket-1');
+        roomManager.joinRoom(room.id, 'Bob', 'socket-2');
+        roomManager.joinRoom(room.id, 'Charlie', 'socket-3');
+        
+        // Add story and complete voting cycle
+        const story = roomManager.addStory(room.id, 'Test Story', 'Description', 'socket-1');
+        roomManager.selectStory(room.id, story!.id, 'socket-1');
+        roomManager.vote('socket-1', story!.id, '5' as VoteValue);
+        roomManager.vote('socket-2', story!.id, '8' as VoteValue);
+        roomManager.vote('socket-3', story!.id, '13' as VoteValue);
+        
+        // Complete the voting process
+        roomManager.revealVotes('socket-1', story!.id);
+        roomManager.setFinalPoint('socket-1', story!.id, '8' as VoteValue);
+        
+        // Bob leaves after voting is complete
+        roomManager.removePlayer('socket-2');
+        
+        const updatedRoom = roomManager.getRoom(room.id);
+        expect(updatedRoom?.stories[0].status).toBe('closed');
+        
+        // All original votes should be preserved for historical record
+        expect(updatedRoom?.stories[0].votes).toBeDefined();
+        const votes = updatedRoom?.stories[0].votes || {};
+        expect(Object.keys(votes).length).toBe(3); // All 3 votes preserved
+        expect(updatedRoom?.stories[0].final_point).toBe('8');
+      });
+    });
+
+    describe('edge cases for voluntary leave', () => {
+      it('should handle single player leaving (room cleanup)', () => {
+        const room = roomManager.createRoom('Alice', 'socket-1');
+        const roomId = room.id;
+        
+        const result = roomManager.removePlayer('socket-1');
+        
+        expect(result.roomId).toBe(roomId);
+        expect(result.hostChanged).toBeUndefined();
+        expect(result.newHost).toBeUndefined();
+        expect(roomManager.getRoom(roomId)).toBeUndefined();
+        expect(roomManager.getUserRoom('socket-1')).toBeUndefined();
+      });
+
+      it('should handle multiple players leaving in sequence', () => {
+        const room = roomManager.createRoom('Alice', 'socket-1');
+        roomManager.joinRoom(room.id, 'Bob', 'socket-2');
+        roomManager.joinRoom(room.id, 'Charlie', 'socket-3');
+        roomManager.joinRoom(room.id, 'Dave', 'socket-4');
+        
+        // Non-host leaves first
+        let result = roomManager.removePlayer('socket-2');
+        expect(result.hostChanged).toBe(false);
+        expect(roomManager.getRoom(room.id)?.players).toHaveLength(3);
+        
+        // Host leaves next
+        result = roomManager.removePlayer('socket-1');
+        expect(result.hostChanged).toBe(true);
+        expect(result.newHost?.nickname).toBe('Charlie');
+        expect(roomManager.getRoom(room.id)?.players).toHaveLength(2);
+        
+        // Another player leaves
+        result = roomManager.removePlayer('socket-4');
+        expect(result.hostChanged).toBe(false);
+        expect(roomManager.getRoom(room.id)?.players).toHaveLength(1);
+        
+        // Last player leaves (room cleanup)
+        result = roomManager.removePlayer('socket-3');
+        expect(roomManager.getRoom(room.id)).toBeUndefined();
+      });
+
+      it('should handle player leaving non-existent room gracefully', () => {
+        const result = roomManager.removePlayer('invalid-socket');
+        
+        expect(result.roomId).toBeUndefined();
+        expect(result.hostChanged).toBeUndefined();
+        expect(result.newHost).toBeUndefined();
       });
     });
   });

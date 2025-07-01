@@ -545,9 +545,65 @@ wss.on('connection', function connection(ws) {
           break;
         }
 
-        case 'LEAVE_ROOM':
-          // Legacy message types - to be implemented later
+        case 'LEAVE_ROOM': {
+          console.log(`Player ${socketId} leaving room voluntarily`);
+          const result = roomManager.removePlayer(socketId);
+          
+          // Handle automatic host reassignment on voluntary leave
+          if (result.hostChanged && result.newHost && result.roomId) {
+            console.log(`Host left voluntarily, reassigning to: ${result.newHost.nickname}`);
+            
+            // Broadcast host change to all remaining clients in room
+            wss.clients.forEach(client => {
+              const clientSocketId = getSocketId(client);
+              if (roomManager.getUserRoom(clientSocketId) === result.roomId) {
+                client.send(JSON.stringify({
+                  type: 'room:hostChanged',
+                  payload: {
+                    newHostId: result.newHost?.id,
+                    newHostNickname: result.newHost?.nickname,
+                    reason: 'host_left'
+                  }
+                }));
+              }
+            });
+
+            // Also send updated room state
+            const roomState = roomManager.getRoomState(result.roomId);
+            if (roomState) {
+              wss.clients.forEach(client => {
+                const clientSocketId = getSocketId(client);
+                if (roomManager.getUserRoom(clientSocketId) === result.roomId) {
+                  client.send(JSON.stringify({
+                    type: 'room:updated',
+                    payload: roomState
+                  }));
+                }
+              });
+            }
+          } else if (result.roomId) {
+            // If no host change but room still exists, just update room state
+            const roomState = roomManager.getRoomState(result.roomId);
+            if (roomState) {
+              wss.clients.forEach(client => {
+                const clientSocketId = getSocketId(client);
+                if (roomManager.getUserRoom(clientSocketId) === result.roomId) {
+                  client.send(JSON.stringify({
+                    type: 'room:updated',
+                    payload: roomState
+                  }));
+                }
+              });
+            }
+          }
+          
+          // Confirm to the leaving client
+          ws.send(JSON.stringify({
+            type: 'room:left',
+            payload: { success: true }
+          }));
           break;
+        }
         default:
           console.log('Unknown message type:', message.type);
       }
