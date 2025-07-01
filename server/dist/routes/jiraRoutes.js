@@ -19,9 +19,13 @@ exports.jiraRouter.get('/status', async (req, res) => {
             });
         }
         const isConnected = await jiraClient_1.jiraClient.testConnection();
+        const hasDefaultProject = jiraClient_1.jiraClient.hasDefaultProject();
+        const defaultProjectKey = jiraClient_1.jiraClient.getDefaultProjectKey();
         res.json({
             configured: true,
             connected: isConnected,
+            hasDefaultProject,
+            defaultProjectKey,
             message: isConnected ? 'Jira connection successful' : 'Jira connection failed'
         });
     }
@@ -52,6 +56,86 @@ exports.jiraRouter.get('/boards', async (req, res) => {
         console.error('Error fetching boards:', error);
         res.status(500).json({
             error: 'Failed to fetch boards from Jira'
+        });
+    }
+});
+/**
+ * GET /api/jira/projects
+ * Get all accessible projects
+ */
+exports.jiraRouter.get('/projects', async (req, res) => {
+    try {
+        if (!jiraClient_1.jiraClient.isJiraConfigured()) {
+            return res.status(400).json({
+                error: 'Jira is not configured'
+            });
+        }
+        const projects = await jiraClient_1.jiraClient.getProjects();
+        res.json({ projects });
+    }
+    catch (error) {
+        console.error('Error fetching projects:', error);
+        res.status(500).json({
+            error: 'Failed to fetch projects from Jira'
+        });
+    }
+});
+/**
+ * GET /api/jira/default-project/sprints
+ * Get sprints for the default project
+ */
+exports.jiraRouter.get('/default-project/sprints', async (req, res) => {
+    try {
+        if (!jiraClient_1.jiraClient.isJiraConfigured()) {
+            return res.status(400).json({
+                error: 'Jira is not configured'
+            });
+        }
+        if (!jiraClient_1.jiraClient.hasDefaultProject()) {
+            return res.status(400).json({
+                error: 'Default project is not configured. Please set JIRA_DEFAULT_PROJECT_KEY environment variable.'
+            });
+        }
+        const sprints = await jiraClient_1.jiraClient.getDefaultProjectSprints();
+        res.json({
+            sprints,
+            projectKey: jiraClient_1.jiraClient.getDefaultProjectKey()
+        });
+    }
+    catch (error) {
+        console.error('Error fetching default project sprints:', error);
+        res.status(500).json({
+            error: 'Failed to fetch sprints for default project'
+        });
+    }
+});
+/**
+ * GET /api/jira/default-project/issues
+ * Get issues for the default project
+ */
+exports.jiraRouter.get('/default-project/issues', async (req, res) => {
+    try {
+        if (!jiraClient_1.jiraClient.isJiraConfigured()) {
+            return res.status(400).json({
+                error: 'Jira is not configured'
+            });
+        }
+        if (!jiraClient_1.jiraClient.hasDefaultProject()) {
+            return res.status(400).json({
+                error: 'Default project is not configured. Please set JIRA_DEFAULT_PROJECT_KEY environment variable.'
+            });
+        }
+        const maxResults = parseInt(req.query.maxResults) || 50;
+        const issues = await jiraClient_1.jiraClient.getDefaultProjectIssues(maxResults);
+        res.json({
+            issues,
+            projectKey: jiraClient_1.jiraClient.getDefaultProjectKey()
+        });
+    }
+    catch (error) {
+        console.error('Error fetching default project issues:', error);
+        res.status(500).json({
+            error: 'Failed to fetch issues for default project'
         });
     }
 });
