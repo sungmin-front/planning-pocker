@@ -159,6 +159,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           break;
           
         case 'story:selected':
+          console.log('Received story:selected message:', message.payload);
           if (message.payload.success && message.payload.roomState && room) {
             // Map roomState format to Room format
             const updatedRoom = {
