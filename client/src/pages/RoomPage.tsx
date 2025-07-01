@@ -7,6 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
+import { ResponsiveVotingInterface } from '@/components/ResponsiveVotingInterface';
+import { ResponsivePlayerLayout } from '@/components/ResponsivePlayerLayout';
+import { CurrentStory } from '@/components/CurrentStory';
+import { StoryList } from '@/components/StoryList';
+import { VotingResults } from '@/components/VotingResults';
+import { HostDelegation } from '@/components/HostDelegation';
+import { SyncButton } from '@/components/SyncButton';
+import { LayoutToggle } from '@/components/LayoutToggle';
 // import { VOTE_OPTIONS } from '@planning-poker/shared';
 const VOTE_OPTIONS = ['0', '1', '2', '3', '5', '8', '13', '21', '?', '☕'];
 
@@ -158,6 +166,10 @@ export const RoomPage: React.FC = () => {
     );
   }
 
+  const currentStory = room.currentStoryId 
+    ? room.stories.find(story => story.id === room.currentStoryId) 
+    : null;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-6xl mx-auto">
@@ -169,102 +181,39 @@ export const RoomPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-4">
             {isHost && <Badge variant="default">Host</Badge>}
+            <LayoutToggle />
+            <SyncButton />
+            {isHost && <HostDelegation />}
             <Button variant="outline" onClick={handleLeaveRoom}>
               Leave Room
             </Button>
           </div>
         </div>
 
+        {/* Current Story */}
+        {currentStory && <CurrentStory story={currentStory} />}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Players */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Players ({room.players.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {room.players.map((player) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
-                  >
-                    <span className="font-medium">{player.nickname}</span>
-                    <div className="flex items-center gap-2">
-                      {player.isHost && <Badge variant="secondary">Host</Badge>}
-                      <Badge variant="outline">
-                        Ready
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="lg:col-span-2">
+            <ResponsivePlayerLayout 
+              players={room.players}
+              currentStory={currentStory}
+              currentPlayerId={currentPlayer?.id || ''}
+            />
+          </div>
 
-          {/* Voting */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Vote</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-5 gap-2">
-                {VOTE_OPTIONS.map((option) => (
-                  <Button
-                    key={option}
-                    variant="outline"
-                    className="aspect-square"
-                    onClick={() => handleVote(option)}
-                  >
-                    {option}
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Stories */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Stories</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {room.stories.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">
-                    No stories yet
-                  </p>
-                ) : (
-                  room.stories.map((story) => (
-                    <div
-                      key={story.id}
-                      className={`p-3 rounded-lg border ${
-                        story.id === room.currentStoryId
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border'
-                      }`}
-                    >
-                      <h4 className="font-medium">{story.title}</h4>
-                      {story.description && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {story.description}
-                        </p>
-                      )}
-                      <div className="flex items-center justify-between mt-2">
-                        <Badge variant="outline">
-                          {story.status}
-                        </Badge>
-                        {story.final_point && (
-                          <Badge variant="default">
-                            {story.final_point} pts
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Right Panel */}
+          <div className="space-y-6">
+            {/* Voting Interface */}
+            <ResponsiveVotingInterface />
+            
+            {/* Voting Results */}
+            <VotingResults />
+            
+            {/* Stories */}
+            <StoryList stories={room.stories} />
+          </div>
         </div>
       </div>
     </div>
