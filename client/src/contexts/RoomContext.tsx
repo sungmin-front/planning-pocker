@@ -70,8 +70,10 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
 
         case 'room:joinError':
           const { error, suggestions = [] } = message.payload;
+          console.log('Received room:joinError:', { error, suggestions });
           setJoinError(error);
           setNicknameSuggestions(suggestions);
+          console.log('Updated state - joinError:', error, 'nicknameSuggestions:', suggestions);
           
           // Don't show toast for nickname conflicts - let the component handle it
           if (!error.includes('already taken')) {

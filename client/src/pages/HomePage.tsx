@@ -14,7 +14,7 @@ export const HomePage: React.FC = () => {
   
   const navigate = useNavigate();
   const { isConnected, connect } = useWebSocket();
-  const { createRoom, joinRoom } = useRoom();
+  const { createRoom, joinRoom, joinError, nicknameSuggestions, clearJoinError } = useRoom();
 
   const handleConnect = () => {
     connect('ws://localhost:8080');
@@ -89,7 +89,10 @@ export const HomePage: React.FC = () => {
                     type="text"
                     placeholder="Enter your nickname"
                     value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
+                    onChange={(e) => {
+                      setNickname(e.target.value);
+                      if (joinError) clearJoinError();
+                    }}
                     onKeyDown={handleKeyDown}
                   />
                 </div>
@@ -136,6 +139,33 @@ export const HomePage: React.FC = () => {
                   Join Room
                 </Button>
               </form>
+
+              {/* Nickname conflict error and suggestions */}
+              {joinError?.includes('already taken') && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md mt-4">
+                  <p className="text-sm text-yellow-800 mb-2">{joinError}</p>
+                  {nicknameSuggestions.length > 0 && (
+                    <div>
+                      <p className="text-sm text-yellow-700 mb-2">Try these suggestions:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {nicknameSuggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                              setNickname(suggestion);
+                              clearJoinError();
+                            }}
+                            className="px-2 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 rounded transition-colors"
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </CardContent>
