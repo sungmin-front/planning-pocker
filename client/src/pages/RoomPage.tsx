@@ -15,12 +15,17 @@ export const RoomPage: React.FC = () => {
   
   const nickname = searchParams.get('nickname');
   
-  const { room, isHost, joinRoom, leaveRoom, vote, syncRoom } = useRoom();
+  const { room, currentPlayer, isHost, joinRoom, leaveRoom, vote, syncRoom } = useRoom();
   const { isConnected } = useWebSocket();
 
   useEffect(() => {
     if (!isConnected) {
       navigate('/');
+      return;
+    }
+
+    // If user is already in a room (e.g., host who created room), don't redirect
+    if (room && currentPlayer) {
       return;
     }
 
@@ -30,7 +35,7 @@ export const RoomPage: React.FC = () => {
       // Redirect to join page if no nickname provided
       navigate(`/join/${roomId}`);
     }
-  }, [roomId, nickname, isConnected, joinRoom, navigate]);
+  }, [roomId, nickname, isConnected, room, currentPlayer, joinRoom, navigate]);
 
   const handleLeaveRoom = () => {
     leaveRoom();
