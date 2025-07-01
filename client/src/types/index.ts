@@ -18,6 +18,9 @@ export interface RoomContextType {
   room: Room | null;
   currentPlayer: Player | null;
   isHost: boolean;
+  joinError: string | null;
+  nicknameSuggestions: string[];
+  createRoom: (nickname: string) => Promise<string | null>;
   joinRoom: (roomId: string, nickname: string) => Promise<boolean>;
   leaveRoom: () => void;
   createStory: (title: string, description?: string) => void;
@@ -27,6 +30,7 @@ export interface RoomContextType {
   setFinalPoint: (storyId: string, point: VoteValue) => void;
   transferHost: (toNickname: string) => void;
   syncRoom: () => void;
+  clearJoinError: () => void;
 }
 
 // Import shared types for re-export

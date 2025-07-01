@@ -44,6 +44,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
     socketInstance.on('disconnected', handleDisconnected);
     socketInstance.on('error', handleError);
 
+    // Auto-connect on component mount
+    socketInstance.connect().catch((error) => {
+      console.error('Failed to auto-connect:', error);
+    });
+
     return () => {
       socketInstance.off('connected', handleConnected);
       socketInstance.off('disconnected', handleDisconnected);

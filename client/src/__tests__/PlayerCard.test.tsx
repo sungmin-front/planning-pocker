@@ -49,7 +49,8 @@ describe('PlayerCard', () => {
     const hostPlayer: Player = { ...mockPlayer, isHost: true };
     render(<PlayerCard player={hostPlayer} />);
     
-    expect(screen.getByText('Host')).toBeInTheDocument();
+    expect(screen.getByLabelText('Host crown')).toBeInTheDocument();
+    expect(screen.getByText('👑')).toBeInTheDocument();
   });
 
   it('should show spectator badge when player is spectator', () => {

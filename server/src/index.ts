@@ -4,10 +4,13 @@ import { WebSocketMessage, VoteValue } from '@planning-poker/shared';
 import { generateRoomId, releaseRoomId } from './utils';
 import { RoomManager } from './roomManager';
 
-const wss = new WebSocketServer({ port: 8080 });
+const port = process.env.PORT ? parseInt(process.env.PORT) : 8080;
+const wss = new WebSocketServer({ port });
 const roomManager = new RoomManager();
+const clients = new Map<string, WebSocket>();
 
-console.log('Planning Poker WebSocket server running on port 8080');
+console.log(`Planning Poker WebSocket server running on port ${port}`);
+console.log(`WebSocket server listening on port ${port}`);
 
 // Helper function to get socket ID
 function getSocketId(ws: WebSocket): string {
@@ -16,6 +19,7 @@ function getSocketId(ws: WebSocket): string {
 
 wss.on('connection', function connection(ws) {
   const socketId = getSocketId(ws);
+  clients.set(socketId, ws);
   console.log(`New client connected: ${socketId}`);
   
   ws.on('error', console.error);
@@ -192,6 +196,34 @@ wss.on('connection', function connection(ws) {
           break;
         }
 
+        case 'ROOM_CREATE': {
+          const { nickname } = message.payload;
+          console.log(`Creating room for host: ${nickname}`);
+          
+          const room = roomManager.createRoom(nickname, socketId);
+          console.log(`Room created: ${room.id}`);
+          
+          // Send room state to the host
+          const publicRoom = {
+            id: room.id,
+            name: room.name,
+            players: room.players,
+            stories: room.stories,
+            createdAt: room.createdAt,
+            currentStoryId: null
+          };
+          
+          const hostPlayer = room.players.find(p => p.socketId === socketId);
+          ws.send(JSON.stringify({
+            type: 'room:created',
+            payload: { 
+              room: publicRoom,
+              player: hostPlayer
+            }
+          }));
+          break;
+        }
+
         case 'ROOM_SYNC': {
           const result = roomManager.syncRoom(socketId);
           
@@ -213,12 +245,225 @@ wss.on('connection', function connection(ws) {
           break;
         }
 
-        case 'JOIN_ROOM':
+        case 'JOIN_ROOM': {
+          const { roomId, nickname, isSpectator } = message.payload;
+          const normalizedRoomId = roomId.toUpperCase();
+          console.log(`Player ${nickname} attempting to join room ${normalizedRoomId}${isSpectator ? ' as spectator' : ''}`);
+          console.log('JOIN_ROOM payload:', message.payload);
+          
+          const joinResult = roomManager.joinRoom(normalizedRoomId, nickname, socketId, isSpectator);
+          console.log('Join result:', joinResult);
+          
+          if (joinResult.success && joinResult.room) {
+            console.log(`Player ${nickname} successfully joined room ${roomId}`);
+            
+            // Send room state to the joining player
+            const publicRoom = {
+              id: joinResult.room.id,
+              name: joinResult.room.name,
+              players: joinResult.room.players,
+              stories: joinResult.room.stories,
+              createdAt: joinResult.room.createdAt,
+              currentStoryId: joinResult.room.currentStoryId || null
+            };
+            
+            const joinedPlayer = joinResult.room.players.find(p => p.socketId === socketId);
+            ws.send(JSON.stringify({
+              type: 'room:joined',
+              payload: { 
+                room: publicRoom,
+                player: joinedPlayer
+              }
+            }));
+            
+            // Notify other players in the room
+            joinResult.room.socketIds.forEach(sid => {
+              if (sid !== socketId) {
+                const otherWs = clients.get(sid);
+                if (otherWs && otherWs.readyState === WebSocket.OPEN) {
+                  otherWs.send(JSON.stringify({
+                    type: 'room:playerJoined',
+                    payload: { 
+                      player: joinResult.room!.players.find(p => p.socketId === socketId),
+                      room: publicRoom
+                    }
+                  }));
+                }
+              }
+            });
+          } else {
+            console.log(`Player ${nickname} failed to join room ${normalizedRoomId}: ${joinResult.error}`);
+            ws.send(JSON.stringify({
+              type: 'room:joinError',
+              payload: { 
+                error: joinResult.error || 'Failed to join room',
+                suggestions: joinResult.suggestions || []
+              }
+            }));
+          }
+          break;
+        }
+
+        case 'STORY_CREATE': {
+          const { title, description } = message.payload;
+          const roomId = roomManager.getUserRoom(socketId);
+          if (!roomId) {
+            ws.send(JSON.stringify({
+              type: 'story:created',
+              payload: { success: false, error: 'Not in a room' }
+            }));
+            break;
+          }
+          
+          const story = roomManager.addStory(roomId, title, description, socketId);
+          if (story) {
+            const roomState = roomManager.getRoomState(roomId);
+            
+            // Broadcast new story to all clients in room
+            wss.clients.forEach(client => {
+              const clientSocketId = getSocketId(client);
+              if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                client.send(JSON.stringify({
+                  type: 'story:created',
+                  payload: { story, roomState }
+                }));
+              }
+            });
+          } else {
+            ws.send(JSON.stringify({
+              type: 'story:created',
+              payload: { success: false, error: 'Only the host can create stories' }
+            }));
+          }
+          break;
+        }
+
+        case 'VOTE': {
+          const { storyId, vote } = message.payload;
+          const result = roomManager.vote(socketId, storyId, vote);
+          
+          if (result.success) {
+            const roomId = roomManager.getUserRoom(socketId);
+            if (roomId) {
+              const player = roomManager.getPlayer(socketId);
+              // Broadcast vote without revealing the value
+              wss.clients.forEach(client => {
+                const clientSocketId = getSocketId(client);
+                if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                  client.send(JSON.stringify({
+                    type: 'player:voted',
+                    payload: {
+                      playerId: player?.id,
+                      storyId
+                    }
+                  }));
+                }
+              });
+            }
+          }
+          
+          ws.send(JSON.stringify({
+            type: 'vote:recorded',
+            payload: result
+          }));
+          break;
+        }
+
+        case 'REVEAL_VOTES': {
+          const { storyId } = message.payload;
+          const result = roomManager.revealVotes(socketId, storyId);
+          
+          if (result.success && result.story) {
+            const roomId = roomManager.getUserRoom(socketId);
+            if (roomId) {
+              // Broadcast revealed votes to all clients in room
+              wss.clients.forEach(client => {
+                const clientSocketId = getSocketId(client);
+                if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                  client.send(JSON.stringify({
+                    type: 'votes:revealed',
+                    payload: {
+                      success: true,
+                      story: result.story
+                    }
+                  }));
+                }
+              });
+            }
+          } else {
+            ws.send(JSON.stringify({
+              type: 'votes:revealed',
+              payload: result
+            }));
+          }
+          break;
+        }
+
+        case 'NEW_STORY': {
+          const { title, description } = message.payload;
+          const roomId = roomManager.getUserRoom(socketId);
+          if (!roomId) {
+            ws.send(JSON.stringify({
+              type: 'story:created',
+              payload: { success: false, error: 'Not in a room' }
+            }));
+            break;
+          }
+          
+          const story = roomManager.addStory(roomId, title, description, socketId);
+          if (story) {
+            const roomState = roomManager.getRoomState(roomId);
+            
+            // Broadcast new story to all clients in room
+            wss.clients.forEach(client => {
+              const clientSocketId = getSocketId(client);
+              if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                client.send(JSON.stringify({
+                  type: 'story:created',
+                  payload: { story, roomState }
+                }));
+              }
+            });
+          } else {
+            ws.send(JSON.stringify({
+              type: 'story:created',
+              payload: { success: false, error: 'Only the host can create stories' }
+            }));
+          }
+          break;
+        }
+
+        case 'RESET_VOTES': {
+          const { storyId } = message.payload;
+          const result = roomManager.restartVoting(socketId, storyId);
+          
+          if (result.success && result.story) {
+            const roomId = roomManager.getUserRoom(socketId);
+            if (roomId) {
+              // Broadcast voting restart to all clients in room
+              wss.clients.forEach(client => {
+                const clientSocketId = getSocketId(client);
+                if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                  client.send(JSON.stringify({
+                    type: 'votes:restarted',
+                    payload: {
+                      success: true,
+                      story: result.story
+                    }
+                  }));
+                }
+              });
+            }
+          } else {
+            ws.send(JSON.stringify({
+              type: 'votes:restarted',
+              payload: result
+            }));
+          }
+          break;
+        }
+
         case 'LEAVE_ROOM':
-        case 'VOTE':
-        case 'REVEAL_VOTES':
-        case 'NEW_STORY':
-        case 'RESET_VOTES':
           // Legacy message types - to be implemented later
           break;
         default:
@@ -235,6 +480,7 @@ wss.on('connection', function connection(ws) {
 
   ws.on('close', function close() {
     console.log(`Client disconnected: ${socketId}`);
+    clients.delete(socketId);
     const result = roomManager.removePlayer(socketId);
     
     // Handle automatic host reassignment on disconnect

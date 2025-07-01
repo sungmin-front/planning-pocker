@@ -1,0 +1,33 @@
+{
+  "name": "@planning-poker/e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for Planning Poker application",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:room": "vitest run room-management.test.ts",
+    "test:voting": "vitest run story-voting.test.ts",
+    "test:browser": "vitest run browser-integration.test.ts",
+    "test:stress": "vitest run stress-testing.test.ts",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf coverage dist"
+  },
+  "dependencies": {
+    "ws": "^8.16.0",
+    "playwright": "^1.40.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/ws": "^8.5.10",
+    "vitest": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

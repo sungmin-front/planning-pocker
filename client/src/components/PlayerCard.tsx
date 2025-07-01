@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { HostBadge } from '@/components/PlayerTable/HostBadge';
 import { cn } from '@/lib/utils';
 
 interface PlayerCardProps {
@@ -116,7 +117,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
               <p className="text-sm font-medium truncate">{player.nickname}</p>
               
               {/* Badges */}
-              {player.isHost && <Badge variant="default">Host</Badge>}
+              {player.isHost && <HostBadge />}
               {player.isSpectator && <Badge variant="secondary">Spectator</Badge>}
             </div>
             
