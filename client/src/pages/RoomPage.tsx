@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 // import { VOTE_OPTIONS } from '@planning-poker/shared';
@@ -14,8 +16,10 @@ export const RoomPage: React.FC = () => {
   const navigate = useNavigate();
   
   const nickname = searchParams.get('nickname');
+  const [nicknameInput, setNicknameInput] = useState(nickname || '');
+  const [isJoining, setIsJoining] = useState(false);
   
-  const { room, currentPlayer, isHost, joinRoom, leaveRoom, vote, syncRoom } = useRoom();
+  const { room, currentPlayer, isHost, joinRoom, leaveRoom, vote, syncRoom, joinError, nicknameSuggestions, clearJoinError } = useRoom();
   const { isConnected } = useWebSocket();
 
   useEffect(() => {
@@ -24,17 +28,16 @@ export const RoomPage: React.FC = () => {
       return;
     }
 
-    // If user is already in a room (e.g., host who created room), don't redirect
+    // If user is already in a room (e.g., host who created room), don't attempt to join again
     if (room && currentPlayer) {
       return;
     }
 
+    // If we have both roomId and nickname from URL, attempt to join
     if (roomId && nickname) {
       joinRoom(roomId, nickname);
-    } else if (roomId && !nickname) {
-      // Redirect to join page if no nickname provided
-      navigate(`/join/${roomId}`);
     }
+    // If no nickname, the component will show the nickname input form
   }, [roomId, nickname, isConnected, room, currentPlayer, joinRoom, navigate]);
 
   const handleLeaveRoom = () => {
@@ -48,17 +51,112 @@ export const RoomPage: React.FC = () => {
     }
   };
 
-  if (!room) {
+  const handleJoinWithNickname = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!roomId || !nicknameInput.trim()) return;
+    
+    setIsJoining(true);
+    try {
+      await joinRoom(roomId, nicknameInput.trim());
+    } catch (error) {
+      console.error('Failed to join room:', error);
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setNicknameInput(suggestion);
+    clearJoinError();
+  };
+
+  // Show nickname input form if not connected to room yet
+  if (!room || !currentPlayer) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center">
-              <p>Connecting to room...</p>
-              <Button onClick={syncRoom} className="mt-4">
-                Retry Connection
-              </Button>
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-semibold leading-none tracking-tight">
+              Join Room {roomId}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleJoinWithNickname} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="nickname">Your Nickname</Label>
+                <Input
+                  id="nickname"
+                  type="text"
+                  value={nicknameInput}
+                  onChange={(e) => {
+                    setNicknameInput(e.target.value);
+                    if (joinError) clearJoinError();
+                  }}
+                  placeholder="Enter your nickname"
+                  disabled={!isConnected || isJoining}
+                  className={joinError?.includes('already taken') ? 'border-red-500' : ''}
+                  autoFocus
+                />
+              </div>
+
+              {/* Nickname conflict error and suggestions */}
+              {joinError?.includes('already taken') && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-sm text-yellow-800 mb-2">{joinError}</p>
+                  {nicknameSuggestions.length > 0 && (
+                    <div>
+                      <p className="text-sm text-yellow-700 mb-2">Try these suggestions:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {nicknameSuggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => handleSuggestionClick(suggestion)}
+                            className="px-2 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 rounded transition-colors"
+                            disabled={!isConnected || isJoining}
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Other join errors */}
+              {joinError && !joinError.includes('already taken') && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-600">{joinError}</p>
+                </div>
+              )}
+
+              {/* Connection Status */}
+              {!isConnected && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-sm text-yellow-600">Connect to server first</p>
+                </div>
+              )}
+
+              <div className="flex space-x-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate('/')}
+                  disabled={isJoining}
+                  className="flex-1"
+                >
+                  Back to Home
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!isConnected || !nicknameInput.trim() || isJoining}
+                  className="flex-1"
+                >
+                  {isJoining ? 'Joining...' : 'Join Room'}
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
       </div>

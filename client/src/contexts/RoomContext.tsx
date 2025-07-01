@@ -46,7 +46,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             setIsHost(message.payload.player.isHost);
           }
           // Navigate to the created room
-          navigate(`/room/${message.payload.room.id}`);
+          navigate(`/${message.payload.room.id}`);
           break;
           
         case 'room:joined':
@@ -65,15 +65,13 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           });
           
           // Navigate to the joined room
-          navigate(`/room/${message.payload.room.id}`);
+          navigate(`/${message.payload.room.id}`);
           break;
 
         case 'room:joinError':
           const { error, suggestions = [] } = message.payload;
-          console.log('Received room:joinError:', { error, suggestions });
           setJoinError(error);
           setNicknameSuggestions(suggestions);
-          console.log('Updated state - joinError:', error, 'nicknameSuggestions:', suggestions);
           
           // Don't show toast for nickname conflicts - let the component handle it
           if (!error.includes('already taken')) {

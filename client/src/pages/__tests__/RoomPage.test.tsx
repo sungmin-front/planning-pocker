@@ -106,7 +106,7 @@ describe('RoomPage Component', () => {
       expect(mockJoinRoom).toHaveBeenCalledWith('ABC123', 'TestUser');
     });
 
-    it('redirects to join page when roomId exists but nickname is missing', () => {
+    it('shows nickname input form when roomId exists but nickname is missing', () => {
       const mockSearchParams = new URLSearchParams();
       vi.mocked(useSearchParams).mockReturnValue([mockSearchParams, vi.fn()]);
 
@@ -116,7 +116,9 @@ describe('RoomPage Component', () => {
         </TestWrapper>
       );
 
-      expect(mockNavigate).toHaveBeenCalledWith('/join/ABC123');
+      expect(screen.getByText('Join Room ABC123')).toBeInTheDocument();
+      expect(screen.getByLabelText('Your Nickname')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Join Room' })).toBeInTheDocument();
     });
 
     it('redirects to home when not connected to WebSocket', () => {
@@ -188,7 +190,7 @@ describe('RoomPage Component', () => {
       expect(mockJoinRoom).not.toHaveBeenCalled();
     });
 
-    it('still redirects when no room or currentPlayer exists and no nickname provided', () => {
+    it('shows nickname input form when no room or currentPlayer exists and no nickname provided', () => {
       // Simulate fresh user with no room context and no nickname
       const mockSearchParams = new URLSearchParams(); // No nickname parameter
       vi.mocked(useSearchParams).mockReturnValue([mockSearchParams, vi.fn()]);
@@ -206,34 +208,43 @@ describe('RoomPage Component', () => {
         </TestWrapper>
       );
 
-      // SHOULD redirect to join page
-      expect(mockNavigate).toHaveBeenCalledWith('/join/ABC123');
+      // SHOULD show nickname input form instead of redirecting
+      expect(screen.getByText('Join Room ABC123')).toBeInTheDocument();
+      expect(screen.getByLabelText('Your Nickname')).toBeInTheDocument();
     });
   });
 
-  describe('Loading State', () => {
-    it('shows connecting message when room is not loaded', () => {
+  describe('Nickname Input Form', () => {
+    it('shows nickname input form when room is not loaded', () => {
+      const mockSearchParams = new URLSearchParams();
+      vi.mocked(useSearchParams).mockReturnValue([mockSearchParams, vi.fn()]);
+
       render(
         <TestWrapper>
           <RoomPage />
         </TestWrapper>
       );
 
-      expect(screen.getByText('Connecting to room...')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Retry Connection' })).toBeInTheDocument();
+      expect(screen.getByText('Join Room ABC123')).toBeInTheDocument();
+      expect(screen.getByLabelText('Your Nickname')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Join Room' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Back to Home' })).toBeInTheDocument();
     });
 
-    it('allows retrying connection', () => {
+    it('allows going back to home', () => {
+      const mockSearchParams = new URLSearchParams();
+      vi.mocked(useSearchParams).mockReturnValue([mockSearchParams, vi.fn()]);
+
       render(
         <TestWrapper>
           <RoomPage />
         </TestWrapper>
       );
 
-      const retryButton = screen.getByRole('button', { name: 'Retry Connection' });
-      fireEvent.click(retryButton);
+      const backButton = screen.getByRole('button', { name: 'Back to Home' });
+      fireEvent.click(backButton);
 
-      expect(mockSyncRoom).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith('/');
     });
   });
 
@@ -249,11 +260,12 @@ describe('RoomPage Component', () => {
       vi.mocked(useRoom).mockReturnValue({
         ...defaultUseRoom,
         room: mockRoom,
+        currentPlayer: createMockPlayer({ id: 'player', nickname: 'TestUser', isHost: false }),
         isHost: false
       });
     });
 
-    it('displays room information', () => {
+    it('displays room information when both room and currentPlayer exist', () => {
       render(
         <TestWrapper>
           <RoomPage />
@@ -265,9 +277,13 @@ describe('RoomPage Component', () => {
     });
 
     it('shows host badge for host user', () => {
+      const mockRoom = createMockRoom();
+      const mockCurrentPlayer = createMockPlayer({ isHost: true });
+      
       vi.mocked(useRoom).mockReturnValue({
         ...defaultUseRoom,
-        room: createMockRoom(),
+        room: mockRoom,
+        currentPlayer: mockCurrentPlayer,
         isHost: true
       });
 
@@ -300,9 +316,13 @@ describe('RoomPage Component', () => {
 
   describe('Story Display', () => {
     it('shows "No stories yet" when no stories exist', () => {
+      const mockRoom = createMockRoom();
+      const mockCurrentPlayer = createMockPlayer();
+      
       vi.mocked(useRoom).mockReturnValue({
         ...defaultUseRoom,
-        room: createMockRoom(),
+        room: mockRoom,
+        currentPlayer: mockCurrentPlayer,
         isHost: false
       });
 
@@ -327,10 +347,12 @@ describe('RoomPage Component', () => {
       const mockRoom = createMockRoom({
         stories: [story1, story2]
       });
+      const mockCurrentPlayer = createMockPlayer();
 
       vi.mocked(useRoom).mockReturnValue({
         ...defaultUseRoom,
         room: mockRoom,
+        currentPlayer: mockCurrentPlayer,
         isHost: false
       });
 
@@ -353,10 +375,12 @@ describe('RoomPage Component', () => {
         stories: [story],
         currentStoryId: story.id
       });
+      const mockCurrentPlayer = createMockPlayer();
 
       vi.mocked(useRoom).mockReturnValue({
         ...defaultUseRoom,
         room: mockRoom,
+        currentPlayer: mockCurrentPlayer,
         isHost: false
       });
 
@@ -378,10 +402,12 @@ describe('RoomPage Component', () => {
         stories: [story],
         currentStoryId: story.id
       });
+      const mockCurrentPlayer = createMockPlayer();
 
       vi.mocked(useRoom).mockReturnValue({
         ...defaultUseRoom,
         room: mockRoom,
+        currentPlayer: mockCurrentPlayer,
         isHost: false
       });
     });
@@ -420,10 +446,12 @@ describe('RoomPage Component', () => {
         stories: [createMockStory()],
         currentStoryId: null
       });
+      const mockCurrentPlayer = createMockPlayer();
 
       vi.mocked(useRoom).mockReturnValue({
         ...defaultUseRoom,
         room: mockRoom,
+        currentPlayer: mockCurrentPlayer,
         isHost: false
       });
 
@@ -442,9 +470,13 @@ describe('RoomPage Component', () => {
 
   describe('Navigation', () => {
     beforeEach(() => {
+      const mockRoom = createMockRoom();
+      const mockCurrentPlayer = createMockPlayer();
+      
       vi.mocked(useRoom).mockReturnValue({
         ...defaultUseRoom,
-        room: createMockRoom(),
+        room: mockRoom,
+        currentPlayer: mockCurrentPlayer,
         isHost: false
       });
     });
@@ -472,10 +504,12 @@ describe('RoomPage Component', () => {
           createMockPlayer({ nickname: 'Player2' })
         ]
       });
+      const mockCurrentPlayer = createMockPlayer();
 
       vi.mocked(useRoom).mockReturnValue({
         ...defaultUseRoom,
         room: mockRoom,
+        currentPlayer: mockCurrentPlayer,
         isHost: false
       });
 
@@ -500,10 +534,12 @@ describe('RoomPage Component', () => {
       const mockRoom = createMockRoom({
         stories: [storyWithDescription]
       });
+      const mockCurrentPlayer = createMockPlayer();
 
       vi.mocked(useRoom).mockReturnValue({
         ...defaultUseRoom,
         room: mockRoom,
+        currentPlayer: mockCurrentPlayer,
         isHost: false
       });
 
@@ -526,10 +562,12 @@ describe('RoomPage Component', () => {
       const mockRoom = createMockRoom({
         stories: [storyWithoutDescription]
       });
+      const mockCurrentPlayer = createMockPlayer();
 
       vi.mocked(useRoom).mockReturnValue({
         ...defaultUseRoom,
         room: mockRoom,
+        currentPlayer: mockCurrentPlayer,
         isHost: false
       });
 
