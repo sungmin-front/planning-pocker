@@ -101,15 +101,22 @@ wss.on('connection', function connection(ws) {
 
         case 'STORY_REVEAL_VOTES': {
           const { storyId } = message.payload;
+          console.log(`[WebSocket] STORY_REVEAL_VOTES received - socketId: ${socketId}, storyId: ${storyId}`);
+          
           const result = roomManager.revealVotes(socketId, storyId);
+          console.log(`[WebSocket] revealVotes result:`, result);
           
           if (result.success && result.story) {
             const roomId = roomManager.getUserRoom(socketId);
+            console.log(`[WebSocket] Broadcasting votes revealed to room: ${roomId}`);
+            
             if (roomId) {
               // Broadcast revealed votes to all clients in room
+              let broadcastCount = 0;
               wss.clients.forEach(client => {
                 const clientSocketId = getSocketId(client);
                 if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                  console.log(`[WebSocket] Sending story:votesRevealed to client ${clientSocketId}`);
                   client.send(JSON.stringify({
                     type: 'story:votesRevealed',
                     payload: {
@@ -117,11 +124,16 @@ wss.on('connection', function connection(ws) {
                       votes: result.story?.votes || {}
                     }
                   }));
+                  broadcastCount++;
                 }
               });
+              console.log(`[WebSocket] Broadcast completed to ${broadcastCount} clients`);
             }
+          } else {
+            console.log(`[WebSocket] revealVotes failed:`, result.error);
           }
           
+          console.log(`[WebSocket] Sending response back to requesting client`);
           ws.send(JSON.stringify({
             type: 'story:revealVotes:response',
             payload: result
@@ -384,130 +396,6 @@ wss.on('connection', function connection(ws) {
           break;
         }
 
-        case 'VOTE': {
-          const { storyId, vote } = message.payload;
-          const result = roomManager.vote(socketId, storyId, vote);
-          
-          if (result.success) {
-            const roomId = roomManager.getUserRoom(socketId);
-            if (roomId) {
-              const player = roomManager.getPlayer(socketId);
-              // Broadcast vote without revealing the value
-              wss.clients.forEach(client => {
-                const clientSocketId = getSocketId(client);
-                if (roomManager.getUserRoom(clientSocketId) === roomId) {
-                  client.send(JSON.stringify({
-                    type: 'player:voted',
-                    payload: {
-                      playerId: player?.id,
-                      storyId
-                    }
-                  }));
-                }
-              });
-            }
-          }
-          
-          ws.send(JSON.stringify({
-            type: 'vote:recorded',
-            payload: result
-          }));
-          break;
-        }
-
-        case 'REVEAL_VOTES': {
-          const { storyId } = message.payload;
-          const result = roomManager.revealVotes(socketId, storyId);
-          
-          if (result.success && result.story) {
-            const roomId = roomManager.getUserRoom(socketId);
-            if (roomId) {
-              // Broadcast revealed votes to all clients in room
-              wss.clients.forEach(client => {
-                const clientSocketId = getSocketId(client);
-                if (roomManager.getUserRoom(clientSocketId) === roomId) {
-                  client.send(JSON.stringify({
-                    type: 'votes:revealed',
-                    payload: {
-                      success: true,
-                      story: result.story
-                    }
-                  }));
-                }
-              });
-            }
-          } else {
-            ws.send(JSON.stringify({
-              type: 'votes:revealed',
-              payload: result
-            }));
-          }
-          break;
-        }
-
-        case 'NEW_STORY': {
-          const { title, description } = message.payload;
-          const roomId = roomManager.getUserRoom(socketId);
-          if (!roomId) {
-            ws.send(JSON.stringify({
-              type: 'story:created',
-              payload: { success: false, error: 'Not in a room' }
-            }));
-            break;
-          }
-          
-          const story = roomManager.addStory(roomId, title, description, socketId);
-          if (story) {
-            const roomState = roomManager.getRoomState(roomId);
-            
-            // Broadcast new story to all clients in room
-            wss.clients.forEach(client => {
-              const clientSocketId = getSocketId(client);
-              if (roomManager.getUserRoom(clientSocketId) === roomId) {
-                client.send(JSON.stringify({
-                  type: 'story:created',
-                  payload: { story, roomState }
-                }));
-              }
-            });
-          } else {
-            ws.send(JSON.stringify({
-              type: 'story:created',
-              payload: { success: false, error: 'Only the host can create stories' }
-            }));
-          }
-          break;
-        }
-
-        case 'RESET_VOTES': {
-          const { storyId } = message.payload;
-          const result = roomManager.restartVoting(socketId, storyId);
-          
-          if (result.success && result.story) {
-            const roomId = roomManager.getUserRoom(socketId);
-            if (roomId) {
-              // Broadcast voting restart to all clients in room
-              wss.clients.forEach(client => {
-                const clientSocketId = getSocketId(client);
-                if (roomManager.getUserRoom(clientSocketId) === roomId) {
-                  client.send(JSON.stringify({
-                    type: 'votes:restarted',
-                    payload: {
-                      success: true,
-                      story: result.story
-                    }
-                  }));
-                }
-              });
-            }
-          } else {
-            ws.send(JSON.stringify({
-              type: 'votes:restarted',
-              payload: result
-            }));
-          }
-          break;
-        }
 
         case 'STORY_SELECT': {
           const { storyId } = message.payload;
@@ -604,6 +492,91 @@ wss.on('connection', function connection(ws) {
           }));
           break;
         }
+
+        case 'HOST_DELEGATE': {
+          const { roomId, newHostId } = message.payload;
+          console.log(`Host delegation requested: ${socketId} -> ${newHostId} in room ${roomId}`);
+          
+          const result = roomManager.delegateHost(socketId, newHostId);
+          
+          if (result.success) {
+            // Broadcast host change to all clients in room
+            wss.clients.forEach(client => {
+              const clientSocketId = getSocketId(client);
+              if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                client.send(JSON.stringify({
+                  type: 'room:hostChanged',
+                  payload: {
+                    newHostId: newHostId,
+                    newHostNickname: result.newHost?.nickname,
+                    reason: 'delegated'
+                  }
+                }));
+              }
+            });
+
+            // Send updated room state
+            const roomState = roomManager.getRoomState(roomId);
+            if (roomState) {
+              wss.clients.forEach(client => {
+                const clientSocketId = getSocketId(client);
+                if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                  client.send(JSON.stringify({
+                    type: 'room:updated',
+                    payload: roomState
+                  }));
+                }
+              });
+            }
+          }
+
+          ws.send(JSON.stringify({
+            type: 'host:delegated',
+            payload: result
+          }));
+          break;
+        }
+
+        case 'PLAYER_KICK': {
+          const { roomId, playerId } = message.payload;
+          console.log(`Player kick requested: ${playerId} from room ${roomId} by ${socketId}`);
+          
+          const result = roomManager.kickPlayer(socketId, playerId);
+          
+          if (result.success) {
+            // Notify the kicked player first
+            wss.clients.forEach(client => {
+              const clientSocketId = getSocketId(client);
+              if (clientSocketId === playerId) {
+                client.send(JSON.stringify({
+                  type: 'player:kicked',
+                  payload: { reason: 'kicked_by_host' }
+                }));
+              }
+            });
+
+            // Update room state for remaining clients
+            const roomState = roomManager.getRoomState(roomId);
+            if (roomState) {
+              wss.clients.forEach(client => {
+                const clientSocketId = getSocketId(client);
+                if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                  client.send(JSON.stringify({
+                    type: 'room:updated',
+                    payload: roomState
+                  }));
+                }
+              });
+            }
+          }
+
+          ws.send(JSON.stringify({
+            type: 'player:kicked:response',
+            payload: result
+          }));
+          break;
+        }
+
         default:
           console.log('Unknown message type:', message.type);
       }

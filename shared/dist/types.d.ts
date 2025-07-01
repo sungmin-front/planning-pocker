@@ -23,7 +23,7 @@ export interface Room {
     createdAt: Date;
     currentStoryId?: string | null;
 }
-export type MessageType = 'ROOM_CREATE' | 'JOIN_ROOM' | 'LEAVE_ROOM' | 'VOTE' | 'REVEAL_VOTES' | 'NEW_STORY' | 'RESET_VOTES' | 'STORY_VOTE' | 'STORY_CREATE' | 'STORY_SELECT' | 'STORY_REVEAL_VOTES' | 'STORY_RESTART_VOTING' | 'STORY_SET_FINAL_POINT' | 'ROOM_TRANSFER_HOST' | 'ROOM_SYNC';
+export type MessageType = 'ROOM_CREATE' | 'JOIN_ROOM' | 'LEAVE_ROOM' | 'VOTE' | 'REVEAL_VOTES' | 'NEW_STORY' | 'RESET_VOTES' | 'STORY_VOTE' | 'STORY_CREATE' | 'STORY_SELECT' | 'STORY_REVEAL_VOTES' | 'STORY_RESTART_VOTING' | 'STORY_SET_FINAL_POINT' | 'ROOM_TRANSFER_HOST' | 'ROOM_SYNC' | 'HOST_DELEGATE' | 'PLAYER_KICK';
 export interface WebSocketMessage {
     type: MessageType;
     payload: any;
