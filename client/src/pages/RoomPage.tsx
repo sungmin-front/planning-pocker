@@ -23,22 +23,17 @@ export const RoomPage: React.FC = () => {
   const { isConnected } = useWebSocket();
 
   useEffect(() => {
-    if (!isConnected) {
-      navigate('/');
-      return;
-    }
-
     // If user is already in a room (e.g., host who created room), don't attempt to join again
     if (room && currentPlayer) {
       return;
     }
 
-    // If we have both roomId and nickname from URL, attempt to join
-    if (roomId && nickname) {
+    // Only attempt to join if connected
+    if (isConnected && roomId && nickname) {
       joinRoom(roomId, nickname);
     }
-    // If no nickname, the component will show the nickname input form
-  }, [roomId, nickname, isConnected, room, currentPlayer, joinRoom, navigate]);
+    // If no nickname or not connected yet, the component will show the appropriate UI
+  }, [roomId, nickname, isConnected, room, currentPlayer, joinRoom]);
 
   const handleLeaveRoom = () => {
     leaveRoom();
