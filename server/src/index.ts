@@ -32,27 +32,34 @@ wss.on('connection', function connection(ws) {
       // Handle different message types
       switch (message.type) {
         case 'STORY_VOTE': {
-          const { storyId, point } = message.payload;
-          const result = roomManager.vote(socketId, storyId, point);
+          const { storyId, vote, point } = message.payload;
+          const voteValue = vote || point; // Support both 'vote' and 'point' for compatibility
+          console.log(`Processing STORY_VOTE for story ${storyId}, vote: ${voteValue}`);
+          const result = roomManager.vote(socketId, storyId, voteValue);
+          console.log('Vote result:', result);
           
           if (result.success) {
             const roomId = roomManager.getUserRoom(socketId);
+            console.log(`Vote successful, broadcasting to room: ${roomId}`);
             if (roomId) {
               const player = roomManager.getPlayer(socketId);
-              // Broadcast vote without revealing the value
+              const roomState = roomManager.getRoomState(roomId);
+              console.log('RoomState after vote:', JSON.stringify(roomState, null, 2));
+              
+              // Broadcast updated room state to all clients
               wss.clients.forEach(client => {
                 const clientSocketId = getSocketId(client);
                 if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                  console.log(`Sending room:updated to client ${clientSocketId}`);
                   client.send(JSON.stringify({
-                    type: 'player:voted',
-                    payload: {
-                      playerId: player?.id,
-                      storyId
-                    }
+                    type: 'room:updated',
+                    payload: roomState
                   }));
                 }
               });
             }
+          } else {
+            console.log('Vote failed:', result.error);
           }
           
           ws.send(JSON.stringify({
@@ -306,8 +313,12 @@ wss.on('connection', function connection(ws) {
 
         case 'STORY_CREATE': {
           const { title, description } = message.payload;
+          console.log(`Processing STORY_CREATE for title: ${title}`);
           const roomId = roomManager.getUserRoom(socketId);
+          console.log(`Socket ${socketId} is in room: ${roomId}`);
+          
           if (!roomId) {
+            console.log('No room found for socket');
             ws.send(JSON.stringify({
               type: 'story:created',
               payload: { success: false, error: 'Not in a room' }
@@ -316,13 +327,17 @@ wss.on('connection', function connection(ws) {
           }
           
           const story = roomManager.addStory(roomId, title, description, socketId);
+          console.log('addStory result:', story);
+          
           if (story) {
             const roomState = roomManager.getRoomState(roomId);
+            console.log('Broadcasting story to room clients');
             
             // Broadcast new story to all clients in room
             wss.clients.forEach(client => {
               const clientSocketId = getSocketId(client);
               if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                console.log(`Sending story:created to client ${clientSocketId}`);
                 client.send(JSON.stringify({
                   type: 'story:created',
                   payload: { story, roomState }
@@ -330,6 +345,7 @@ wss.on('connection', function connection(ws) {
               }
             });
           } else {
+            console.log('Failed to create story - host check failed');
             ws.send(JSON.stringify({
               type: 'story:created',
               payload: { success: false, error: 'Only the host can create stories' }
@@ -457,6 +473,42 @@ wss.on('connection', function connection(ws) {
           } else {
             ws.send(JSON.stringify({
               type: 'votes:restarted',
+              payload: result
+            }));
+          }
+          break;
+        }
+
+        case 'STORY_SELECT': {
+          const { storyId } = message.payload;
+          const roomId = roomManager.getUserRoom(socketId);
+          if (!roomId) {
+            ws.send(JSON.stringify({
+              type: 'story:selected',
+              payload: { success: false, error: 'Not in a room' }
+            }));
+            break;
+          }
+          
+          const result = roomManager.selectStory(roomId, storyId, socketId);
+          if (result.success) {
+            // Broadcast story selection to all clients in room
+            wss.clients.forEach(client => {
+              const clientSocketId = getSocketId(client);
+              if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                client.send(JSON.stringify({
+                  type: 'story:selected',
+                  payload: { 
+                    success: true,
+                    storyId,
+                    roomState: roomManager.getRoomState(roomId)
+                  }
+                }));
+              }
+            });
+          } else {
+            ws.send(JSON.stringify({
+              type: 'story:selected',
               payload: result
             }));
           }

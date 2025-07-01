@@ -24,7 +24,8 @@ class RoomManager {
             players: [hostPlayer],
             stories: [],
             createdAt: new Date(),
-            socketIds: new Set([hostSocketId])
+            socketIds: new Set([hostSocketId]),
+            currentStoryId: undefined
         };
         this.rooms.set(roomId, room);
         this.socketUserMap[hostSocketId] = {
@@ -181,6 +182,25 @@ class RoomManager {
         };
         room.stories.push(story);
         return story;
+    }
+    selectStory(roomId, storyId, hostSocketId) {
+        const room = this.rooms.get(roomId);
+        if (!room) {
+            return { success: false, error: 'Room not found' };
+        }
+        // Check if the requester is the host
+        const player = room.players.find(p => p.socketId === hostSocketId);
+        if (!player?.isHost) {
+            return { success: false, error: 'Only the host can select stories for voting' };
+        }
+        const story = room.stories.find(s => s.id === storyId);
+        if (!story) {
+            return { success: false, error: 'Story not found' };
+        }
+        // Set the current story for voting
+        room.currentStoryId = storyId;
+        story.status = 'voting';
+        return { success: true };
     }
     vote(socketId, storyId, vote) {
         const userInfo = this.socketUserMap[socketId];

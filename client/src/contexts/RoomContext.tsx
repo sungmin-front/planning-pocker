@@ -130,6 +130,57 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           });
           break;
           
+        case 'story:created':
+          console.log('Received story:created message:', message.payload);
+          if (message.payload.story && message.payload.roomState) {
+            console.log('Processing story:created with roomState:', message.payload.roomState);
+            // Map roomState to Room format - handle case when room is null
+            const updatedRoom = {
+              id: message.payload.roomState.roomId || (room ? room.id : ''),
+              name: message.payload.roomState.name || (room ? room.name : ''),
+              stories: message.payload.roomState.stories || [],
+              players: message.payload.roomState.players || [],
+              createdAt: room ? room.createdAt : new Date(),
+              currentStoryId: message.payload.roomState.currentStoryId
+            };
+            console.log('Updated room:', updatedRoom);
+            setRoom(updatedRoom);
+            toast({
+              title: "Story Created",
+              description: `Story "${message.payload.story.title}" has been added`,
+            });
+          } else {
+            console.log('story:created message missing required fields:', {
+              story: !!message.payload.story,
+              roomState: !!message.payload.roomState,
+              room: !!room
+            });
+          }
+          break;
+          
+        case 'story:selected':
+          if (message.payload.success && message.payload.roomState) {
+            setRoom(message.payload.roomState);
+            toast({
+              title: "Story Selected",
+              description: "Voting has started for the selected story",
+            });
+          }
+          break;
+          
+        case 'room:updated':
+          if (message.payload && message.payload.roomId && room?.id === message.payload.roomId) {
+            // Update room state with the new data from server
+            const updatedRoom = {
+              ...room,
+              players: message.payload.players || room.players,
+              stories: message.payload.stories || room.stories,
+              currentStoryId: message.payload.currentStoryId
+            };
+            setRoom(updatedRoom);
+          }
+          break;
+          
         default:
           // Handle unknown message types gracefully
           break;

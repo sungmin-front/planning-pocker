@@ -20,6 +20,10 @@ export declare class RoomManager {
         newHost?: Player;
     };
     addStory(roomId: string, title: string, description?: string, hostSocketId?: string): Story | null;
+    selectStory(roomId: string, storyId: string, hostSocketId: string): {
+        success: boolean;
+        error?: string;
+    };
     vote(socketId: string, storyId: string, vote: VoteValue): {
         success: boolean;
         error?: string;
