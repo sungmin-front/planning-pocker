@@ -41,8 +41,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     if (showVote && vote) {
       // Show the actual vote
       return (
-        <div className="w-20 h-28 bg-white rounded-lg shadow-md border-2 border-blue-500 flex items-center justify-center">
-          <span className="text-2xl font-bold text-blue-600">{vote}</span>
+        <div className="w-12 h-16 bg-white rounded shadow border border-gray-300 flex items-center justify-center">
+          <span className="text-lg font-bold text-gray-800">{vote}</span>
         </div>
       );
     }
@@ -50,20 +50,18 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     if (hasVoted === true) {
       // Show face-down card (voted but not revealed)
       return (
-        <div className="w-20 h-28 bg-gray-100 rounded-lg shadow-md border border-gray-300 flex items-center justify-center">
-          <div className="w-16 h-24 bg-gray-200 rounded border-2 border-gray-300 flex items-center justify-center">
-            <div className="w-8 h-8 bg-gray-300 rounded"></div>
+        <div className="w-12 h-16 bg-gray-400 rounded shadow border border-gray-500 flex items-center justify-center">
+          <div className="w-8 h-12 bg-gray-500 rounded border border-gray-600 flex items-center justify-center">
+            <div className="w-4 h-4 bg-gray-600 rounded"></div>
           </div>
         </div>
       );
     }
     
-    // No vote - show empty space or placeholder
+    // No vote - show empty placeholder
     return (
-      <div className="w-20 h-28 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-        <div className="text-gray-400 text-xs text-center">
-          {hasVoted === false ? 'Waiting...' : ''}
-        </div>
+      <div className="w-12 h-16 border border-dashed border-gray-300 rounded flex items-center justify-center">
+        <div className="text-gray-300 text-xs">?</div>
       </div>
     );
   };
@@ -72,8 +70,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     <div
       data-testid="player-card"
       className={cn(
-        "flex flex-col items-center space-y-3 transition-all duration-200",
-        isCurrentPlayer && "scale-110",
+        "flex flex-col items-center space-y-2 transition-all duration-200",
+        isCurrentPlayer && "scale-105",
         isClickable && "cursor-pointer hover:scale-105",
         !isConnected && "opacity-60"
       )}
@@ -81,7 +79,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     >
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg z-10">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
         </div>
       )}
       
@@ -93,35 +91,16 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
       {/* Player Name */}
       <div className="text-center">
         <div className={cn(
-          "text-sm font-medium px-3 py-1 rounded-full",
+          "text-xs font-medium px-2 py-1 rounded",
           isCurrentPlayer 
-            ? "bg-blue-100 text-blue-800" 
+            ? "bg-blue-500 text-white" 
             : player.isHost 
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-gray-100 text-gray-700"
+              ? "bg-yellow-500 text-white"
+              : "bg-gray-600 text-white"
         )}>
           {player.nickname}
         </div>
-        
-        {/* Host indicator */}
-        {player.isHost && (
-          <div className="text-xs text-yellow-600 mt-1">Host</div>
-        )}
-        
-        {/* Spectator indicator */}
-        {player.isSpectator && (
-          <div className="text-xs text-purple-600 mt-1">Spectator</div>
-        )}
       </div>
-
-      {/* Connection status indicator */}
-      <div
-        data-testid="connection-status"
-        className={cn(
-          "w-2 h-2 rounded-full",
-          isConnected ? "bg-green-500" : "bg-red-500"
-        )}
-      />
     </div>
   );
 };
