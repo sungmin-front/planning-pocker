@@ -3,6 +3,7 @@ import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { PlayerCard } from '@/components/PlayerCard';
 import { cn } from '@/lib/utils';
 import { Player, Story } from '@/types';
+import { Users } from 'lucide-react';
 
 interface ResponsivePlayerLayoutProps {
   players: Player[];
@@ -15,15 +16,17 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
   currentStory,
   currentPlayerId,
 }) => {
-  const { isMobile, isTablet, currentBreakpoint } = useBreakpoint();
+  const { isMobile, isTablet } = useBreakpoint();
 
   if (players.length === 0) {
     return (
       <div 
         data-testid="responsive-player-layout"
-        className="flex items-center justify-center p-8 text-gray-500"
+        className="flex flex-col items-center justify-center p-12 text-gray-500 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100"
       >
-        <p>No players in room</p>
+        <Users className="w-12 h-12 text-gray-400 mb-4" />
+        <p className="text-lg font-medium text-gray-600">No players in room</p>
+        <p className="text-sm text-gray-400 mt-2">Waiting for players to join...</p>
       </div>
     );
   }
@@ -45,185 +48,59 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
     };
   };
 
-  // Mobile List Layout
-  const renderMobileLayout = () => (
-    <div 
-      data-testid="list-layout"
-      className="space-y-2 max-h-96 overflow-y-auto"
-    >
-      {players.map((player) => {
-        const voteStatus = getPlayerVoteStatus(player);
-        const isCurrentPlayer = player.id === currentPlayerId;
-        
-        return (
-          <div
-            key={player.id}
-            data-testid={`player-card-${player.id}`}
-            className={cn(
-              'flex items-center justify-between p-3 rounded-lg border bg-white transition-all',
-              isCurrentPlayer && 'ring-2 ring-primary bg-primary/5'
-            )}
-          >
-            <div className="flex items-center space-x-3">
-              <div className={cn(
-                'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold',
-                player.isHost ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700'
-              )}>
-                {player.nickname.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <div className="font-medium text-sm">{player.nickname}</div>
-                {player.isHost && (
-                  <div className="text-xs text-yellow-600">Host</div>
-                )}
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              {voteStatus?.showVote && voteStatus.vote ? (
-                <div className="w-6 h-6 rounded flex items-center justify-center bg-primary text-primary-foreground text-xs font-bold">
-                  {voteStatus.vote}
-                </div>
-              ) : (
-                <div className={cn(
-                  'px-2 py-1 rounded-full text-xs font-medium',
-                  voteStatus?.hasVoted 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-600'
-                )}>
-                  {voteStatus?.hasVoted ? 'Voted' : 'Not Voted'}
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
+  // Get optimal grid columns based on player count and screen size
+  const getGridColumns = () => {
+    if (isMobile) {
+      return players.length === 1 ? 1 : 2;
+    }
+    if (isTablet) {
+      if (players.length <= 2) return 2;
+      if (players.length <= 6) return 3;
+      return 4;
+    }
+    // Desktop
+    if (players.length <= 3) return 3;
+    if (players.length <= 8) return 4;
+    if (players.length <= 15) return 5;
+    return 6;
+  };
 
-  // Tablet Grid Layout
-  const renderTabletLayout = () => {
-    // Optimize columns based on player count
-    const getGridCols = () => {
-      if (players.length <= 4) return 'grid-cols-2';
-      if (players.length <= 9) return 'grid-cols-3';
-      return 'grid-cols-4';
-    };
+  const gridCols = getGridColumns();
 
+  const renderPlayerGrid = () => {
+    const gridColsClass = `grid-cols-${gridCols}`;
+    
     return (
       <div 
-        data-testid="grid-layout"
-        className={cn('grid gap-3', getGridCols())}
+        data-testid="player-grid"
+        className={cn(
+          'grid gap-4 justify-items-center',
+          gridColsClass,
+          isMobile && 'gap-3',
+          isTablet && 'gap-4',
+          !isMobile && !isTablet && 'gap-6'
+        )}
+        style={{
+          gridTemplateColumns: `repeat(${gridCols}, 1fr)`
+        }}
       >
         {players.map((player) => {
           const voteStatus = getPlayerVoteStatus(player);
-          const isCurrentPlayer = player.id === currentPlayerId;
           
           return (
             <div
               key={player.id}
               data-testid={`player-card-${player.id}`}
-              className={cn(
-                'p-3 rounded-lg border bg-white text-center transition-all',
-                isCurrentPlayer && 'ring-2 ring-primary bg-primary/5'
-              )}
+              className="w-full max-w-xs"
             >
-              <div className={cn(
-                'w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-2',
-                player.isHost ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700'
-              )}>
-                {player.nickname.charAt(0).toUpperCase()}
-              </div>
-              
-              <div className="font-medium text-sm mb-1">{player.nickname}</div>
-              
-              {player.isHost && (
-                <div className="text-xs text-yellow-600 mb-2">Host</div>
-              )}
-              
-              {voteStatus?.showVote && voteStatus.vote ? (
-                <div className="w-8 h-8 rounded flex items-center justify-center bg-primary text-primary-foreground text-sm font-bold mx-auto">
-                  {voteStatus.vote}
-                </div>
-              ) : (
-                <div className={cn(
-                  'px-2 py-1 rounded-full text-xs font-medium inline-block',
-                  voteStatus?.hasVoted 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-600'
-                )}>
-                  {voteStatus?.hasVoted ? 'Voted' : 'Not Voted'}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  // Desktop Circular Layout
-  const renderCircularLayout = () => {
-    const centerX = 200;
-    const centerY = 200;
-    const radius = Math.min(150, Math.max(100, players.length * 15 + 80));
-
-    return (
-      <div 
-        data-testid="circular-layout"
-        className="relative"
-        style={{ width: '400px', height: '400px' }}
-      >
-        {players.map((player, index) => {
-          const voteStatus = getPlayerVoteStatus(player);
-          const isCurrentPlayer = player.id === currentPlayerId;
-          
-          const angle = (index / players.length) * 2 * Math.PI;
-          const x = centerX + radius * Math.cos(angle - Math.PI / 2);
-          const y = centerY + radius * Math.sin(angle - Math.PI / 2);
-
-          return (
-            <div
-              key={player.id}
-              data-testid={`player-card-${player.id}`}
-              className={cn(
-                'absolute p-4 rounded-lg border bg-white text-center transition-all transform -translate-x-1/2 -translate-y-1/2',
-                isCurrentPlayer && 'ring-2 ring-primary bg-primary/5',
-                'hover:shadow-lg hover:scale-105'
-              )}
-              style={{ 
-                left: `${x}px`, 
-                top: `${y}px`,
-                minWidth: '120px'
-              }}
-            >
-              <div className={cn(
-                'w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-2',
-                player.isHost ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700'
-              )}>
-                {player.nickname.charAt(0).toUpperCase()}
-              </div>
-              
-              <div className="font-medium text-sm mb-1">{player.nickname}</div>
-              
-              {player.isHost && (
-                <div className="text-xs text-yellow-600 mb-2">Host</div>
-              )}
-              
-              {voteStatus?.showVote && voteStatus.vote ? (
-                <div className="w-8 h-8 rounded flex items-center justify-center bg-primary text-primary-foreground text-sm font-bold mx-auto">
-                  {voteStatus.vote}
-                </div>
-              ) : (
-                <div className={cn(
-                  'px-2 py-1 rounded-full text-xs font-medium inline-block',
-                  voteStatus?.hasVoted 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-600'
-                )}>
-                  {voteStatus?.hasVoted ? 'Voted' : 'Not Voted'}
-                </div>
-              )}
+              <PlayerCard
+                player={player}
+                vote={voteStatus?.vote ? String(voteStatus.vote) : undefined}
+                hasVoted={voteStatus?.hasVoted}
+                showVote={voteStatus?.showVote}
+                showActions={false}
+                isConnected={true}
+              />
             </div>
           );
         })}
@@ -237,22 +114,43 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
       className="w-full"
       aria-label={`${players.length} players in room`}
     >
-      <div className={cn(
-        'bg-gray-50 rounded-lg',
-        isMobile ? 'p-4' : isTablet ? 'p-5' : 'p-6'
-      )}>
-        <div className={cn(
-          'mb-4',
-          isMobile ? 'text-lg' : 'text-xl',
-          'font-semibold text-gray-900'
-        )}>
-          Players ({players.length})
+      <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 rounded-2xl border border-blue-100/50 backdrop-blur-sm p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Users className="w-4 h-4 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Players
+              </h2>
+              <p className="text-sm text-gray-500">
+                {players.length} {players.length === 1 ? 'player' : 'players'} in room
+              </p>
+            </div>
+          </div>
+          
+          {/* Vote summary */}
+          {currentStory && (
+            <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                <span className="text-gray-600">
+                  {Object.keys(currentStory.votes).length} voted
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                <span className="text-gray-600">
+                  {players.filter(p => !p.isSpectator).length - Object.keys(currentStory.votes).length} pending
+                </span>
+              </div>
+            </div>
+          )}
         </div>
         
-        <div className="flex justify-center">
-          {isMobile && renderMobileLayout()}
-          {isTablet && renderTabletLayout()}
-          {!isMobile && !isTablet && renderCircularLayout()}
+        <div className="w-full">
+          {renderPlayerGrid()}
         </div>
       </div>
     </div>
