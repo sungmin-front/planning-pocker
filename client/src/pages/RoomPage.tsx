@@ -195,7 +195,7 @@ export const RoomPage: React.FC = () => {
         </div>
 
         {/* Current Story */}
-        {currentStory && <CurrentStory story={currentStory} />}
+        {currentStory && <CurrentStory />}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Players */}
