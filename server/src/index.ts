@@ -3,14 +3,44 @@ import { v4 as uuidv4 } from 'uuid';
 import { WebSocketMessage, VoteValue } from '@planning-poker/shared';
 import { generateRoomId, releaseRoomId } from './utils';
 import { RoomManager } from './roomManager';
+import express from 'express';
+import cors from 'cors';
+import { createServer } from 'http';
+import { jiraRouter } from './routes/jiraRoutes';
+import * as dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 8080;
-const wss = new WebSocketServer({ port });
+
+// Create Express app and HTTP server
+const app = express();
+const server = createServer(app);
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Routes
+app.use('/api/jira', jiraRouter);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', service: 'Planning Poker Server' });
+});
+
+// Create WebSocket server using the HTTP server
+const wss = new WebSocketServer({ server });
 const roomManager = new RoomManager();
 const clients = new Map<string, WebSocket>();
 
-console.log(`Planning Poker WebSocket server running on port ${port}`);
-console.log(`WebSocket server listening on port ${port}`);
+// Start the combined server
+server.listen(port, () => {
+  console.log(`Planning Poker server running on port ${port}`);
+  console.log(`WebSocket server listening on port ${port}`);
+  console.log(`REST API available at http://localhost:${port}/api`);
+});
 
 // Helper function to get socket ID
 function getSocketId(ws: WebSocket): string {

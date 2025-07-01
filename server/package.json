@@ -15,12 +15,18 @@
   "dependencies": {
     "@planning-poker/shared": "workspace:*",
     "ws": "^8.13.0",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.0",
+    "express": "^4.18.0",
+    "cors": "^2.8.5"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/ws": "^8.5.0",
     "@types/uuid": "^9.0.0",
+    "@types/express": "^4.17.0",
+    "@types/cors": "^2.8.0",
     "@types/jest": "^29.5.0",
     "jest": "^29.5.0",
     "ts-jest": "^29.1.0",
