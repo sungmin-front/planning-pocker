@@ -159,8 +159,17 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           break;
           
         case 'story:selected':
-          if (message.payload.success && message.payload.roomState) {
-            setRoom(message.payload.roomState);
+          if (message.payload.success && message.payload.roomState && room) {
+            // Map roomState format to Room format
+            const updatedRoom = {
+              ...room,
+              id: message.payload.roomState.roomId || room.id,
+              name: message.payload.roomState.name || room.name,
+              stories: message.payload.roomState.stories || room.stories,
+              players: message.payload.roomState.players || room.players,
+              currentStoryId: message.payload.roomState.currentStoryId
+            };
+            setRoom(updatedRoom);
             toast({
               title: "Story Selected",
               description: "Voting has started for the selected story",
@@ -169,15 +178,24 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           break;
           
         case 'room:updated':
-          if (message.payload && message.payload.roomId && room?.id === message.payload.roomId) {
+          console.log('Received room:updated message:', message.payload);
+          console.log('Current room ID:', room?.id);
+          console.log('Payload room ID:', message.payload?.roomId);
+          if (message.payload && message.payload.roomId && room && room.id === message.payload.roomId) {
+            console.log('Processing room:updated with matching room ID');
             // Update room state with the new data from server
             const updatedRoom = {
               ...room,
+              id: message.payload.roomId || room.id,
+              name: message.payload.name || room.name,
               players: message.payload.players || room.players,
               stories: message.payload.stories || room.stories,
               currentStoryId: message.payload.currentStoryId
             };
+            console.log('Updated room with vote data:', updatedRoom);
             setRoom(updatedRoom);
+          } else {
+            console.log('room:updated message not processed - room ID mismatch or missing data');
           }
           break;
           
