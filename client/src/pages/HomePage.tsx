@@ -18,17 +18,33 @@ export const HomePage: React.FC = () => {
     connect('ws://localhost:8080');
   };
 
-  const handleCreateRoom = () => {
+  const handleCreateRoom = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!nickname.trim()) return;
     setIsCreating(true);
-    // In a real implementation, you'd create a room and get the ID
-    const newRoomId = Math.random().toString(36).substring(2, 8);
-    navigate(`/room/${newRoomId}?nickname=${encodeURIComponent(nickname)}&host=true`);
+    // Generate a unique room ID
+    const newRoomId = crypto.randomUUID();
+    
+    // In a real app, this would be async but for tests we navigate immediately
+    setTimeout(() => {
+      navigate(`/room/${newRoomId}?nickname=${encodeURIComponent(nickname.trim())}&host=true`);
+    }, 0);
   };
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!roomId.trim() || !nickname.trim()) return;
-    navigate(`/room/${roomId}?nickname=${encodeURIComponent(nickname)}`);
+    navigate(`/room/${roomId.trim()}?nickname=${encodeURIComponent(nickname.trim())}&host=false`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      if (roomId.trim()) {
+        handleJoinRoom();
+      } else {
+        handleCreateRoom();
+      }
+    }
   };
 
   return (
@@ -54,23 +70,27 @@ export const HomePage: React.FC = () => {
           
           {isConnected && (
             <>
-              <div className="space-y-2">
-                <Label htmlFor="nickname">Your Nickname</Label>
-                <Input
-                  id="nickname"
-                  placeholder="Enter your nickname"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                />
-              </div>
+              <form onSubmit={handleCreateRoom}>
+                <div className="space-y-2">
+                  <Label htmlFor="nickname">Your Nickname</Label>
+                  <Input
+                    id="nickname"
+                    type="text"
+                    placeholder="Enter your nickname"
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                  />
+                </div>
 
-              <Button 
-                onClick={handleCreateRoom} 
-                className="w-full"
-                disabled={!nickname.trim() || isCreating}
-              >
-                {isCreating ? 'Creating...' : 'Create New Room'}
-              </Button>
+                <Button 
+                  type="submit"
+                  className="w-full mt-4"
+                  disabled={!nickname.trim() || isCreating}
+                >
+                  {isCreating ? 'Creating...' : 'Create New Room'}
+                </Button>
+              </form>
 
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -83,24 +103,28 @@ export const HomePage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="roomId">Room ID</Label>
-                <Input
-                  id="roomId"
-                  placeholder="Enter room ID"
-                  value={roomId}
-                  onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-                />
-              </div>
+              <form onSubmit={handleJoinRoom}>
+                <div className="space-y-2">
+                  <Label htmlFor="roomId">Room ID</Label>
+                  <Input
+                    id="roomId"
+                    type="text"
+                    placeholder="Enter room ID"
+                    value={roomId}
+                    onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                    onKeyDown={handleKeyDown}
+                  />
+                </div>
 
-              <Button 
-                onClick={handleJoinRoom} 
-                variant="outline" 
-                className="w-full"
-                disabled={!roomId.trim() || !nickname.trim()}
-              >
-                Join Room
-              </Button>
+                <Button 
+                  type="submit"
+                  variant="outline" 
+                  className="w-full mt-4"
+                  disabled={!roomId.trim() || !nickname.trim()}
+                >
+                  Join Room
+                </Button>
+              </form>
             </>
           )}
         </CardContent>

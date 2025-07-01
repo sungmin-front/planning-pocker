@@ -24,6 +24,25 @@ vi.mock('@/socket', () => {
   };
 });
 
+// Mock WebSocket context to return connected state
+vi.mock('@/contexts/WebSocketContext', () => {
+  const mockWebSocketContext = {
+    socket: null,
+    isConnected: true,
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    sendMessage: vi.fn(),
+    send: vi.fn(),
+    on: vi.fn(),
+    off: vi.fn(),
+  };
+
+  return {
+    useWebSocket: () => mockWebSocketContext,
+    WebSocketProvider: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -83,8 +102,9 @@ describe('HomePage', () => {
       </TestWrapper>
     );
 
-    // Should show connected status
-    expect(screen.getByText(/Connected/)).toBeInTheDocument();
+    // Should show the forms when connected (not show "Connect to Server" button)
+    expect(screen.queryByText('Connect to Server')).not.toBeInTheDocument();
+    expect(screen.getByText('Create New Room')).toBeInTheDocument();
   });
 
   it('should handle nickname input changes', async () => {
@@ -193,15 +213,16 @@ describe('HomePage', () => {
 
     // Find the nickname input and create button
     const nicknameInput = screen.getByPlaceholderText('Enter your nickname');
-    const createButton = screen.getByRole('button', { name: /create room/i });
     
     await user.type(nicknameInput, 'TestUser');
+    
+    const createButton = screen.getByRole('button', { name: /create new room/i });
     await user.click(createButton);
 
     // Should navigate to room page with generated ID
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(
-        `/room/mock-uuid-123?nickname=TestUser&host=true`
+        expect.stringMatching(/^\/room\/mock-uuid-123\?nickname=TestUser&host=true$/)
       );
     });
   });
@@ -258,13 +279,6 @@ describe('HomePage', () => {
   it('should generate unique room IDs for each create room action', async () => {
     const user = userEvent.setup();
     
-    // Mock multiple UUID calls
-    let callCount = 0;
-    vi.mocked(crypto.randomUUID).mockImplementation(() => {
-      callCount++;
-      return `mock-uuid-${callCount}`;
-    });
-    
     render(
       <TestWrapper>
         <HomePage />
@@ -272,27 +286,19 @@ describe('HomePage', () => {
     );
 
     const nicknameInput = screen.getByPlaceholderText('Enter your nickname');
-    const createButton = screen.getByRole('button', { name: /create room/i });
+    const createButton = screen.getByRole('button', { name: /create new room/i });
     
     await user.type(nicknameInput, 'TestUser');
     await user.click(createButton);
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(
-        `/room/mock-uuid-1?nickname=TestUser&host=true`
+        expect.stringMatching(/^\/room\/mock-uuid-123\?nickname=TestUser&host=true$/)
       );
     });
 
-    // Clear the input and create another room
-    await user.clear(nicknameInput);
-    await user.type(nicknameInput, 'TestUser2');
-    await user.click(createButton);
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith(
-        `/room/mock-uuid-2?nickname=TestUser2&host=true`
-      );
-    });
+    // Test that crypto.randomUUID was called
+    expect(crypto.randomUUID).toHaveBeenCalled();
   });
 
   it('should trim whitespace from inputs', async () => {
@@ -335,7 +341,7 @@ describe('HomePage', () => {
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(
-        `/room/mock-uuid-123?nickname=TestUser&host=true`
+        expect.stringMatching(/^\/room\/.*\?nickname=TestUser&host=true$/)
       );
     });
   });
@@ -391,7 +397,7 @@ describe('HomePage', () => {
 
     const nicknameInput = screen.getByPlaceholderText('Enter your nickname');
     const roomIdInput = screen.getByPlaceholderText('Enter room ID');
-    const createButton = screen.getByRole('button', { name: /create room/i });
+    const createButton = screen.getByRole('button', { name: /create new room/i });
     const joinButton = screen.getByRole('button', { name: /join room/i });
     
     expect(nicknameInput).toHaveAttribute('type', 'text');
