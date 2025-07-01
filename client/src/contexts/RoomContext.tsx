@@ -47,6 +47,28 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           setIsHost(false);
           break;
           
+        case 'room:hostChanged':
+          const { newHostId, newHostNickname, oldHostId, oldHostNickname, reason } = message.payload;
+          
+          // Update isHost state if current player is involved
+          // Use callback form to get the current player state
+          setCurrentPlayer(currentPlayerState => {
+            if (currentPlayerState?.id === newHostId) {
+              setIsHost(true);
+            } else if (currentPlayerState?.id === oldHostId) {
+              setIsHost(false);
+            }
+            return currentPlayerState; // Don't change the player state
+          });
+          
+          // Show notification
+          const reasonText = reason === 'host_disconnected' ? ' (previous host disconnected)' : '';
+          toast({
+            title: "Host Changed",
+            description: `${newHostNickname} is now the host${reasonText}`,
+          });
+          break;
+          
         default:
           // Handle unknown message types gracefully
           break;
@@ -55,7 +77,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
 
     on('message', handleMessage);
     return () => off('message', handleMessage);
-  }, [on, off]);
+  }, [on, off, toast]);
 
   const joinRoom = async (roomId: string, nickname: string): Promise<boolean> => {
     if (!isConnected) {
