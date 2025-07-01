@@ -4,11 +4,13 @@ export declare class RoomManager {
     private rooms;
     private socketUserMap;
     createRoom(hostNickname: string, hostSocketId: string): ServerRoom;
-    joinRoom(roomId: string, nickname: string, socketId: string): {
+    joinRoom(roomId: string, nickname: string, socketId: string, isSpectator?: boolean): {
         success: boolean;
         room?: ServerRoom;
         error?: string;
+        suggestions?: string[];
     };
+    private generateNicknameSuggestions;
     getUserRoom(socketId: string): string | undefined;
     getRoom(roomId: string): ServerRoom | undefined;
     getPlayer(socketId: string): Player | undefined;
@@ -17,7 +19,7 @@ export declare class RoomManager {
         hostChanged?: boolean;
         newHost?: Player;
     };
-    addStory(roomId: string, title: string, description?: string): Story | null;
+    addStory(roomId: string, title: string, description?: string, hostSocketId?: string): Story | null;
     vote(socketId: string, storyId: string, vote: VoteValue): {
         success: boolean;
         error?: string;
@@ -42,6 +44,7 @@ export declare class RoomManager {
         error?: string;
         newHost?: Player;
         oldHost?: Player;
+        roomId?: string;
     };
     syncRoom(socketId: string): {
         success: boolean;
@@ -57,9 +60,9 @@ export declare class RoomManager {
             nickname: string;
             isHost: boolean;
             isSpectator: boolean;
-            hasVoted: boolean | "" | undefined;
+            hasVoted: boolean | "" | null | undefined;
         }[];
         stories: Story[];
-        currentStoryId: string | undefined;
+        currentStoryId: string | null | undefined;
     } | null;
 }
