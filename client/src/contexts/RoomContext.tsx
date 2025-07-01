@@ -386,7 +386,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     if (!room) return;
     
     send({
-      type: 'NEW_STORY',
+      type: 'STORY_CREATE',
       payload: { title, description }
     });
   };
