@@ -2,21 +2,28 @@ import React from 'react';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 
-export const StoryList: React.FC = () => {
+interface StoryListProps {
+  stories: any[];
+}
+
+export const StoryList: React.FC<StoryListProps> = ({ stories }) => {
   const { room, isHost } = useRoom();
-  const { socket } = useWebSocket();
+  const { send } = useWebSocket();
 
   // Early return if no room
   if (!room) {
     return null;
   }
 
-  const { stories, currentStoryId } = room;
+  const { currentStoryId } = room;
 
   const handleSelectStory = (storyId: string) => {
-    if (!isHost || !socket) return; // Only host can select stories
+    if (!isHost) return; // Only host can select stories
     
-    socket.emit('story:select', { storyId });
+    send({
+      type: 'STORY_SELECT',
+      payload: { storyId }
+    });
   };
 
   if (stories.length === 0) {

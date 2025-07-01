@@ -14,6 +14,7 @@ import { StoryList } from '@/components/StoryList';
 import { VotingResults } from '@/components/VotingResults';
 import { HostDelegation } from '@/components/HostDelegation';
 import { AddStoryModal } from '@/components/HostControls/AddStoryModal';
+import { JiraIntegrationModal } from '@/components/HostControls/JiraIntegrationModal';
 import { SyncButton } from '@/components/SyncButton';
 import { LayoutToggle } from '@/components/LayoutToggle';
 // import { VOTE_OPTIONS } from '@planning-poker/shared';
@@ -28,6 +29,7 @@ export const RoomPage: React.FC = () => {
   const [nicknameInput, setNicknameInput] = useState(nickname || '');
   const [isJoining, setIsJoining] = useState(false);
   const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
+  const [isJiraModalOpen, setIsJiraModalOpen] = useState(false);
   
   const { room, currentPlayer, isHost, joinRoom, leaveRoom, vote, syncRoom, joinError, nicknameSuggestions, clearJoinError } = useRoom();
   const { isConnected, send } = useWebSocket();
@@ -224,6 +226,13 @@ export const RoomPage: React.FC = () => {
                     >
                       + Add Story
                     </Button>
+                    <Button 
+                      onClick={() => setIsJiraModalOpen(true)}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      📋 Import from Jira
+                    </Button>
                     {room.stories.length > 0 && (
                       <Button 
                         onClick={() => {
@@ -257,6 +266,17 @@ export const RoomPage: React.FC = () => {
       <AddStoryModal 
         isOpen={isAddStoryModalOpen} 
         onClose={() => setIsAddStoryModalOpen(false)} 
+      />
+      
+      {/* Jira Integration Modal */}
+      <JiraIntegrationModal
+        isOpen={isJiraModalOpen}
+        onClose={() => setIsJiraModalOpen(false)}
+        roomId={room.id}
+        onStoriesImported={() => {
+          // Refresh room state after importing stories
+          syncRoom();
+        }}
       />
     </div>
   );

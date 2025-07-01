@@ -1,0 +1,41 @@
+import React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { JiraIntegration } from './JiraIntegration';
+
+interface JiraIntegrationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  roomId: string;
+  onStoriesImported: () => void;
+}
+
+export const JiraIntegrationModal: React.FC<JiraIntegrationModalProps> = ({
+  isOpen,
+  onClose,
+  roomId,
+  onStoriesImported
+}) => {
+  const handleStoriesImported = () => {
+    onStoriesImported();
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Jira 연동</DialogTitle>
+        </DialogHeader>
+        <JiraIntegration
+          roomId={roomId}
+          onStoriesImported={handleStoriesImported}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+};

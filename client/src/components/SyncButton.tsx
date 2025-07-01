@@ -4,25 +4,21 @@ import { useWebSocket } from '@/contexts/WebSocketContext';
 
 export const SyncButton: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
-  const { socket } = useWebSocket();
+  const { send } = useWebSocket();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const handleSync = () => {
-    if (!socket || isSyncing) return;
+    if (isSyncing) return;
     
     setIsSyncing(true);
     
     try {
-      socket.emit('room:sync', {}, () => {
-        // Callback when sync is complete
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
-        }
-        setIsSyncing(false);
+      send({
+        type: 'ROOM_SYNC',
+        payload: {}
       });
       
-      // Fallback in case callback doesn't fire
+      // Fallback to reset syncing state
       timeoutRef.current = setTimeout(() => {
         setIsSyncing(false);
         timeoutRef.current = null;
