@@ -111,15 +111,34 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
         case 'room:hostChanged':
           const { newHostId, newHostNickname, oldHostId, oldHostNickname, reason } = message.payload;
           
+          // Update room state to reflect host changes
+          if (room) {
+            const updatedPlayers = room.players.map(player => {
+              if (player.id === newHostId) {
+                return { ...player, isHost: true };
+              } else if (player.id === oldHostId) {
+                return { ...player, isHost: false };
+              }
+              return player;
+            });
+            
+            const updatedRoom = {
+              ...room,
+              players: updatedPlayers
+            };
+            setRoom(updatedRoom);
+          }
+          
           // Update isHost state if current player is involved
-          // Use callback form to get the current player state
           setCurrentPlayer(currentPlayerState => {
             if (currentPlayerState?.id === newHostId) {
               setIsHost(true);
+              return { ...currentPlayerState, isHost: true };
             } else if (currentPlayerState?.id === oldHostId) {
               setIsHost(false);
+              return { ...currentPlayerState, isHost: false };
             }
-            return currentPlayerState; // Don't change the player state
+            return currentPlayerState;
           });
           
           // Show notification

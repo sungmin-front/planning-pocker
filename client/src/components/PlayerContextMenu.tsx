@@ -23,7 +23,6 @@ export const PlayerContextMenu: React.FC<PlayerContextMenuProps> = ({
 }) => {
   const { room, currentPlayer } = useRoom();
   const { sendMessage } = useWebSocket();
-  const [isOpen, setIsOpen] = useState(false);
 
   const isHost = currentPlayer?.isHost;
   const isTargetPlayer = player.id === currentPlayer?.id;
@@ -43,7 +42,6 @@ export const PlayerContextMenu: React.FC<PlayerContextMenuProps> = ({
         newHostId: player.id
       }
     });
-    setIsOpen(false);
   };
 
   const handleKickPlayer = () => {
@@ -56,11 +54,10 @@ export const PlayerContextMenu: React.FC<PlayerContextMenuProps> = ({
         playerId: player.id
       }
     });
-    setIsOpen(false);
   };
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="cursor-pointer">
           {children}

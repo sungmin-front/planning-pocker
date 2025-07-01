@@ -498,8 +498,10 @@ wss.on('connection', function connection(ws) {
           console.log(`Host delegation requested: ${socketId} -> ${newHostId} in room ${roomId}`);
           
           const result = roomManager.delegateHost(socketId, newHostId);
+          console.log('Host delegation result:', result);
           
           if (result.success) {
+            console.log('Host delegation successful, broadcasting messages...');
             // Broadcast host change to all clients in room
             wss.clients.forEach(client => {
               const clientSocketId = getSocketId(client);
@@ -509,6 +511,8 @@ wss.on('connection', function connection(ws) {
                   payload: {
                     newHostId: newHostId,
                     newHostNickname: result.newHost?.nickname,
+                    oldHostId: result.oldHost?.id,
+                    oldHostNickname: result.oldHost?.nickname,
                     reason: 'delegated'
                   }
                 }));
