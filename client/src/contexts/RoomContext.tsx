@@ -83,6 +83,20 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           }
           break;
           
+        case 'room:playerJoined':
+          // Update room state when a new player joins
+          if (message.payload.room) {
+            setRoom(message.payload.room);
+          }
+          
+          // Show notification that someone joined
+          if (message.payload.player) {
+            toast({
+              title: "Player Joined",
+              description: `${message.payload.player.nickname} joined the room`,
+            });
+          }
+          break;
           
         case 'ROOM_SYNC':
           setRoom(message.payload.room);
