@@ -4,7 +4,6 @@ import { RoomProvider } from '@/contexts/RoomContext';
 import { Toaster } from '@/components/ui/toaster';
 import { HomePage } from '@/pages/HomePage';
 import { RoomPage } from '@/pages/RoomPage';
-import { RoomJoin } from '@/components/RoomJoin';
 
 function App() {
   return (
@@ -12,8 +11,7 @@ function App() {
       <RoomProvider>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/join/:roomId" element={<RoomJoin />} />
-          <Route path="/room/:roomId" element={<RoomPage />} />
+          <Route path="/:roomId" element={<RoomPage />} />
         </Routes>
         <Toaster />
       </RoomProvider>

@@ -51,72 +51,61 @@ describe('URL Routing', () => {
     expect(screen.getByText('Estimate story points with your team')).toBeInTheDocument();
   });
 
-  it('should render RoomPage at /room/:roomId path', () => {
+  it('should render RoomPage at /:roomId path', () => {
     render(
-      <MemoryRouter initialEntries={['/room/ABC123?nickname=TestUser']}>
+      <MemoryRouter initialEntries={['/ABC123?nickname=TestUser']}>
         <App />
       </MemoryRouter>
     );
 
-    // Should show connecting state since no room data yet
-    expect(screen.getByText('Connecting to room...')).toBeInTheDocument();
+    // Should show nickname input form since no room/currentPlayer data yet
+    expect(screen.getByText('Join Room ABC123')).toBeInTheDocument();
   });
 
   it('should handle room ID parameter correctly', () => {
     const roomId = 'TEST-ROOM-123';
     render(
-      <MemoryRouter initialEntries={[`/room/${roomId}?nickname=TestUser`]}>
+      <MemoryRouter initialEntries={[`/${roomId}?nickname=TestUser`]}>
         <App />
       </MemoryRouter>
     );
 
-    // RoomPage should be rendered (showing connecting state)
-    expect(screen.getByText('Connecting to room...')).toBeInTheDocument();
+    // RoomPage should be rendered (showing nickname input form)
+    expect(screen.getByText(`Join Room ${roomId}`)).toBeInTheDocument();
   });
 
   it('should handle query parameters in room URL', () => {
     render(
-      <MemoryRouter initialEntries={['/room/ABC123?nickname=John&host=true']}>
+      <MemoryRouter initialEntries={['/ABC123?nickname=John&host=true']}>
         <App />
       </MemoryRouter>
     );
 
-    // Should render RoomPage
-    expect(screen.getByText('Connecting to room...')).toBeInTheDocument();
+    // Should render RoomPage with nickname input form
+    expect(screen.getByText('Join Room ABC123')).toBeInTheDocument();
   });
 
   it('should handle navigation between routes', () => {
-    const { rerender } = render(
-      <MemoryRouter initialEntries={['/']}>
+    // Start at room page - should show nickname input form
+    render(
+      <MemoryRouter initialEntries={['/ABC123?nickname=TestUser']}>
         <App />
       </MemoryRouter>
     );
 
-    // Start at home page
-    expect(screen.getByText('Planning Poker')).toBeInTheDocument();
-
-    // Navigate to room page - when not properly connected, should redirect back to home
-    rerender(
-      <MemoryRouter initialEntries={['/room/ABC123?nickname=TestUser']}>
-        <App />
-      </MemoryRouter>
-    );
-
-    // Since navigation happens during rerender and can cause redirects,
-    // we should still see home page content, which indicates the routing system works
-    expect(screen.getByText('Planning Poker')).toBeInTheDocument();
+    // Should show RoomPage with nickname input form
+    expect(screen.getByText('Join Room ABC123')).toBeInTheDocument();
   });
 
-  it('should render 404 page for unknown routes', () => {
+  it('should treat unknown routes as room IDs', () => {
     render(
       <MemoryRouter initialEntries={['/unknown-route']}>
         <App />
       </MemoryRouter>
     );
 
-    // Should show some kind of 404 or fallback content
-    // For now, we expect it to render nothing or show an error
+    // Since we use /:roomId as catch-all, should render RoomPage with the unknown route as roomId
+    expect(screen.getByText('Join Room unknown-route')).toBeInTheDocument();
     expect(screen.queryByText('Planning Poker')).not.toBeInTheDocument();
-    expect(screen.queryByText('Connecting to room...')).not.toBeInTheDocument();
   });
 });
