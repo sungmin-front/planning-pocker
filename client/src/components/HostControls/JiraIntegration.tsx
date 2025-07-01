@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ExternalLink } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 interface JiraBoard {
   id: number;
@@ -57,10 +56,10 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
   const [isConfigured, setIsConfigured] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [boards, setBoards] = useState<JiraBoard[]>([]);
+  const [hasDefaultProject, setHasDefaultProject] = useState(false);
+  const [defaultProjectKey, setDefaultProjectKey] = useState<string>('');
   const [sprints, setSprints] = useState<JiraSprint[]>([]);
   const [issues, setIssues] = useState<JiraIssue[]>([]);
-  const [selectedBoard, setSelectedBoard] = useState<string>('');
   const [selectedSprint, setSelectedSprint] = useState<string>('');
   const [selectedIssues, setSelectedIssues] = useState<Set<string>>(new Set());
   const { toast } = useToast();
@@ -77,9 +76,17 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
       const data = await response.json();
       setIsConfigured(data.configured);
       setIsConnected(data.connected);
+      setHasDefaultProject(data.hasDefaultProject);
+      setDefaultProjectKey(data.defaultProjectKey || '');
       
-      if (data.configured && data.connected) {
-        fetchBoards();
+      if (data.configured && data.connected && data.hasDefaultProject) {
+        fetchDefaultProjectSprints();
+      } else if (!data.hasDefaultProject) {
+        toast({
+          title: 'Jira 기본 프로젝트 설정 필요',
+          description: '서버 환경변수에 JIRA_DEFAULT_PROJECT_KEY를 설정해주세요.',
+          variant: 'destructive'
+        });
       } else {
         toast({
           title: 'Jira 설정 필요',
@@ -99,38 +106,20 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
     }
   };
 
-  const fetchBoards = async () => {
+  const fetchDefaultProjectSprints = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/api/jira/boards');
-      const data = await response.json();
-      setBoards(data.boards || []);
-    } catch (error) {
-      console.error('Error fetching boards:', error);
-      toast({
-        title: '보드 목록 로드 실패',
-        description: 'Jira 보드 목록을 불러올 수 없습니다.',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchSprints = async (boardId: string) => {
-    try {
-      setLoading(true);
-      const response = await fetch(`http://localhost:8080/api/jira/boards/${boardId}/sprints`);
+      const response = await fetch('http://localhost:8080/api/jira/default-project/sprints');
       const data = await response.json();
       setSprints(data.sprints || []);
       setSelectedSprint('');
       setIssues([]);
       setSelectedIssues(new Set());
     } catch (error) {
-      console.error('Error fetching sprints:', error);
+      console.error('Error fetching default project sprints:', error);
       toast({
         title: '스프린트 목록 로드 실패',
-        description: '스프린트 목록을 불러올 수 없습니다.',
+        description: '기본 프로젝트 스프린트 목록을 불러올 수 없습니다.',
         variant: 'destructive'
       });
     } finally {
@@ -155,11 +144,6 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleBoardChange = (boardId: string) => {
-    setSelectedBoard(boardId);
-    fetchSprints(boardId);
   };
 
   const handleSprintChange = (sprintId: string) => {
@@ -271,6 +255,25 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
     );
   }
 
+  if (!hasDefaultProject) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Jira 연동</CardTitle>
+          <CardDescription>
+            기본 프로젝트가 설정되지 않았습니다. 서버 환경변수에 JIRA_DEFAULT_PROJECT_KEY를 설정해주세요.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={checkJiraStatus} disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            다시 확인
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <Card>
@@ -280,29 +283,12 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
             <Badge variant="outline" className="text-green-600">연결됨</Badge>
           </CardTitle>
           <CardDescription>
-            보드와 스프린트를 선택하여 이슈를 Planning Poker 스토리로 가져올 수 있습니다.
+            프로젝트 {defaultProjectKey}의 스프린트를 선택하여 이슈를 Planning Poker 스토리로 가져올 수 있습니다.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Board Selection */}
-          <div>
-            <label className="text-sm font-medium mb-2 block">보드 선택</label>
-            <Select value={selectedBoard} onValueChange={handleBoardChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="보드를 선택하세요" />
-              </SelectTrigger>
-              <SelectContent>
-                {boards.map(board => (
-                  <SelectItem key={board.id} value={board.id.toString()}>
-                    {board.name} ({board.type})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Sprint Selection */}
-          {selectedBoard && (
+          {sprints.length > 0 && (
             <div>
               <label className="text-sm font-medium mb-2 block">스프린트 선택</label>
               <Select value={selectedSprint} onValueChange={handleSprintChange}>
@@ -381,6 +367,19 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
                   선택한 이슈를 스토리로 가져오기 ({selectedIssues.size}개)
                 </Button>
               </div>
+            </div>
+          )}
+
+          {sprints.length === 0 && !loading && (
+            <p className="text-sm text-gray-500 text-center py-4">
+              프로젝트 {defaultProjectKey}에 활성/예정 스프린트가 없습니다.
+            </p>
+          )}
+
+          {sprints.length === 0 && loading && (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              <span className="text-sm text-gray-500">스프린트를 불러오는 중...</span>
             </div>
           )}
 
