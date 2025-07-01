@@ -43,30 +43,33 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
   };
 
   const renderCircularTable = () => {
-    const centerX = 300; // Center X coordinate
-    const centerY = 250; // Center Y coordinate
-    const radius = Math.max(180, players.length * 25); // Dynamic radius based on player count
+    const containerWidth = 600;
+    const containerHeight = 400;
+    const centerX = containerWidth / 2;
+    const centerY = containerHeight / 2;
+    const radius = Math.min(140, Math.max(100, players.length * 15)); // Smaller radius
 
     return (
       <div 
         data-testid="circular-table"
-        className="relative w-full h-96 flex items-center justify-center"
+        className="relative mx-auto"
+        style={{ width: `${containerWidth}px`, height: `${containerHeight}px` }}
       >
         {/* Center message */}
         <div className="absolute inset-0 flex items-center justify-center z-0">
           <div className="text-center">
             {currentStory ? (
-              <div className="bg-blue-50 rounded-lg p-6 shadow-sm">
-                <h3 className="text-lg font-medium text-blue-900 mb-2">
+              <div className="bg-blue-50 rounded-lg p-4 shadow-sm max-w-xs">
+                <h3 className="text-base font-medium text-blue-900 mb-1">
                   {currentStory.title}
                 </h3>
-                <p className="text-blue-700">
+                <p className="text-sm text-blue-700">
                   {isRevealed ? 'Votes revealed!' : 'Pick your cards!'}
                 </p>
               </div>
             ) : (
-              <div className="bg-gray-50 rounded-lg p-6 shadow-sm">
-                <p className="text-gray-600">Ready to start voting</p>
+              <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
+                <p className="text-sm text-gray-600">Ready to start voting</p>
               </div>
             )}
           </div>
