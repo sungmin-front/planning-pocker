@@ -43,7 +43,9 @@ export type MessageType =
   | 'STORY_RESTART_VOTING'
   | 'STORY_SET_FINAL_POINT'
   | 'ROOM_TRANSFER_HOST'
-  | 'ROOM_SYNC';
+  | 'ROOM_SYNC'
+  | 'HOST_DELEGATE'
+  | 'PLAYER_KICK';
 
 export interface WebSocketMessage {
   type: MessageType;

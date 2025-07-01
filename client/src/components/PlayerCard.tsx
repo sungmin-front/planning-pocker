@@ -2,6 +2,7 @@ import React from 'react';
 import { Player } from '@/types';
 import { useRoom } from '@/contexts/RoomContext';
 import { cn } from '@/lib/utils';
+import { PlayerContextMenu } from './PlayerContextMenu';
 
 interface PlayerCardProps {
   player: Player;
@@ -67,40 +68,42 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   };
 
   return (
-    <div
-      data-testid="player-card"
-      className={cn(
-        "flex flex-col items-center space-y-2 transition-all duration-200",
-        isCurrentPlayer && "scale-105",
-        isClickable && "cursor-pointer hover:scale-105",
-        !isConnected && "opacity-60"
-      )}
-      onClick={handleCardClick}
-    >
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg z-10">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+    <PlayerContextMenu player={player}>
+      <div
+        data-testid="player-card"
+        className={cn(
+          "flex flex-col items-center space-y-2 transition-all duration-200",
+          isCurrentPlayer && "scale-105",
+          isClickable && "cursor-pointer hover:scale-105",
+          !isConnected && "opacity-60"
+        )}
+        onClick={handleCardClick}
+      >
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg z-10">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+          </div>
+        )}
+        
+        {/* Vote Card */}
+        <div className="relative">
+          {getVoteDisplay()}
         </div>
-      )}
-      
-      {/* Vote Card */}
-      <div className="relative">
-        {getVoteDisplay()}
-      </div>
 
-      {/* Player Name */}
-      <div className="text-center">
-        <div className={cn(
-          "text-xs font-medium px-2 py-1 rounded",
-          isCurrentPlayer 
-            ? "bg-blue-500 text-white" 
-            : player.isHost 
-              ? "bg-yellow-500 text-white"
-              : "bg-gray-600 text-white"
-        )}>
-          {player.nickname}
+        {/* Player Name */}
+        <div className="text-center">
+          <div className={cn(
+            "text-xs font-medium px-2 py-1 rounded",
+            isCurrentPlayer 
+              ? "bg-blue-500 text-white" 
+              : player.isHost 
+                ? "bg-yellow-500 text-white"
+                : "bg-gray-600 text-white"
+          )}>
+            {player.nickname}
+          </div>
         </div>
       </div>
-    </div>
+    </PlayerContextMenu>
   );
 };

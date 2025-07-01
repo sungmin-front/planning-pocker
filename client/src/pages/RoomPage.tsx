@@ -12,11 +12,10 @@ import { ResponsivePlayerLayout } from '@/components/ResponsivePlayerLayout';
 import { CurrentStory } from '@/components/CurrentStory';
 import { StoryList } from '@/components/StoryList';
 import { VotingResults } from '@/components/VotingResults';
-import { HostDelegation } from '@/components/HostDelegation';
 import { AddStoryModal } from '@/components/HostControls/AddStoryModal';
 import { JiraIntegrationModal } from '@/components/HostControls/JiraIntegrationModal';
+import { VotingControls } from '@/components/HostControls/VotingControls';
 import { SyncButton } from '@/components/SyncButton';
-import { LayoutToggle } from '@/components/LayoutToggle';
 // import { VOTE_OPTIONS } from '@planning-poker/shared';
 const VOTE_OPTIONS = ['0', '1', '2', '3', '5', '8', '13', '21', '?', '☕'];
 
@@ -185,9 +184,7 @@ export const RoomPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-4">
             {isHost && <Badge variant="default">Host</Badge>}
-            <LayoutToggle />
             <SyncButton />
-            {isHost && <HostDelegation />}
             <Button variant="outline" onClick={handleLeaveRoom}>
               Leave Room
             </Button>
@@ -211,6 +208,9 @@ export const RoomPage: React.FC = () => {
           <div className="space-y-6">
             {/* Voting Interface */}
             <ResponsiveVotingInterface />
+            
+            {/* Host Voting Controls */}
+            {isHost && <VotingControls />}
             
             {/* Voting Results */}
             <VotingResults />

@@ -198,6 +198,109 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             console.log('room:updated message not processed - room ID mismatch or missing data');
           }
           break;
+
+        case 'story:votesRevealed':
+          console.log('Received story:votesRevealed message:', message.payload);
+          if (message.payload && message.payload.storyId && room) {
+            const { storyId, votes } = message.payload;
+            // Update the specific story's status and votes
+            const updatedStories = room.stories.map(story => {
+              if (story.id === storyId) {
+                return {
+                  ...story,
+                  status: 'revealed' as const,
+                  votes: votes || story.votes
+                };
+              }
+              return story;
+            });
+            
+            const updatedRoom = {
+              ...room,
+              stories: updatedStories
+            };
+            console.log('Updated room with revealed votes:', updatedRoom);
+            setRoom(updatedRoom);
+            
+            toast({
+              title: "Votes Revealed",
+              description: "All votes are now visible to everyone",
+            });
+          }
+          break;
+
+        case 'story:votingRestarted':
+          console.log('Received story:votingRestarted message:', message.payload);
+          if (message.payload && message.payload.storyId && room) {
+            const { storyId } = message.payload;
+            // Update the specific story's status and clear votes
+            const updatedStories = room.stories.map(story => {
+              if (story.id === storyId) {
+                return {
+                  ...story,
+                  status: 'voting' as const,
+                  votes: {}
+                };
+              }
+              return story;
+            });
+            
+            const updatedRoom = {
+              ...room,
+              stories: updatedStories
+            };
+            console.log('Updated room with restarted voting:', updatedRoom);
+            setRoom(updatedRoom);
+            
+            toast({
+              title: "Voting Restarted",
+              description: "Votes have been cleared and voting has started again",
+            });
+          }
+          break;
+
+        case 'player:kicked':
+          console.log('Received player:kicked message:', message.payload);
+          toast({
+            title: "Kicked from Room",
+            description: "You have been removed from the room by the host",
+            variant: "destructive",
+          });
+          // Navigate back to home page
+          navigate('/');
+          break;
+
+        case 'host:delegated':
+          console.log('Received host:delegated message:', message.payload);
+          if (message.payload && message.payload.success) {
+            toast({
+              title: "Host Delegation Successful",
+              description: "Host privileges have been transferred",
+            });
+          } else {
+            toast({
+              title: "Host Delegation Failed", 
+              description: message.payload?.error || "Failed to transfer host privileges",
+              variant: "destructive",
+            });
+          }
+          break;
+
+        case 'player:kicked:response':
+          console.log('Received player:kicked:response message:', message.payload);
+          if (message.payload && message.payload.success) {
+            toast({
+              title: "Player Kicked",
+              description: "Player has been removed from the room",
+            });
+          } else {
+            toast({
+              title: "Kick Failed",
+              description: message.payload?.error || "Failed to kick player",
+              variant: "destructive",
+            });
+          }
+          break;
           
         default:
           // Handle unknown message types gracefully
