@@ -53,6 +53,7 @@ export class RoomManager {
     const existingPlayer = room.players.find(p => p.nickname.toLowerCase() === trimmedNickname.toLowerCase());
     if (existingPlayer) {
       const suggestions = this.generateNicknameSuggestions(trimmedNickname, room);
+      console.log(`Generated suggestions for "${trimmedNickname}":`, suggestions);
       return { 
         success: false, 
         error: 'Nickname already taken',
