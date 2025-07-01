@@ -1,9 +1,7 @@
 import React from 'react';
-import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { PlayerCard } from '@/components/PlayerCard';
 import { cn } from '@/lib/utils';
 import { Player, Story } from '@/types';
-import { Users } from 'lucide-react';
 
 interface ResponsivePlayerLayoutProps {
   players: Player[];
@@ -16,17 +14,13 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
   currentStory,
   currentPlayerId,
 }) => {
-  const { isMobile, isTablet } = useBreakpoint();
-
   if (players.length === 0) {
     return (
       <div 
         data-testid="responsive-player-layout"
-        className="flex flex-col items-center justify-center p-12 text-gray-500 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100"
+        className="flex flex-col items-center justify-center h-96 text-gray-500"
       >
-        <Users className="w-12 h-12 text-gray-400 mb-4" />
-        <p className="text-lg font-medium text-gray-600">No players in room</p>
-        <p className="text-sm text-gray-400 mt-2">Waiting for players to join...</p>
+        <p className="text-lg">Waiting for players to join...</p>
       </div>
     );
   }
@@ -48,50 +42,54 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
     };
   };
 
-  // Get optimal grid columns based on player count and screen size
-  const getGridColumns = () => {
-    if (isMobile) {
-      return players.length === 1 ? 1 : 2;
-    }
-    if (isTablet) {
-      if (players.length <= 2) return 2;
-      if (players.length <= 6) return 3;
-      return 4;
-    }
-    // Desktop
-    if (players.length <= 3) return 3;
-    if (players.length <= 8) return 4;
-    if (players.length <= 15) return 5;
-    return 6;
-  };
+  const renderCircularTable = () => {
+    const centerX = 300; // Center X coordinate
+    const centerY = 250; // Center Y coordinate
+    const radius = Math.max(180, players.length * 25); // Dynamic radius based on player count
 
-  const gridCols = getGridColumns();
-
-  const renderPlayerGrid = () => {
-    const gridColsClass = `grid-cols-${gridCols}`;
-    
     return (
       <div 
-        data-testid="player-grid"
-        className={cn(
-          'grid gap-4 justify-items-center',
-          gridColsClass,
-          isMobile && 'gap-3',
-          isTablet && 'gap-4',
-          !isMobile && !isTablet && 'gap-6'
-        )}
-        style={{
-          gridTemplateColumns: `repeat(${gridCols}, 1fr)`
-        }}
+        data-testid="circular-table"
+        className="relative w-full h-96 flex items-center justify-center"
       >
-        {players.map((player) => {
+        {/* Center message */}
+        <div className="absolute inset-0 flex items-center justify-center z-0">
+          <div className="text-center">
+            {currentStory ? (
+              <div className="bg-blue-50 rounded-lg p-6 shadow-sm">
+                <h3 className="text-lg font-medium text-blue-900 mb-2">
+                  {currentStory.title}
+                </h3>
+                <p className="text-blue-700">
+                  {isRevealed ? 'Votes revealed!' : 'Pick your cards!'}
+                </p>
+              </div>
+            ) : (
+              <div className="bg-gray-50 rounded-lg p-6 shadow-sm">
+                <p className="text-gray-600">Ready to start voting</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Players positioned in circle */}
+        {players.map((player, index) => {
           const voteStatus = getPlayerVoteStatus(player);
+          
+          // Calculate position around circle
+          const angle = (index / players.length) * 2 * Math.PI - Math.PI / 2; // Start from top
+          const x = centerX + radius * Math.cos(angle);
+          const y = centerY + radius * Math.sin(angle);
           
           return (
             <div
               key={player.id}
               data-testid={`player-card-${player.id}`}
-              className="w-full max-w-xs"
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
+              style={{
+                left: `${x}px`,
+                top: `${y}px`,
+              }}
             >
               <PlayerCard
                 player={player}
@@ -114,44 +112,8 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
       className="w-full"
       aria-label={`${players.length} players in room`}
     >
-      <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/50 rounded-2xl border border-blue-100/50 backdrop-blur-sm p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-              <Users className="w-4 h-4 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Players
-              </h2>
-              <p className="text-sm text-gray-500">
-                {players.length} {players.length === 1 ? 'player' : 'players'} in room
-              </p>
-            </div>
-          </div>
-          
-          {/* Vote summary */}
-          {currentStory && (
-            <div className="flex items-center gap-2 text-sm">
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <span className="text-gray-600">
-                  {Object.keys(currentStory.votes).length} voted
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                <span className="text-gray-600">
-                  {players.filter(p => !p.isSpectator).length - Object.keys(currentStory.votes).length} pending
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        <div className="w-full">
-          {renderPlayerGrid()}
-        </div>
+      <div className="bg-white rounded-lg p-6">
+        {renderCircularTable()}
       </div>
     </div>
   );
