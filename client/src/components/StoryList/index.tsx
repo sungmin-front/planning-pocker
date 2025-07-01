@@ -18,8 +18,12 @@ export const StoryList: React.FC<StoryListProps> = ({ stories }) => {
   const { currentStoryId } = room;
 
   const handleSelectStory = (storyId: string) => {
-    if (!isHost) return; // Only host can select stories
+    if (!isHost) {
+      console.log('Not host, cannot select story');
+      return; // Only host can select stories
+    }
     
+    console.log('Selecting story:', storyId);
     send({
       type: 'STORY_SELECT',
       payload: { storyId }
