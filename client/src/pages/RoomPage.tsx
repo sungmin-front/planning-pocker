@@ -28,7 +28,7 @@ export const RoomPage: React.FC = () => {
   const [isJoining, setIsJoining] = useState(false);
   
   const { room, currentPlayer, isHost, joinRoom, leaveRoom, vote, syncRoom, joinError, nicknameSuggestions, clearJoinError } = useRoom();
-  const { isConnected } = useWebSocket();
+  const { isConnected, send } = useWebSocket();
 
   useEffect(() => {
     // If user is already in a room (e.g., host who created room), don't attempt to join again
@@ -210,6 +210,49 @@ export const RoomPage: React.FC = () => {
             
             {/* Voting Results */}
             <VotingResults />
+            
+            {/* Add Story Button (Host Only) */}
+            {isHost && (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={() => {
+                        // Quick test story creation
+                        send({
+                          type: 'STORY_CREATE',
+                          payload: {
+                            title: 'Test Story',
+                            description: 'A test story for voting'
+                          }
+                        });
+                      }}
+                      className="w-full"
+                    >
+                      + Add Test Story
+                    </Button>
+                    {room.stories.length > 0 && (
+                      <Button 
+                        onClick={() => {
+                          // Set first story as current for voting
+                          const firstStory = room.stories[0];
+                          send({
+                            type: 'STORY_SELECT',
+                            payload: {
+                              storyId: firstStory.id
+                            }
+                          });
+                        }}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        Start Voting on First Story
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             
             {/* Stories */}
             <StoryList stories={room.stories} />

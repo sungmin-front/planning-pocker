@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,8 +13,16 @@ export const HomePage: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   
   const navigate = useNavigate();
+  const location = useLocation();
   const { isConnected, connect } = useWebSocket();
   const { createRoom, joinRoom, joinError, nicknameSuggestions, clearJoinError } = useRoom();
+
+  // Reset creating state when navigating away from home page
+  useEffect(() => {
+    if (location.pathname !== '/') {
+      setIsCreating(false);
+    }
+  }, [location.pathname]);
 
   const handleConnect = () => {
     connect('ws://localhost:8080');

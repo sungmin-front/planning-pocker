@@ -38,6 +38,7 @@ export type MessageType =
   | 'RESET_VOTES'
   | 'STORY_VOTE'
   | 'STORY_CREATE'
+  | 'STORY_SELECT'
   | 'STORY_REVEAL_VOTES'
   | 'STORY_RESTART_VOTING'
   | 'STORY_SET_FINAL_POINT'
