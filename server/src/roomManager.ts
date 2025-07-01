@@ -162,6 +162,15 @@ export class RoomManager {
     const leavingPlayer = room.players.find(p => p.socketId === socketId);
     const wasHost = leavingPlayer?.isHost || false;
 
+    // Remove player's votes only from ongoing voting (not completed votes)
+    if (leavingPlayer) {
+      room.stories.forEach(story => {
+        if (story.votes && story.votes[leavingPlayer.id] && story.status === 'voting') {
+          delete story.votes[leavingPlayer.id];
+        }
+      });
+    }
+
     room.players = room.players.filter(p => p.socketId !== socketId);
     room.socketIds.delete(socketId);
     delete this.socketUserMap[socketId];
