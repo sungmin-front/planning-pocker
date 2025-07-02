@@ -125,7 +125,7 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
@@ -133,7 +133,7 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Consensus Indicator */}
           <div className="flex items-center gap-2">
             <Badge className={getConsensusColor()}>
@@ -148,40 +148,40 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
 
           {/* Statistics Cards */}
           {stats.numericVotesOnly.length > 0 && (
-            <div className="grid grid-cols-3 gap-4">
-              <Card className="p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium">Highest</span>
+            <div className="grid grid-cols-3 gap-3">
+              <Card className="p-2">
+                <div className="flex items-center gap-1 mb-1">
+                  <TrendingUp className="h-3 w-3 text-green-600" />
+                  <span className="text-xs font-medium">Highest</span>
                 </div>
-                <div className="text-2xl font-bold text-green-600">{stats.highest}</div>
+                <div className="text-lg font-bold text-green-600">{stats.highest}</div>
               </Card>
               
-              <Card className="p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <TrendingDown className="h-4 w-4 text-red-600" />
-                  <span className="text-sm font-medium">Lowest</span>
+              <Card className="p-2">
+                <div className="flex items-center gap-1 mb-1">
+                  <TrendingDown className="h-3 w-3 text-red-600" />
+                  <span className="text-xs font-medium">Lowest</span>
                 </div>
-                <div className="text-2xl font-bold text-red-600">{stats.lowest}</div>
+                <div className="text-lg font-bold text-red-600">{stats.lowest}</div>
               </Card>
               
-              <Card className="p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <Target className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium">Average</span>
+              <Card className="p-2">
+                <div className="flex items-center gap-1 mb-1">
+                  <Target className="h-3 w-3 text-blue-600" />
+                  <span className="text-xs font-medium">Average</span>
                 </div>
-                <div className="text-2xl font-bold text-blue-600">{stats.average}</div>
+                <div className="text-lg font-bold text-blue-600">{stats.average}</div>
               </Card>
             </div>
           )}
 
           {/* Line Chart */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Vote Distribution</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Vote Distribution</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-48">
+            <CardContent className="pt-2">
+              <div className="h-32">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
