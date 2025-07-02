@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlayerCard } from '@/components/PlayerCard';
 import { VoteProgressRing } from '@/components/VoteProgressRing';
 import { VotingResultsModal } from '@/components/VotingResultsModal';
@@ -19,6 +19,13 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
   currentPlayerId,
 }) => {
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+
+  // Auto-open modal when votes are revealed
+  useEffect(() => {
+    if (currentStory?.status === 'revealed' && Object.keys(currentStory.votes || {}).length > 0) {
+      setIsStatsModalOpen(true);
+    }
+  }, [currentStory?.status, currentStory?.votes]);
 
   if (players.length === 0) {
     return (
