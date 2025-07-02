@@ -17,7 +17,11 @@
     "install-deps": "pnpm install",
     "dev:client": "pnpm --filter client dev",
     "dev:server": "pnpm --filter server dev",
-    "dev:shared": "pnpm --filter shared dev"
+    "dev:shared": "pnpm --filter shared dev",
+    "setup:env": "./scripts/setup-env.sh",
+    "docker:start": "./scripts/start-docker.sh",
+    "docker:stop": "./scripts/stop-docker.sh",
+    "setup": "./scripts/setup-env.sh && pnpm install"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.0.0",

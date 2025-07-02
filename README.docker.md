@@ -8,7 +8,9 @@ Docker를 사용하여 Planning Poker 애플리케이션을 쉽게 실행할 수
 환경변수 설정 헬퍼 스크립트를 실행하여 필요한 파일들을 생성하세요:
 
 ```bash
-./setup-env.sh
+./scripts/setup-env.sh
+# 또는
+npm run setup:env
 ```
 
 그 후 `.env.docker` 파일을 편집하여 실제 Jira 설정으로 업데이트하세요:
@@ -23,7 +25,9 @@ JIRA_DEFAULT_PROJECT_KEY=YOUR_PROJECT_KEY
 
 ### 2. Docker 환경 시작
 ```bash
-./start-docker.sh
+./scripts/start-docker.sh
+# 또는
+npm run docker:start
 ```
 
 ### 3. 애플리케이션 접속
@@ -32,7 +36,9 @@ JIRA_DEFAULT_PROJECT_KEY=YOUR_PROJECT_KEY
 
 ### 4. Docker 환경 정지
 ```bash
-./stop-docker.sh
+./scripts/stop-docker.sh
+# 또는
+npm run docker:stop
 ```
 
 ## 🏗️ 아키텍처
@@ -114,8 +120,8 @@ docker-compose build --no-cache
 lsof -i :80
 
 # 기존 프로세스 종료 후 재시작
-./stop-docker.sh
-./start-docker.sh
+./scripts/stop-docker.sh
+./scripts/start-docker.sh
 ```
 
 ### 3. 환경변수 문제

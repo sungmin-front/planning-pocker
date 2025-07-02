@@ -27,7 +27,9 @@ cd planning-poker
 
 2. **환경변수 설정**
 ```bash
-./setup-env.sh
+./scripts/setup-env.sh
+# 또는
+npm run setup:env
 ```
 
 3. **환경변수 파일 편집**
@@ -58,7 +60,9 @@ npm run dev
 vi .env.docker
 
 # Docker 환경 시작  
-./start-docker.sh
+./scripts/start-docker.sh
+# 또는
+npm run docker:start
 
 # 브라우저에서 접속
 # http://localhost
@@ -70,17 +74,17 @@ vi .env.docker
 planning-poker/
 ├── client/                 # React 클라이언트
 │   ├── src/
-│   ├── Dockerfile
-│   └── .env.example
+│   └── Dockerfile
 ├── server/                 # Node.js 서버
 │   ├── src/
-│   ├── Dockerfile
-│   └── .env.example
+│   └── Dockerfile
 ├── shared/                 # 공유 타입 정의
+├── scripts/                # 자동화 스크립트
+│   ├── setup-env.sh       # 환경변수 설정 헬퍼
+│   ├── start-docker.sh    # Docker 환경 시작
+│   └── stop-docker.sh     # Docker 환경 정지
 ├── nginx/                  # Nginx 설정 (Docker용)
-├── docker-compose.yml      # Docker 구성
-├── .env.example           # 환경변수 예제
-└── setup-env.sh           # 환경설정 헬퍼
+└── docker-compose.yml      # Docker 구성
 ```
 
 ## 🔧 개발 가이드
@@ -104,8 +108,14 @@ npm run test:server    # 서버 테스트
 npm run test:client    # 클라이언트 테스트
 
 # Docker
-./start-docker.sh      # Docker 환경 시작
-./stop-docker.sh       # Docker 환경 정지
+./scripts/start-docker.sh      # Docker 환경 시작
+./scripts/stop-docker.sh       # Docker 환경 정지
+npm run docker:start           # Docker 환경 시작 (npm)
+npm run docker:stop            # Docker 환경 정지 (npm)
+
+# 환경 설정
+npm run setup:env              # 환경변수 파일 생성
+npm run setup                  # 환경설정 + 의존성 설치
 ```
 
 ### 개발 워크플로우
