@@ -4,16 +4,20 @@
     "module": "CommonJS",
     "lib": ["ES2020"],
     "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "sourceMap": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "baseUrl": "..",
+    "paths": {
+      "@planning-poker/shared": ["shared/src"],
+      "@planning-poker/shared/*": ["shared/src/*"]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules", "src/**/*.test.ts"],
-  "references": [{ "path": "../shared" }]
+  "include": ["src/**/*", "../shared/src/**/*"],
+  "exclude": ["dist", "node_modules", "src/**/*.test.ts"]
 }

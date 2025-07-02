@@ -28,3 +28,5 @@ client/.env
 
 # OS specific
 .DS_Store
+
+dist/
