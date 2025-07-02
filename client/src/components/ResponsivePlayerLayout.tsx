@@ -35,9 +35,14 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
   // Auto-open modal when votes are revealed
   useEffect(() => {
     if (currentStory?.status === 'revealed' && Object.keys(currentStory.votes || {}).length > 0) {
-      setIsStatsModalOpen(true);
+      // Add a small delay to ensure single modal opening
+      const timeoutId = setTimeout(() => {
+        setIsStatsModalOpen(true);
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
-  }, [currentStory?.status, currentStory?.votes]);
+  }, [currentStory?.status, currentStory?.id]); // Use currentStory.id instead of votes to prevent re-triggering
 
   if (players.length === 0) {
     return (

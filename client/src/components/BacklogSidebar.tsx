@@ -1,19 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-// import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ContextMenu } from '@/components/ui/context-menu';
 import { AddStoryModal } from '@/components/HostControls/AddStoryModal';
 import { JiraIntegrationModal } from '@/components/HostControls/JiraIntegrationModal';
-import { Plus, FileText, ChevronsUp, ChevronUp, Menu, ChevronDown, ChevronsDown } from 'lucide-react';
+import { Plus, FileText, ChevronsUp, ChevronUp, Menu, ChevronDown, ChevronsDown, ArrowUpDown, Filter } from 'lucide-react';
 
 interface BacklogSidebarProps {
   stories: any[];
 }
+
+type SortOption = 'priority-desc' | 'priority-asc' | 'ticket-desc' | 'ticket-asc' | 'created-desc' | 'created-asc';
+type FilterOption = 'all' | 'story' | 'task' | 'bug';
 
 export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
   const { room, isHost, syncRoom } = useRoom();
@@ -21,10 +24,71 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; story: any } | null>(null);
   const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
   const [isJiraModalOpen, setIsJiraModalOpen] = useState(false);
+  const [sortOption, setSortOption] = useState<SortOption>('created-desc');
+  const [filterOption, setFilterOption] = useState<FilterOption>('all');
 
   if (!room) return null;
 
   const { currentStoryId } = room;
+
+  // Priority order mapping for sorting
+  const priorityOrder = {
+    'highest': 5,
+    'high': 4,
+    'medium': 3,
+    'low': 2,
+    'lowest': 1
+  };
+
+  // Sort and filter stories
+  const sortedAndFilteredStories = useMemo(() => {
+    let filtered = stories;
+
+    // Apply filter
+    if (filterOption !== 'all') {
+      filtered = stories.filter(story => {
+        const issueType = story.jiraMetadata?.issueType?.toLowerCase();
+        if (filterOption === 'story') {
+          return issueType === 'story' || issueType === '스토리';
+        } else if (filterOption === 'task') {
+          return issueType === 'task' || issueType === '작업';
+        } else if (filterOption === 'bug') {
+          return issueType === 'bug' || issueType === '버그';
+        }
+        return true;
+      });
+    }
+
+    // Apply sort
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortOption) {
+        case 'priority-desc':
+          const aPriority = priorityOrder[a.jiraMetadata?.priority?.toLowerCase() as keyof typeof priorityOrder] || 0;
+          const bPriority = priorityOrder[b.jiraMetadata?.priority?.toLowerCase() as keyof typeof priorityOrder] || 0;
+          return bPriority - aPriority;
+        case 'priority-asc':
+          const aPriorityAsc = priorityOrder[a.jiraMetadata?.priority?.toLowerCase() as keyof typeof priorityOrder] || 0;
+          const bPriorityAsc = priorityOrder[b.jiraMetadata?.priority?.toLowerCase() as keyof typeof priorityOrder] || 0;
+          return aPriorityAsc - bPriorityAsc;
+        case 'ticket-desc':
+          const aTicket = a.jiraMetadata?.jiraKey || a.title || '';
+          const bTicket = b.jiraMetadata?.jiraKey || b.title || '';
+          return bTicket.localeCompare(aTicket);
+        case 'ticket-asc':
+          const aTicketAsc = a.jiraMetadata?.jiraKey || a.title || '';
+          const bTicketAsc = b.jiraMetadata?.jiraKey || b.title || '';
+          return aTicketAsc.localeCompare(bTicketAsc);
+        case 'created-desc':
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+        case 'created-asc':
+          return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [stories, sortOption, filterOption]);
 
   const handleSelectStory = (storyId: string) => {
     if (!isHost) return;
@@ -195,7 +259,7 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
             <div className="flex items-center gap-2">
               Backlog
               <Badge variant="secondary" className="text-xs">
-                {stories.length}
+                {sortedAndFilteredStories.length}/{stories.length}
               </Badge>
             </div>
             {isHost && (
@@ -218,11 +282,46 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
               </div>
             )}
           </CardTitle>
+          
+          {/* Sort and Filter Controls */}
+          <div className="flex gap-2 mt-3">
+            <Select value={sortOption} onValueChange={(value: SortOption) => setSortOption(value)}>
+              <SelectTrigger className="h-7 text-xs flex-1">
+                <div className="flex items-center gap-1">
+                  <ArrowUpDown className="h-3 w-3" />
+                  <SelectValue placeholder="정렬" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created-desc">최신순</SelectItem>
+                <SelectItem value="created-asc">오래된순</SelectItem>
+                <SelectItem value="priority-desc">우선순위 높음</SelectItem>
+                <SelectItem value="priority-asc">우선순위 낮음</SelectItem>
+                <SelectItem value="ticket-desc">티켓번호 내림차순</SelectItem>
+                <SelectItem value="ticket-asc">티켓번호 오름차순</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={filterOption} onValueChange={(value: FilterOption) => setFilterOption(value)}>
+              <SelectTrigger className="h-7 text-xs flex-1">
+                <div className="flex items-center gap-1">
+                  <Filter className="h-3 w-3" />
+                  <SelectValue placeholder="필터" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체</SelectItem>
+                <SelectItem value="story">스토리</SelectItem>
+                <SelectItem value="task">작업</SelectItem>
+                <SelectItem value="bug">버그</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
       <CardContent className="flex-1 min-h-0 p-3">
         <div className="h-full overflow-y-auto">
           <div className="space-y-2 pr-3">
-            {stories.map(story => {
+            {sortedAndFilteredStories.map(story => {
               const isActive = story.id === currentStoryId;
               const statusIcon = statusIcons[story.status] || '❓';
               
