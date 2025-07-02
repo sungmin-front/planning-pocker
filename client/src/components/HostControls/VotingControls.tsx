@@ -35,15 +35,17 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
   if (!room.currentStoryId && room.stories.length > 0) {
     return (
       <div className="w-full bg-white rounded-lg border p-3">
-        <h3 className="text-base font-medium mb-3">Voting Controls</h3>
-        <Button
-          onClick={handleStartVotingOnFirstStory}
-          size="sm"
-          className="w-full h-8 text-sm"
-        >
-          <Play className="h-3 w-3 mr-2" />
-          Start Voting on First Story
-        </Button>
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-medium">Voting Controls</h3>
+          <Button
+            onClick={handleStartVotingOnFirstStory}
+            size="sm"
+            className="h-8 text-sm"
+          >
+            <Play className="h-3 w-3 mr-2" />
+            Start Voting
+          </Button>
+        </div>
       </div>
     );
   }
@@ -187,79 +189,78 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
   const status = getStatusDisplay();
 
   return (
-    <div data-testid="voting-controls" className="w-full bg-white rounded-lg border p-3 space-y-3">
-      <h3 className="text-base font-medium">
-        Voting Controls
-      </h3>
-      
-      {/* Status Display */}
-      <div className="space-y-1">
-        {status.badge}
-        <p className="text-xs text-muted-foreground">{status.description}</p>
-      </div>
-
-      {/* Progress Bar for Voting Phase */}
-      {currentStory.status === 'voting' && totalPlayers > 0 && (
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs">
-            <span>Progress</span>
-            <span>{votingProgress}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div 
-              className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
-              style={{ width: `${votingProgress}%` }}
-            />
+    <div data-testid="voting-controls" className="w-full bg-white rounded-lg border p-3">
+      {/* Horizontal Layout */}
+      <div className="flex items-center justify-between gap-4">
+        {/* Left Side: Status and Progress */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <h3 className="text-base font-medium whitespace-nowrap">Voting Controls</h3>
+          
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {status.badge}
+            
+            {/* Progress Bar for Voting Phase - Inline */}
+            {currentStory.status === 'voting' && totalPlayers > 0 && (
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="flex-1 bg-gray-200 rounded-full h-2 min-w-0">
+                  <div 
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${votingProgress}%` }}
+                  />
+                </div>
+                <span className="text-xs text-gray-600 whitespace-nowrap">{votingProgress}%</span>
+              </div>
+            )}
           </div>
         </div>
-      )}
 
-      {/* Control Buttons - Compact Grid */}
-      <div className="grid grid-cols-2 gap-2">
-        {/* Reveal Votes Button */}
-        {currentStory.status === 'voting' && (
-          <Button
-            onClick={handleRevealVotes}
-            size="sm"
-            className="h-8 text-xs col-span-2"
-            disabled={totalVotes === 0}
-            data-testid="reveal-votes-button"
-          >
-            <Eye className="h-3 w-3 mr-1" />
-            Reveal{totalVotes > 0 && ` (${totalVotes})`}
-          </Button>
-        )}
+        {/* Right Side: Control Buttons */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Reveal Votes Button */}
+          {currentStory.status === 'voting' && (
+            <Button
+              onClick={handleRevealVotes}
+              size="sm"
+              className="h-8 text-xs whitespace-nowrap"
+              disabled={totalVotes === 0}
+              data-testid="reveal-votes-button"
+            >
+              <Eye className="h-3 w-3 mr-1" />
+              Reveal{totalVotes > 0 && ` (${totalVotes})`}
+            </Button>
+          )}
 
-        {/* Restart and Skip Buttons */}
-        {(currentStory.status === 'revealed' || currentStory.status === 'voting') && (
-          <>
-            <Button
-              onClick={handleRestartVoting}
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs"
-              data-testid="restart-voting-button"
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              Restart
-            </Button>
-            <Button
-              onClick={handleSkipStory}
-              variant="destructive"
-              size="sm"
-              className="h-8 text-xs"
-              data-testid="skip-story-button"
-            >
-              <SkipForward className="h-3 w-3 mr-1" />
-              Skip
-            </Button>
-          </>
-        )}
+          {/* Restart and Skip Buttons */}
+          {(currentStory.status === 'revealed' || currentStory.status === 'voting') && (
+            <>
+              <Button
+                onClick={handleRestartVoting}
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs whitespace-nowrap"
+                data-testid="restart-voting-button"
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Restart
+              </Button>
+              <Button
+                onClick={handleSkipStory}
+                variant="destructive"
+                size="sm"
+                className="h-8 text-xs whitespace-nowrap"
+                data-testid="skip-story-button"
+              >
+                <SkipForward className="h-3 w-3 mr-1" />
+                Skip
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Help Text */}
+      {/* Help Text - Only show when needed and compact */}
       {currentStory.status === 'voting' && totalVotes === 0 && (
-        <p className="text-xs text-muted-foreground text-center">
+        <p className="text-xs text-muted-foreground text-center mt-2">
           Wait for votes before revealing
         </p>
       )}

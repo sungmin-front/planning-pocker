@@ -28,28 +28,30 @@ export const ResponsiveVotingInterface: React.FC = () => {
     }
   };
 
-  // Determine grid configuration based on screen size
+  // Determine grid configuration based on screen size - full width coverage
   const getGridConfig = () => {
+    const totalOptions = VOTE_OPTIONS.length; // 9 options
     if (isMobile) {
-      // Use 4 columns on very small screens, 5 on larger mobile
-      return screenSize.width < 400 ? 'grid-cols-4' : 'grid-cols-5';
+      // Use 3 rows for mobile to cover full width
+      return 'grid-cols-3';
     }
     if (isTablet) {
+      // Use full width on tablet
       return 'grid-cols-5';
     }
-    // Desktop and larger
-    return 'grid-cols-5';
+    // Desktop - use all 9 columns for full width
+    return 'grid-cols-9';
   };
 
-  // Determine button size based on screen size
+  // Determine button size based on screen size - now flexible width
   const getButtonSize = () => {
     if (isMobile) {
-      return 'h-14 w-14'; // Larger touch targets on mobile
+      return 'h-14 w-full min-w-0'; // Full width on mobile
     }
     if (isTablet) {
-      return 'h-13 w-13'; // Slightly smaller on tablet
+      return 'h-13 w-full min-w-0'; // Full width on tablet
     }
-    return 'h-12 w-12'; // Standard size on desktop
+    return 'h-12 w-full min-w-0'; // Full width on desktop
   };
 
   // Determine container padding based on screen size
@@ -85,30 +87,15 @@ export const ResponsiveVotingInterface: React.FC = () => {
     <div 
       data-testid="voting-interface"
       className={cn(
-        'bg-white rounded-lg border shadow-sm',
+        'bg-white rounded-lg border shadow-sm w-full',
         getContainerPadding()
       )}
     >
-      <div className="space-y-4">
-        <div className="text-center">
-          <h3 className={cn(
-            'font-semibold text-gray-900',
-            isMobile ? 'text-lg' : 'text-xl'
-          )}>
-            Select your vote
-          </h3>
-          <p className={cn(
-            'text-gray-600 mt-1',
-            isMobile ? 'text-sm' : 'text-base'
-          )}>
-            Choose a story point value
-          </p>
-        </div>
-
+      <div className="space-y-3">
         <div 
           data-testid={getLayoutTestId()}
           className={cn(
-            'grid place-items-center',
+            'grid place-items-center w-full',
             getGridConfig(),
             getGapSize()
           )}
