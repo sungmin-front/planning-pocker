@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PlayerCard } from '@/components/PlayerCard';
 import { VoteProgressRing } from '@/components/VoteProgressRing';
+import { VotingResultsModal } from '@/components/VotingResultsModal';
+import { Button } from '@/components/ui/button';
+import { BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Player, Story } from '@/types';
 
@@ -15,6 +18,8 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
   currentStory,
   currentPlayerId,
 }) => {
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+
   if (players.length === 0) {
     return (
       <div 
@@ -86,9 +91,20 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
                   <p className="text-sm text-gray-600 mb-2">
                     {isRevealed ? 'Votes revealed!' : 'Pick your cards!'}
                   </p>
-                  <div className="text-xs text-gray-500">
-                    {players.filter(p => p.id in currentStory.votes).length}/{players.length} voted
-                  </div>
+                  {isRevealed ? (
+                    <Button
+                      size="sm"
+                      onClick={() => setIsStatsModalOpen(true)}
+                      className="h-7 px-3 text-xs"
+                    >
+                      <BarChart3 className="h-3 w-3 mr-1" />
+                      View Statistics
+                    </Button>
+                  ) : (
+                    <div className="text-xs text-gray-500">
+                      {players.filter(p => p.id in currentStory.votes).length}/{players.length} voted
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -137,14 +153,26 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
   };
 
   return (
-    <div 
-      data-testid="responsive-player-layout"
-      className="w-full flex-1 flex flex-col"
-      aria-label={`${players.length} players in room`}
-    >
-      <div className="bg-white rounded-lg p-6 flex-1 flex items-center justify-center">
-        {renderCircularTable()}
+    <>
+      <div 
+        data-testid="responsive-player-layout"
+        className="w-full flex-1 flex flex-col"
+        aria-label={`${players.length} players in room`}
+      >
+        <div className="bg-white rounded-lg p-6 flex-1 flex items-center justify-center">
+          {renderCircularTable()}
+        </div>
       </div>
-    </div>
+
+      {/* Voting Results Modal */}
+      {currentStory && (
+        <VotingResultsModal
+          isOpen={isStatsModalOpen}
+          onClose={() => setIsStatsModalOpen(false)}
+          votes={currentStory.votes || {}}
+          totalVotes={Object.keys(currentStory.votes || {}).length}
+        />
+      )}
+    </>
   );
 };

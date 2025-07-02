@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 // import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { ContextMenu } from '@/components/ui/context-menu';
 import { AddStoryModal } from '@/components/HostControls/AddStoryModal';
 import { JiraIntegrationModal } from '@/components/HostControls/JiraIntegrationModal';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, FileText, ChevronsUp, ChevronUp, Menu, ChevronDown, ChevronsDown } from 'lucide-react';
 
 interface BacklogSidebarProps {
   stories: any[];
@@ -16,7 +18,7 @@ interface BacklogSidebarProps {
 export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
   const { room, isHost, syncRoom } = useRoom();
   const { send } = useWebSocket();
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; storyId: string } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; story: any } | null>(null);
   const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
   const [isJiraModalOpen, setIsJiraModalOpen] = useState(false);
 
@@ -33,41 +35,61 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
     });
   };
 
+  const handleOpenJiraLink = (jiraUrl: string) => {
+    window.open(jiraUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const handleCardClick = (story: any, event: React.MouseEvent) => {
     event.preventDefault();
+    
+    const availableActions = [];
+    
+    // Add Jira link action if available
     if (story.jiraMetadata?.jiraUrl) {
-      window.open(story.jiraMetadata.jiraUrl, '_blank', 'noopener,noreferrer');
+      availableActions.push({
+        id: 'open-link',
+        label: 'Jira 이슈 열기',
+        icon: '🔗',
+        action: () => handleOpenJiraLink(story.jiraMetadata.jiraUrl)
+      });
     }
-  };
-
-  const handleContextMenu = (event: React.MouseEvent, storyId: string) => {
-    if (!isHost) return;
     
-    event.preventDefault();
-    event.stopPropagation();
+    // Add select action for hosts
+    if (isHost) {
+      availableActions.push({
+        id: 'select-story',
+        label: '투표 안건으로 선택',
+        icon: '📋',
+        action: () => handleSelectStory(story.id)
+      });
+    }
     
-    setContextMenu({
-      x: event.clientX,
-      y: event.clientY,
-      storyId
-    });
+    // If only one action, execute it directly
+    if (availableActions.length === 1) {
+      availableActions[0].action();
+      return;
+    }
+    
+    // If multiple actions, show context menu
+    if (availableActions.length > 1) {
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        story: { ...story, availableActions }
+      });
+    }
   };
 
-  const handleContextMenuAction = (action: 'select') => {
-    if (contextMenu && action === 'select') {
-      handleSelectStory(contextMenu.storyId);
-    }
-    setContextMenu(null);
+  const getContextMenuItems = () => {
+    if (!contextMenu?.story?.availableActions) return [];
+    
+    return contextMenu.story.availableActions.map((action: any) => ({
+      id: action.id,
+      label: action.label,
+      icon: action.icon,
+      onClick: action.action
+    }));
   };
-
-  // Close context menu when clicking outside
-  React.useEffect(() => {
-    const handleClickOutside = () => setContextMenu(null);
-    if (contextMenu) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [contextMenu]);
 
   const getIssueTypeColor = (issueType: string) => {
     switch (issueType.toLowerCase()) {
@@ -83,19 +105,19 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
     switch (priority.toLowerCase()) {
       case 'highest': case 'high': return 'border-red-300 bg-red-50 text-red-700';
       case 'medium': return 'border-orange-300 bg-orange-50 text-orange-700';
-      case 'low': case 'lowest': return 'border-green-300 bg-green-50 text-green-700';
+      case 'low': case 'lowest': return 'border-blue-300 bg-blue-50 text-blue-700';
       default: return 'border-gray-300 bg-gray-50 text-gray-700';
     }
   };
 
   const getPriorityIcon = (priority: string) => {
     switch (priority.toLowerCase()) {
-      case 'highest': return '⬆️';
-      case 'high': return '↗️';
-      case 'medium': return '➡️';
-      case 'low': return '↘️';
-      case 'lowest': return '⬇️';
-      default: return '➡️';
+      case 'highest': return <ChevronsUp className="h-3 w-3" />;
+      case 'high': return <ChevronUp className="h-3 w-3" />;
+      case 'medium': return <Menu className="h-3 w-3" />;
+      case 'low': return <ChevronDown className="h-3 w-3" />;
+      case 'lowest': return <ChevronsDown className="h-3 w-3" />;
+      default: return <Menu className="h-3 w-3" />;
     }
   };
 
@@ -212,12 +234,11 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
                     isActive ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200'
                   }`}
                   onClick={(e) => handleCardClick(story, e)}
-                  onContextMenu={(e) => handleContextMenu(e, story.id)}
                 >
                   {/* Story Header */}
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm text-gray-900 truncate leading-tight">
+                      <h4 className="font-medium text-xs text-gray-900 line-clamp-2 leading-tight">
                         {story.title}
                       </h4>
                     </div>
@@ -269,22 +290,15 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
         </div>
       </CardContent>
       
-      {/* Context Menu */}
-      {contextMenu && isHost && (
-        <div
-          className="fixed bg-white border border-gray-200 rounded-md shadow-lg py-1 z-50"
-          style={{
-            left: contextMenu.x,
-            top: contextMenu.y,
-          }}
-        >
-          <button
-            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-            onClick={() => handleContextMenuAction('select')}
-          >
-            📋 투표 안건으로 선택
-          </button>
-        </div>
+      {/* Context Menu - Portal to body to avoid sidebar clipping */}
+      {contextMenu && createPortal(
+        <ContextMenu
+          isOpen={!!contextMenu}
+          position={{ x: contextMenu.x, y: contextMenu.y }}
+          items={getContextMenuItems()}
+          onClose={() => setContextMenu(null)}
+        />,
+        document.body
       )}
     </Card>
       
