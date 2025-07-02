@@ -1,4 +1,4 @@
-import { Room, Player, Story, VoteValue } from '@planning-poker/shared';
+import { Room, Player, Story, VoteValue, JiraMetadata } from '@planning-poker/shared';
 import { generateRoomId, releaseRoomId } from './utils';
 import { ServerRoom, SocketUserMap } from './types';
 import { v4 as uuidv4 } from 'uuid';
@@ -195,8 +195,8 @@ export class RoomManager {
     };
   }
 
-  addStory(roomId: string, title: string, description?: string, hostSocketId?: string): Story | null {
-    const room = this.rooms.get(roomId);
+  addStory(roomId: string, title: string, description?: string, hostSocketId?: string, jiraMetadata?: JiraMetadata): Story | null {
+    const room = this.rooms.get(roomId.toUpperCase());
     if (!room) return null;
 
     // Check if the requester is the host
@@ -212,7 +212,8 @@ export class RoomManager {
       title,
       description,
       status: 'voting',
-      votes: {}
+      votes: {},
+      ...(jiraMetadata && { jiraMetadata })
     };
 
     room.stories.push(story);
