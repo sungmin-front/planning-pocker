@@ -219,15 +219,18 @@ export const RoomPage: React.FC = () => {
             </div>
 
             {/* Bottom Panel - Cards */}
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Voting Interface */}
+            <div className="mt-6 space-y-4">
+              {/* Voting Interface - Full Width */}
               <ResponsiveVotingInterface />
               
-              {/* Voting Results */}
-              <VotingResults />
-              
-              {/* Finalize Points (Host Only) */}
-              <FinalizePoints />
+              {/* Other Components - Grid Layout */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Voting Results */}
+                <VotingResults />
+                
+                {/* Finalize Points (Host Only) */}
+                <FinalizePoints />
+              </div>
             </div>
           </div>
         </div>
@@ -263,22 +266,25 @@ export const RoomPage: React.FC = () => {
             />
           </div>
 
-          {/* Bottom Cards Grid */}
-          <div className="grid grid-cols-1 gap-4 mb-6">
-            {/* Voting Interface */}
+          {/* Bottom Cards */}
+          <div className="space-y-4 mb-6">
+            {/* Voting Interface - Full Width */}
             <ResponsiveVotingInterface />
             
-            {/* Voting Results */}
-            <VotingResults />
-            
-            {/* Finalize Points (Host Only) */}
-            <FinalizePoints />
-            
-            {/* Host Actions (Mobile) */}
-            <HostActions />
-            
-            {/* Stories (Mobile) */}
-            <StoryList stories={room.stories} />
+            {/* Other Components - Grid Layout */}
+            <div className="grid grid-cols-1 gap-4">
+              {/* Voting Results */}
+              <VotingResults />
+              
+              {/* Finalize Points (Host Only) */}
+              <FinalizePoints />
+              
+              {/* Host Actions (Mobile) */}
+              <HostActions />
+              
+              {/* Stories (Mobile) */}
+              <StoryList stories={room.stories} />
+            </div>
           </div>
         </div>
       </div>
