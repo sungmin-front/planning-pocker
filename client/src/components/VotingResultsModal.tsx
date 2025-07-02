@@ -41,24 +41,6 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
 }) => {
   const [selectedFinalPoint, setSelectedFinalPoint] = useState<string>('');
 
-  if (totalVotes === 0) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Voting Results
-            </DialogTitle>
-          </DialogHeader>
-          <div className="p-4 text-center text-muted-foreground">
-            No votes cast
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
   // All possible vote options (including those with 0 votes)
   const VOTE_OPTIONS = ['1', '2', '3', '5', '8', '13', '21', '?', '☕'];
   
@@ -69,44 +51,47 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
     distribution.set(vote, (distribution.get(vote) || 0) + 1);
   });
 
-  // Create complete distribution including 0-vote options
+  // Create sorted distribution including options with 0 votes
   const sortedDistribution: VoteDistribution[] = VOTE_OPTIONS.map(option => ({
     value: option,
     count: distribution.get(option) || 0,
-    percentage: Math.round(((distribution.get(option) || 0) / totalVotes) * 100)
+    percentage: totalVotes > 0 ? ((distribution.get(option) || 0) / totalVotes) * 100 : 0
   }));
 
-  // Prepare data for line chart
-  const chartData = sortedDistribution.map(item => ({
-    name: item.value,
-    votes: item.count,
-    percentage: item.percentage
-  }));
+  // Chart data for line chart (only non-zero values)
+  const chartData = sortedDistribution
+    .filter(d => d.count > 0)
+    .map(d => ({
+      name: d.value,
+      vote: d.value,
+      votes: d.count,
+      percentage: d.percentage
+    }));
 
-  // Calculate statistics (only for numeric votes)
-  const calculateStats = (): VotingStats => {
-    const numericVotes = voteValues
-      .filter(vote => !isNaN(Number(vote)))
-      .map(vote => Number(vote));
+  // Calculate statistics for numeric values only
+  const calculateStats = () => {
+    const numericVotes = voteValues.filter(vote => !isNaN(Number(vote)));
+    const numericNumbers = numericVotes.map(vote => Number(vote));
     
-    if (numericVotes.length === 0) {
+    if (numericNumbers.length === 0) {
       return {
+        average: 0,
         highest: 0,
         lowest: 0,
-        average: 0,
         numericVotesOnly: []
       };
     }
 
-    const highest = Math.max(...numericVotes);
-    const lowest = Math.min(...numericVotes);
-    const average = numericVotes.reduce((sum, vote) => sum + vote, 0) / numericVotes.length;
+    const sum = numericNumbers.reduce((acc, val) => acc + val, 0);
+    const average = sum / numericNumbers.length;
+    const highest = Math.max(...numericNumbers);
+    const lowest = Math.min(...numericNumbers);
 
     return {
+      average: Math.round(average * 10) / 10,
       highest,
       lowest,
-      average: Math.round(average * 10) / 10, // Round to 1 decimal place
-      numericVotesOnly: numericVotes
+      numericVotesOnly: numericNumbers
     };
   };
 
@@ -147,6 +132,24 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
       onClose();
     }
   };
+
+  if (totalVotes === 0) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Voting Results
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4 text-center text-muted-foreground">
+            No votes cast
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   // Determine consensus type
   const getConsensusType = () => {
