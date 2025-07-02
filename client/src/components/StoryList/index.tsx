@@ -117,7 +117,8 @@ export const StoryList: React.FC<StoryListProps> = ({ stories }) => {
             pending: '⏳',
             voting: '🗳️',
             revealed: '👁️',
-            closed: '✅'
+            closed: '✅',
+            skipped: '⏭️'
           };
           const statusIcon = statusIcons[story.status] || '❓';
           

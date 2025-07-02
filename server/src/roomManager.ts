@@ -378,6 +378,44 @@ export class RoomManager {
     return { success: true, story };
   }
 
+  skipStory(socketId: string, storyId: string): { success: boolean; error?: string; story?: Story } {
+    const userInfo = this.socketUserMap[socketId];
+    if (!userInfo?.roomId) {
+      return { success: false, error: 'Not in a room' };
+    }
+
+    const room = this.rooms.get(userInfo.roomId);
+    if (!room) {
+      return { success: false, error: 'Room not found' };
+    }
+
+    const player = room.players.find(p => p.socketId === socketId);
+    if (!player?.isHost) {
+      return { success: false, error: 'Only the host can skip stories' };
+    }
+
+    const story = room.stories.find(s => s.id === storyId);
+    if (!story) {
+      return { success: false, error: 'Story not found' };
+    }
+
+    // Don't allow skipping already completed stories
+    if (story.status === 'closed') {
+      return { success: false, error: 'Cannot skip a completed story' };
+    }
+
+    // Don't allow skipping already skipped stories
+    if (story.status === 'skipped') {
+      return { success: false, error: 'Story is already skipped' };
+    }
+
+    story.status = 'skipped';
+    // Clear votes when skipping (optional - could preserve for history)
+    // story.votes = {};
+    
+    return { success: true, story };
+  }
+
   transferHost(socketId: string, toNickname: string): { success: boolean; error?: string; newHost?: Player; oldHost?: Player; roomId?: string } {
     const userInfo = this.socketUserMap[socketId];
     if (!userInfo?.roomId) {

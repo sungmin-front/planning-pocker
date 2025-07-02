@@ -3,10 +3,10 @@ import { useRoom } from '@/contexts/RoomContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Eye, RotateCcw, Users } from 'lucide-react';
+import { Eye, RotateCcw, Users, SkipForward } from 'lucide-react';
 
 export const VotingControls: React.FC = () => {
-  const { room, isHost, revealVotes, restartVoting } = useRoom();
+  const { room, isHost, revealVotes, restartVoting, skipStory } = useRoom();
 
   // Only render for hosts
   if (!isHost || !room || !room.currentStoryId) {
@@ -37,6 +37,12 @@ export const VotingControls: React.FC = () => {
     }
   };
 
+  const handleSkipStory = () => {
+    if (room.currentStoryId) {
+      skipStory(room.currentStoryId);
+    }
+  };
+
   const getStatusDisplay = () => {
     switch (currentStory.status) {
       case 'voting':
@@ -53,6 +59,11 @@ export const VotingControls: React.FC = () => {
         return {
           badge: <Badge variant="default" className="bg-gray-100 text-gray-800">Story Completed</Badge>,
           description: `Final points: ${currentStory.final_point || 'Not set'}`
+        };
+      case 'skipped':
+        return {
+          badge: <Badge variant="default" className="bg-yellow-100 text-yellow-800">Story Skipped</Badge>,
+          description: 'This story has been skipped'
         };
       default:
         return {
@@ -121,6 +132,19 @@ export const VotingControls: React.FC = () => {
             >
               <RotateCcw className="h-4 w-4 mr-2" />
               Restart Voting
+            </Button>
+          )}
+
+          {/* Skip Story Button */}
+          {(currentStory.status === 'voting' || currentStory.status === 'revealed') && (
+            <Button
+              onClick={handleSkipStory}
+              variant="destructive"
+              className="w-full"
+              data-testid="skip-story-button"
+            >
+              <SkipForward className="h-4 w-4 mr-2" />
+              Skip Story
             </Button>
           )}
         </div>
