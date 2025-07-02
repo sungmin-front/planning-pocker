@@ -72,7 +72,7 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
   const checkJiraStatus = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/api/jira/status');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/jira/status`);
       const data = await response.json();
       setIsConfigured(data.configured);
       setIsConnected(data.connected);
@@ -109,7 +109,7 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
   const fetchDefaultProjectSprints = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/api/jira/default-project/sprints');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/jira/default-project/sprints`);
       const data = await response.json();
       setSprints(data.sprints || []);
       setSelectedSprint('');
@@ -130,9 +130,14 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
   const fetchSprintIssues = async (sprintId: string) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8080/api/jira/sprints/${sprintId}/issues`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/jira/sprints/${sprintId}/issues`);
       const data = await response.json();
-      setIssues(data.issues || []);
+      // 에픽 제외 필터링
+      const filteredIssues = (data.issues || []).filter((issue: JiraIssue) => 
+        issue.issueType.name.toLowerCase() !== 'epic' && 
+        issue.issueType.name !== '에픽'
+      );
+      setIssues(filteredIssues);
       setSelectedIssues(new Set());
     } catch (error) {
       console.error('Error fetching sprint issues:', error);
@@ -183,7 +188,7 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
       setLoading(true);
       const selectedIssueObjects = issues.filter(issue => selectedIssues.has(issue.id));
       
-      const response = await fetch('http://localhost:8080/api/jira/issues/import', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/jira/issues/import`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
