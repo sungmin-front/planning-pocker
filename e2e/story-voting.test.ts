@@ -156,7 +156,7 @@ describe('Story and Voting E2E Tests', () => {
     it('should allow players to vote', async () => {
       // Player 1 votes
       player1Client.send({
-        type: 'VOTE',
+        type: 'STORY_VOTE',
         payload: { storyId, vote: '5' }
       });
 
@@ -165,7 +165,7 @@ describe('Story and Voting E2E Tests', () => {
 
       // Player 2 votes
       player2Client.send({
-        type: 'VOTE',
+        type: 'STORY_VOTE',
         payload: { storyId, vote: '8' }
       });
 
@@ -174,7 +174,7 @@ describe('Story and Voting E2E Tests', () => {
 
       // Host votes
       hostClient.send({
-        type: 'VOTE',
+        type: 'STORY_VOTE',
         payload: { storyId, vote: '3' }
       });
 
@@ -188,7 +188,7 @@ describe('Story and Voting E2E Tests', () => {
     it('should allow players to change their votes', async () => {
       // Initial vote
       player1Client.send({
-        type: 'VOTE',
+        type: 'STORY_VOTE',
         payload: { storyId, vote: '5' }
       });
 
@@ -196,7 +196,7 @@ describe('Story and Voting E2E Tests', () => {
 
       // Change vote
       player1Client.send({
-        type: 'VOTE',
+        type: 'STORY_VOTE',
         payload: { storyId, vote: '8' }
       });
 
@@ -214,7 +214,7 @@ describe('Story and Voting E2E Tests', () => {
 
       for (const { client, vote } of votes) {
         client.send({
-          type: 'VOTE',
+          type: 'STORY_VOTE',
           payload: { storyId, vote }
         });
         await client.waitForMessage('vote:recorded');
@@ -222,7 +222,7 @@ describe('Story and Voting E2E Tests', () => {
 
       // Host reveals votes
       hostClient.send({
-        type: 'REVEAL_VOTES',
+        type: 'STORY_REVEAL_VOTES',
         payload: { storyId }
       });
 
@@ -241,7 +241,7 @@ describe('Story and Voting E2E Tests', () => {
 
     it('should only allow host to reveal votes', async () => {
       player1Client.send({
-        type: 'REVEAL_VOTES',
+        type: 'STORY_REVEAL_VOTES',
         payload: { storyId }
       });
 
@@ -253,20 +253,20 @@ describe('Story and Voting E2E Tests', () => {
     it('should restart voting when host requests', async () => {
       // Vote and reveal first
       player1Client.send({
-        type: 'VOTE',
+        type: 'STORY_VOTE',
         payload: { storyId, vote: '5' }
       });
       await player1Client.waitForMessage('vote:recorded');
 
       hostClient.send({
-        type: 'REVEAL_VOTES',
+        type: 'STORY_REVEAL_VOTES',
         payload: { storyId }
       });
       await hostClient.waitForMessage('votes:revealed');
 
       // Restart voting
       hostClient.send({
-        type: 'RESET_VOTES',
+        type: 'STORY_RESTART_VOTING',
         payload: { storyId }
       });
 
@@ -309,14 +309,14 @@ describe('Story and Voting E2E Tests', () => {
 
       for (const { client, vote } of votes) {
         client.send({
-          type: 'VOTE',
+          type: 'STORY_VOTE',
           payload: { storyId, vote }
         });
         await client.waitForMessage('vote:recorded');
       }
 
       hostClient.send({
-        type: 'REVEAL_VOTES',
+        type: 'STORY_REVEAL_VOTES',
         payload: { storyId }
       });
       await hostClient.waitForMessage('votes:revealed');
@@ -381,7 +381,7 @@ describe('Story and Voting E2E Tests', () => {
 
     it('should handle invalid vote values', async () => {
       player1Client.send({
-        type: 'VOTE',
+        type: 'STORY_VOTE',
         payload: { storyId, vote: 'invalid_value' }
       });
 
@@ -392,7 +392,7 @@ describe('Story and Voting E2E Tests', () => {
 
     it('should handle voting on non-existent story', async () => {
       player1Client.send({
-        type: 'VOTE',
+        type: 'STORY_VOTE',
         payload: { storyId: 'non-existent', vote: '5' }
       });
 
@@ -403,7 +403,7 @@ describe('Story and Voting E2E Tests', () => {
 
     it('should handle revealing votes with no votes cast', async () => {
       hostClient.send({
-        type: 'REVEAL_VOTES',
+        type: 'STORY_REVEAL_VOTES',
         payload: { storyId }
       });
 
@@ -417,21 +417,21 @@ describe('Story and Voting E2E Tests', () => {
       const promises = [
         (async () => {
           player1Client.send({
-            type: 'VOTE',
+            type: 'STORY_VOTE',
             payload: { storyId, vote: '3' }
           });
           return player1Client.waitForMessage('vote:recorded');
         })(),
         (async () => {
           player2Client.send({
-            type: 'VOTE',
+            type: 'STORY_VOTE',
             payload: { storyId, vote: '5' }
           });
           return player2Client.waitForMessage('vote:recorded');
         })(),
         (async () => {
           hostClient.send({
-            type: 'VOTE',
+            type: 'STORY_VOTE',
             payload: { storyId, vote: '8' }
           });
           return hostClient.waitForMessage('vote:recorded');
@@ -445,7 +445,7 @@ describe('Story and Voting E2E Tests', () => {
 
       // Verify all votes were recorded
       hostClient.send({
-        type: 'REVEAL_VOTES',
+        type: 'STORY_REVEAL_VOTES',
         payload: { storyId }
       });
 
@@ -495,7 +495,7 @@ describe('Story and Voting E2E Tests', () => {
     it('should allow spectators to observe but not vote', async () => {
       // Spectator tries to vote
       spectatorClient.send({
-        type: 'VOTE',
+        type: 'STORY_VOTE',
         payload: { storyId, vote: '5' }
       });
 
@@ -507,14 +507,14 @@ describe('Story and Voting E2E Tests', () => {
     it('should allow spectators to see vote reveals', async () => {
       // Players vote
       player1Client.send({
-        type: 'VOTE',
+        type: 'STORY_VOTE',
         payload: { storyId, vote: '5' }
       });
       await player1Client.waitForMessage('vote:recorded');
 
       // Host reveals
       hostClient.send({
-        type: 'REVEAL_VOTES',
+        type: 'STORY_REVEAL_VOTES',
         payload: { storyId }
       });
       await hostClient.waitForMessage('votes:revealed');
