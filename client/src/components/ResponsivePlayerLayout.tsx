@@ -27,8 +27,8 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
   // Handle finalizing story points
   const handleFinalize = (storyId: string, finalPoint: string) => {
     send({
-      type: 'STORY_FINALIZE',
-      payload: { storyId, finalPoint }
+      type: 'STORY_SET_FINAL_POINT',
+      payload: { storyId, point: finalPoint }
     });
   };
 
