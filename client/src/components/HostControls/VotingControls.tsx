@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, RotateCcw, SkipForward, Play } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Eye, RotateCcw, SkipForward, Play, ChevronRight } from 'lucide-react';
 
 interface VotingControlsProps {
   compact?: boolean;
@@ -85,6 +86,42 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
     }
   };
 
+  // Find next pending story (excluding finalized ones unless manually re-selected)
+  const getNextPendingStory = () => {
+    room.stories.forEach((s, index) => {
+      console.log(`Story ${index + 1}:`, {
+        title: s.title,
+        status: s.status,
+        final_point: s.final_point,
+        id: s.id
+      });
+    });
+    
+    const pendingStories = room.stories.filter(story => 
+      (story.status === 'pending' || story.status === 'voting') && 
+      (story.final_point === undefined || story.final_point === null)
+    );
+    
+    console.log('getNextPendingStory Debug - filtered pending stories:', pendingStories.map(s => ({
+      id: s.id,
+      title: s.title,
+      status: s.status,
+      final_point: s.final_point
+    })));
+    
+    return pendingStories.length > 0 ? pendingStories[0] : null;
+  };
+
+  const handleNextStory = () => {
+    const nextStory = getNextPendingStory();
+    if (nextStory) {
+      send({
+        type: 'STORY_SELECT',
+        payload: { storyId: nextStory.id }
+      });
+    }
+  };
+
   const getStatusBadge = () => {
     switch (currentStory.status) {
       case 'voting':
@@ -102,6 +139,8 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
 
   // Compact version for poker table
   if (compact) {
+    const nextStory = getNextPendingStory();
+    
     return (
       <div data-testid="voting-controls-compact" className="flex items-center gap-1 p-2 bg-white/90 backdrop-blur-sm rounded-lg border border-white/20 shadow-sm">
         {/* Control Buttons - Compact */}
@@ -141,6 +180,28 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
               <SkipForward className="h-3 w-3" />
             </Button>
           )}
+
+          {/* Next Issue Button - Show when current story is completed and there's a next story */}
+          {(currentStory.status === 'closed' || currentStory.status === 'skipped') && nextStory && (
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={handleNextStory}
+                    variant="default"
+                    size="sm"
+                    data-testid="next-story-button"
+                    className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700"
+                  >
+                    <ChevronRight className="h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-black text-white text-xs p-2 rounded">
+                  <p>다음 이슈: {nextStory.title}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
       </div>
     );
@@ -178,6 +239,15 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
   };
 
   const status = getStatusDisplay();
+  const nextStory = getNextPendingStory();
+
+  // Debug logs
+  console.log('VotingControls Debug:', {
+    currentStoryStatus: currentStory.status,
+    currentStoryId: currentStory.id,
+    nextStory: nextStory ? { id: nextStory.id, title: nextStory.title, status: nextStory.status } : null,
+    shouldShowNextButton: (currentStory.status === 'closed' || currentStory.status === 'skipped') && nextStory
+  });
 
   return (
     <div data-testid="voting-controls" className="w-full bg-white rounded-lg border p-3">
@@ -228,6 +298,29 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
                 Skip
               </Button>
             </>
+          )}
+
+          {/* Next Issue Button - Show when current story is completed and there's a next story */}
+          {(currentStory.status === 'closed' || currentStory.status === 'skipped') && nextStory && (
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={handleNextStory}
+                    variant="default"
+                    size="sm"
+                    className="h-8 text-xs whitespace-nowrap bg-green-600 hover:bg-green-700"
+                    data-testid="next-story-button"
+                  >
+                    <ChevronRight className="h-3 w-3 mr-1" />
+                    Next Issue
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="bg-black text-white text-xs p-2 rounded">
+                  <p>다음 이슈: {nextStory.title}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       </div>
