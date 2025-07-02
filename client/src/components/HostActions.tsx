@@ -13,7 +13,7 @@ export const HostActions: React.FC = () => {
   return (
     <>
       {/* Host Actions Bar - Only visible on larger screens */}
-      <div className="hidden lg:block mb-6">
+      <div className="hidden lg:block">
         <VotingControls />
       </div>
 
