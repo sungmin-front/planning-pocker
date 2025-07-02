@@ -1,6 +1,5 @@
 import { BacklogSidebar } from "@/components/BacklogSidebar";
 import { CurrentStory } from "@/components/CurrentStory";
-import { FinalizePoints } from "@/components/FinalizePoints";
 import { HostActions } from "@/components/HostActions";
 import { ResponsivePlayerLayout } from "@/components/ResponsivePlayerLayout";
 import { ResponsiveVotingInterface } from "@/components/ResponsiveVotingInterface";
@@ -255,11 +254,7 @@ export const RoomPage: React.FC = () => {
                   {/* Voting Interface - Full Width */}
                   <ResponsiveVotingInterface />
 
-                  {/* Other Components - Grid Layout */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Finalize Points (Host Only) */}
-                    <FinalizePoints />
-                  </div>
+                  {/* Other Components - Grid Layout removed as finalize is now in modal */}
                 </div>
               </div>
             </SidebarInset>
@@ -328,11 +323,7 @@ export const RoomPage: React.FC = () => {
                 {/* Voting Interface - Full Width */}
                 <ResponsiveVotingInterface />
 
-                {/* Other Components */}
-                <div className="space-y-4">
-                  {/* Finalize Points (Host Only) */}
-                  <FinalizePoints />
-                </div>
+                {/* Other Components removed as finalize is now in modal */}
               </div>
             </SidebarInset>
           </div>
