@@ -38,4 +38,3 @@ export interface WebSocketMessage {
     type: MessageType;
     payload: any;
 }
-//# sourceMappingURL=types.d.ts.map

@@ -1,19 +1,15 @@
-version: '3.8'
 
 services:
   # 서버 (Planning Poker Backend)
   server:
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./server/Dockerfile
     container_name: planning-poker-server
+    env_file:
+      - .env.docker
     environment:
       - NODE_ENV=production
-      - PORT=9000
-      - JIRA_BASE_URL=${JIRA_BASE_URL}
-      - JIRA_EMAIL=${JIRA_EMAIL}
-      - JIRA_API_TOKEN=${JIRA_API_TOKEN}
-      - JIRA_DEFAULT_PROJECT_KEY=${JIRA_DEFAULT_PROJECT_KEY}
     networks:
       - planning-poker-network
     restart: unless-stopped
@@ -21,8 +17,8 @@ services:
   # 클라이언트 (Planning Poker Frontend)
   client:
     build:
-      context: ./client
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./client/Dockerfile
       args:
         - VITE_API_BASE_URL=http://localhost/api
         - VITE_WEBSOCKET_URL=ws://localhost
