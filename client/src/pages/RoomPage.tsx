@@ -1,44 +1,51 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { 
-  SidebarProvider, 
-  Sidebar, 
-  SidebarContent, 
+import { BacklogSidebar } from "@/components/BacklogSidebar";
+import { CurrentStory } from "@/components/CurrentStory";
+import { FinalizePoints } from "@/components/FinalizePoints";
+import { HostActions } from "@/components/HostActions";
+import { ResponsivePlayerLayout } from "@/components/ResponsivePlayerLayout";
+import { ResponsiveVotingInterface } from "@/components/ResponsiveVotingInterface";
+import { SyncButton } from "@/components/SyncButton";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarInset,
+  SidebarProvider,
   SidebarTrigger,
-  SidebarInset
-} from '@/components/ui/sidebar';
-import { PanelLeftOpen, PanelLeftClose } from 'lucide-react';
-import { useRoom } from '@/contexts/RoomContext';
-import { useWebSocket } from '@/contexts/WebSocketContext';
-import { ResponsiveVotingInterface } from '@/components/ResponsiveVotingInterface';
-import { ResponsivePlayerLayout } from '@/components/ResponsivePlayerLayout';
-import { CurrentStory } from '@/components/CurrentStory';
-import { StoryList } from '@/components/StoryList';
-import { VotingResults } from '@/components/VotingResults';
-import { VotingControls } from '@/components/HostControls/VotingControls';
-import { SyncButton } from '@/components/SyncButton';
-import { FinalizePoints } from '@/components/FinalizePoints';
-import { HostActions } from '@/components/HostActions';
-import { BacklogSidebar } from '@/components/BacklogSidebar';
-// import { VOTE_OPTIONS } from '@planning-poker/shared';
-const VOTE_OPTIONS = ['0', '1', '2', '3', '5', '8', '13', '21', '?', '☕'];
+} from "@/components/ui/sidebar";
+import { VotingResults } from "@/components/VotingResults";
+import { useRoom } from "@/contexts/RoomContext";
+import { useWebSocket } from "@/contexts/WebSocketContext";
+import { PanelLeftOpen } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 export const RoomPage: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  
-  const nickname = searchParams.get('nickname');
-  const [nicknameInput, setNicknameInput] = useState(nickname || '');
+
+  const nickname = searchParams.get("nickname");
+  const [nicknameInput, setNicknameInput] = useState(nickname || "");
   const [isJoining, setIsJoining] = useState(false);
   // Modal states moved to HostActions component
-  
-  const { room, currentPlayer, isHost, joinRoom, leaveRoom, vote, syncRoom, joinError, nicknameSuggestions, clearJoinError } = useRoom();
+
+  const {
+    room,
+    currentPlayer,
+    isHost,
+    joinRoom,
+    leaveRoom,
+    vote,
+    syncRoom,
+    joinError,
+    nicknameSuggestions,
+    clearJoinError,
+  } = useRoom();
   const { isConnected, send } = useWebSocket();
 
   useEffect(() => {
@@ -56,7 +63,7 @@ export const RoomPage: React.FC = () => {
 
   const handleLeaveRoom = () => {
     leaveRoom();
-    navigate('/');
+    navigate("/");
   };
 
   const handleVote = (value: string) => {
@@ -68,12 +75,12 @@ export const RoomPage: React.FC = () => {
   const handleJoinWithNickname = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!roomId || !nicknameInput.trim()) return;
-    
+
     setIsJoining(true);
     try {
       await joinRoom(roomId, nicknameInput.trim());
     } catch (error) {
-      console.error('Failed to join room:', error);
+      console.error("Failed to join room:", error);
     } finally {
       setIsJoining(false);
     }
@@ -108,18 +115,22 @@ export const RoomPage: React.FC = () => {
                   }}
                   placeholder="Enter your nickname"
                   disabled={!isConnected || isJoining}
-                  className={joinError?.includes('already taken') ? 'border-red-500' : ''}
+                  className={
+                    joinError?.includes("already taken") ? "border-red-500" : ""
+                  }
                   autoFocus
                 />
               </div>
 
               {/* Nickname conflict error and suggestions */}
-              {joinError?.includes('already taken') && (
+              {joinError?.includes("already taken") && (
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                   <p className="text-sm text-yellow-800 mb-2">{joinError}</p>
                   {nicknameSuggestions.length > 0 && (
                     <div>
-                      <p className="text-sm text-yellow-700 mb-2">Try these suggestions:</p>
+                      <p className="text-sm text-yellow-700 mb-2">
+                        Try these suggestions:
+                      </p>
                       <div className="flex flex-wrap gap-2">
                         {nicknameSuggestions.map((suggestion, index) => (
                           <button
@@ -139,7 +150,7 @@ export const RoomPage: React.FC = () => {
               )}
 
               {/* Other join errors */}
-              {joinError && !joinError.includes('already taken') && (
+              {joinError && !joinError.includes("already taken") && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-md">
                   <p className="text-sm text-red-600">{joinError}</p>
                 </div>
@@ -148,7 +159,9 @@ export const RoomPage: React.FC = () => {
               {/* Connection Status */}
               {!isConnected && (
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <p className="text-sm text-yellow-600">Connect to server first</p>
+                  <p className="text-sm text-yellow-600">
+                    Connect to server first
+                  </p>
                 </div>
               )}
 
@@ -156,7 +169,7 @@ export const RoomPage: React.FC = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate('/')}
+                  onClick={() => navigate("/")}
                   disabled={isJoining}
                   className="flex-1"
                 >
@@ -167,7 +180,7 @@ export const RoomPage: React.FC = () => {
                   disabled={!isConnected || !nicknameInput.trim() || isJoining}
                   className="flex-1"
                 >
-                  {isJoining ? 'Joining...' : 'Join Room'}
+                  {isJoining ? "Joining..." : "Join Room"}
                 </Button>
               </div>
             </form>
@@ -177,16 +190,16 @@ export const RoomPage: React.FC = () => {
     );
   }
 
-  const currentStory = room.currentStoryId 
-    ? room.stories.find(story => story.id === room.currentStoryId) 
+  const currentStory = room.currentStoryId
+    ? room.stories.find((story) => story.id === room.currentStoryId)
     : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Desktop Layout: Sidebar + Main Content */}
-      <div className="hidden lg:block h-screen">
-        <SidebarProvider>
-          <div className="flex h-full">
+      <SidebarProvider>
+        {/* Desktop Layout: Sidebar + Main Content */}
+        <div className="hidden lg:flex h-screen">
+          <div className="flex h-full flex-1">
             {/* Collapsible Backlog Sidebar */}
             <Sidebar className="border-r border-white/20">
               <SidebarContent className="bg-white/50 backdrop-blur-sm">
@@ -199,10 +212,24 @@ export const RoomPage: React.FC = () => {
               {/* Header - Fixed */}
               <div className="bg-white/50 backdrop-blur-sm border-b border-white/20 p-4">
                 <div className="flex justify-between items-center mb-4">
-                  <div>
+                  <div className="flex items-center gap-4">
+                    {/* Sidebar Toggle Button */}
+                    <div className="mb-4">
+                      <SidebarTrigger>
+                        <Button variant="outline" size="sm">
+                          <PanelLeftOpen className="h-4 w-4" />
+                          Toggle Backlog
+                        </Button>
+                      </SidebarTrigger>
+                    </div>
+                    <div className="flex flex-col">
+
                     <h1 className="text-3xl font-bold">{room.name}</h1>
                     <p className="text-muted-foreground">Room ID: {room.id}</p>
+                    </div>
                   </div>
+                  </div>
+                  <div>
                   <div className="flex items-center gap-4">
                     {isHost && <Badge variant="default">Host</Badge>}
                     <SyncButton />
@@ -211,45 +238,35 @@ export const RoomPage: React.FC = () => {
                     </Button>
                   </div>
                 </div>
-                
-                {/* Host Actions */}
-                <HostActions />
               </div>
 
               {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto p-4 flex flex-col">
-                {/* Sidebar Toggle Button */}
-                <div className="mb-4">
-                  <SidebarTrigger>
-                    <Button variant="outline" size="sm">
-                      <PanelLeftOpen className="h-4 w-4" />
-                      Toggle Backlog
-                    </Button>
-                  </SidebarTrigger>
-                </div>
-                
+                {/* Host Actions */}
+                <HostActions />
+
                 {/* Current Story */}
                 {currentStory && <CurrentStory />}
 
-            {/* Main Content - Players */}
-            <div className="flex-1 flex flex-col">
-              <ResponsivePlayerLayout 
-                players={room.players}
-                currentStory={currentStory}
-                currentPlayerId={currentPlayer?.id || ''}
-              />
-            </div>
+                {/* Main Content - Players */}
+                <div className="flex-1 flex flex-col">
+                  <ResponsivePlayerLayout
+                    players={room.players}
+                    currentStory={currentStory ?? null}
+                    currentPlayerId={currentPlayer?.id || ""}
+                  />
+                </div>
 
                 {/* Bottom Panel - Cards */}
                 <div className="mt-6 space-y-4">
                   {/* Voting Interface - Full Width */}
                   <ResponsiveVotingInterface />
-                  
+
                   {/* Other Components - Grid Layout */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Voting Results */}
                     <VotingResults />
-                    
+
                     {/* Finalize Points (Host Only) */}
                     <FinalizePoints />
                   </div>
@@ -257,61 +274,71 @@ export const RoomPage: React.FC = () => {
               </div>
             </SidebarInset>
           </div>
-        </SidebarProvider>
-      </div>
+        </div>
 
-      {/* Mobile Layout: Traditional Stacked */}
-      <div className="lg:hidden p-4">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-3xl font-bold">{room.name}</h1>
-              <p className="text-muted-foreground">Room ID: {room.id}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              {isHost && <Badge variant="default">Host</Badge>}
-              <SyncButton />
-              <Button variant="outline" onClick={handleLeaveRoom}>
-                Leave Room
-              </Button>
-            </div>
-          </div>
+        {/* Mobile Layout: Sidebar + Main Content */}
+        <div className="lg:hidden h-screen">
+          <div className="flex h-full">
+            {/* Mobile Collapsible Backlog Sidebar */}
+            <Sidebar className="border-r border-white/20" variant="inset">
+              <SidebarContent className="bg-white/50 backdrop-blur-sm">
+                <BacklogSidebar stories={room.stories} />
+              </SidebarContent>
+            </Sidebar>
 
-          {/* Current Story */}
-          {currentStory && <CurrentStory />}
+            {/* Mobile Main Content Area */}
+            <SidebarInset className="flex-1 flex flex-col overflow-hidden">
+              {/* Mobile Header - Fixed */}
+              <div className="bg-white/50 backdrop-blur-sm border-b border-white/20 p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-2">
+                    <SidebarTrigger />
+                    <div>
+                      <h1 className="text-xl font-bold">{room.name}</h1>
+                      <p className="text-sm text-muted-foreground">Room ID: {room.id}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isHost && <Badge variant="default" className="text-xs">Host</Badge>}
+                    <SyncButton />
+                    <Button variant="outline" size="sm" onClick={handleLeaveRoom}>
+                      Leave
+                    </Button>
+                  </div>
+                </div>
+              </div>
 
-          {/* Players */}
-          <div className="mb-6">
-            <ResponsivePlayerLayout 
-              players={room.players}
-              currentStory={currentStory}
-              currentPlayerId={currentPlayer?.id || ''}
-            />
-          </div>
+              {/* Mobile Scrollable Content */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {/* Host Actions */}
+                <HostActions />
 
-          {/* Bottom Cards */}
-          <div className="space-y-4 mb-6">
-            {/* Voting Interface - Full Width */}
-            <ResponsiveVotingInterface />
-            
-            {/* Other Components - Grid Layout */}
-            <div className="grid grid-cols-1 gap-4">
-              {/* Voting Results */}
-              <VotingResults />
-              
-              {/* Finalize Points (Host Only) */}
-              <FinalizePoints />
-              
-              {/* Host Actions (Mobile) */}
-              <HostActions />
-              
-              {/* Stories (Mobile) */}
-              <StoryList stories={room.stories} />
-            </div>
+                {/* Current Story */}
+                {currentStory && <CurrentStory />}
+
+                {/* Players */}
+                <ResponsivePlayerLayout
+                  players={room.players}
+                  currentStory={currentStory ?? null}
+                  currentPlayerId={currentPlayer?.id || ""}
+                />
+
+                {/* Voting Interface - Full Width */}
+                <ResponsiveVotingInterface />
+
+                {/* Other Components */}
+                <div className="space-y-4">
+                  {/* Voting Results */}
+                  <VotingResults />
+
+                  {/* Finalize Points (Host Only) */}
+                  <FinalizePoints />
+                </div>
+              </div>
+            </SidebarInset>
           </div>
         </div>
-      </div>
+      </SidebarProvider>
     </div>
   );
 };
