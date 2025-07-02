@@ -28,30 +28,29 @@ export const ResponsiveVotingInterface: React.FC = () => {
     }
   };
 
-  // Determine grid configuration based on screen size - full width coverage
-  const getGridConfig = () => {
-    const totalOptions = VOTE_OPTIONS.length; // 9 options
+  // Determine layout configuration based on screen size
+  const getLayoutConfig = () => {
     if (isMobile) {
-      // Use 3 rows for mobile to cover full width
-      return 'grid-cols-3';
+      // Mobile: 3 columns in rows
+      return 'flex flex-wrap justify-center';
     }
     if (isTablet) {
-      // Use full width on tablet
-      return 'grid-cols-5';
+      // Tablet: flex layout with wrapping
+      return 'flex flex-wrap justify-center';
     }
-    // Desktop - use all 9 columns for full width
-    return 'grid-cols-9';
+    // Desktop: single row flex layout
+    return 'flex justify-center flex-wrap';
   };
 
-  // Determine button size based on screen size - now flexible width
+  // Determine button size based on screen size - match PlayerCard exactly
   const getButtonSize = () => {
     if (isMobile) {
-      return 'h-14 w-full min-w-0'; // Full width on mobile
+      return 'h-16 w-12 flex-shrink-0'; // Exact same as PlayerCard
     }
     if (isTablet) {
-      return 'h-13 w-full min-w-0'; // Full width on tablet
+      return 'h-16 w-12 flex-shrink-0'; // Exact same as PlayerCard
     }
-    return 'h-12 w-full min-w-0'; // Full width on desktop
+    return 'h-16 w-12 flex-shrink-0'; // Exact same as PlayerCard (w-12 h-16 = 48px x 64px)
   };
 
   // Determine container padding based on screen size
@@ -95,8 +94,8 @@ export const ResponsiveVotingInterface: React.FC = () => {
         <div 
           data-testid={getLayoutTestId()}
           className={cn(
-            'grid place-items-center w-full',
-            getGridConfig(),
+            'w-full',
+            getLayoutConfig(),
             getGapSize()
           )}
         >
@@ -110,12 +109,12 @@ export const ResponsiveVotingInterface: React.FC = () => {
                 onClick={() => handleVote(option)}
                 aria-label={`Vote for ${option} points`}
                 className={cn(
-                  'font-bold text-lg rounded-lg transition-all duration-200',
-                  'border-2 hover:scale-105 active:scale-95',
+                  'font-bold text-lg rounded shadow transition-all duration-200',
+                  'border border-gray-300 hover:scale-105 active:scale-95 flex items-center justify-center',
                   getButtonSize(),
                   isSelected
                     ? 'bg-primary text-primary-foreground border-primary shadow-lg'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-primary hover:text-primary',
+                    : 'bg-white text-gray-800 border-gray-300 hover:border-primary hover:text-primary',
                   // Enhanced touch targets for mobile
                   isMobile && 'touch-manipulation',
                   // Special styling for special votes
@@ -128,17 +127,6 @@ export const ResponsiveVotingInterface: React.FC = () => {
           })}
         </div>
 
-        {/* Current vote indicator */}
-        {currentVote && (
-          <div className="text-center">
-            <div className={cn(
-              'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary',
-              isMobile ? 'text-xs' : 'text-sm'
-            )}>
-              Your vote: <span className="ml-1 font-bold">{currentVote}</span>
-            </div>
-          </div>
-        )}
 
         {/* Mobile-specific quick actions */}
         {isMobile && currentVote && (
