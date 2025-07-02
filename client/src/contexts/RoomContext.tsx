@@ -278,6 +278,63 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           }
           break;
 
+        case 'story:setFinalPoint:response':
+          console.log('Received story:setFinalPoint:response message:', message.payload);
+          if (message.payload && message.payload.success && message.payload.story && room) {
+            const { story } = message.payload;
+            // Update the specific story with final point and status
+            const updatedStories = room.stories.map(roomStory => {
+              if (roomStory.id === story.id) {
+                return {
+                  ...roomStory,
+                  final_point: story.final_point,
+                  status: story.status as 'closed'
+                };
+              }
+              return roomStory;
+            });
+            
+            const updatedRoom = {
+              ...room,
+              stories: updatedStories
+            };
+            console.log('Updated room with finalized story:', updatedRoom);
+            setRoom(updatedRoom);
+            
+            toast({
+              title: "Story Finalized",
+              description: `Story points set to ${story.final_point}. Story is now complete.`,
+            });
+          } else if (message.payload && !message.payload.success) {
+            toast({
+              title: "Failed to Finalize Story",
+              description: message.payload.error || "Failed to set final story points",
+              variant: "destructive",
+            });
+          }
+          break;
+
+        case 'story:updated':
+          console.log('Received story:updated message:', message.payload);
+          if (message.payload && message.payload.story && room) {
+            const { story } = message.payload;
+            // Update the specific story in the room
+            const updatedStories = room.stories.map(roomStory => {
+              if (roomStory.id === story.id) {
+                return story;
+              }
+              return roomStory;
+            });
+            
+            const updatedRoom = {
+              ...room,
+              stories: updatedStories
+            };
+            console.log('Updated room with story update:', updatedRoom);
+            setRoom(updatedRoom);
+          }
+          break;
+
         case 'player:kicked':
           console.log('Received player:kicked message:', message.payload);
           toast({

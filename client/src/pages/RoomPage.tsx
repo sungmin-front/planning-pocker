@@ -16,6 +16,7 @@ import { AddStoryModal } from '@/components/HostControls/AddStoryModal';
 import { JiraIntegrationModal } from '@/components/HostControls/JiraIntegrationModal';
 import { VotingControls } from '@/components/HostControls/VotingControls';
 import { SyncButton } from '@/components/SyncButton';
+import { FinalizePoints } from '@/components/FinalizePoints';
 // import { VOTE_OPTIONS } from '@planning-poker/shared';
 const VOTE_OPTIONS = ['0', '1', '2', '3', '5', '8', '13', '21', '?', '☕'];
 
@@ -214,6 +215,9 @@ export const RoomPage: React.FC = () => {
             
             {/* Voting Results */}
             <VotingResults />
+            
+            {/* Finalize Points (Host Only) */}
+            <FinalizePoints />
             
             {/* Add Story Button (Host Only) */}
             {isHost && (
