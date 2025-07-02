@@ -7,25 +7,24 @@ RUN npm install -g pnpm
 # 작업 디렉토리 설정
 WORKDIR /app
 
-# 루트의 package.json과 pnpm-lock.yaml 복사 (workspace 설정)
-COPY ../package.json ../pnpm-lock.yaml ./
+# workspace 설정 파일들 복사
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # shared 패키지 복사
-COPY ../shared ./shared
+COPY shared ./shared
 
 # server 소스 복사
-COPY package.json ./server/
-COPY src ./server/src
-COPY tsconfig.json ./server/
-COPY nodemon.json ./server/
+COPY server/package.json ./server/
+COPY server/src ./server/src
+COPY server/tsconfig.json ./server/
 
 # 의존성 설치 (workspace 전체)
 RUN pnpm install
 
 # shared 패키지 빌드
-RUN cd shared && pnpm run build
+RUN pnpm --filter @planning-poker/shared build
 
-# 서버 빌드
+# 서버 빌드 (테스트 파일 제외)  
 RUN cd server && pnpm run build
 
 # Production 스테이지
@@ -37,10 +36,10 @@ RUN npm install -g pnpm
 WORKDIR /app
 
 # 필요한 파일들만 복사
-COPY ../package.json ../pnpm-lock.yaml ./
-COPY ../shared/package.json ./shared/
-COPY ../shared/dist ./shared/dist
-COPY package.json ./server/
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY shared/package.json ./shared/
+COPY --from=base /app/shared/dist ./shared/dist
+COPY server/package.json ./server/
 COPY --from=base /app/server/dist ./server/dist
 
 # 프로덕션 의존성만 설치
