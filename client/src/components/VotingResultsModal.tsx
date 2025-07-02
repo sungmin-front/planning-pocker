@@ -125,7 +125,7 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
@@ -148,29 +148,29 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
 
           {/* Statistics Cards */}
           {stats.numericVotesOnly.length > 0 && (
-            <div className="grid grid-cols-3 gap-3">
-              <Card className="p-2">
-                <div className="flex items-center gap-1 mb-1">
-                  <TrendingUp className="h-3 w-3 text-green-600" />
-                  <span className="text-xs font-medium">Highest</span>
+            <div className="grid grid-cols-3 gap-2">
+              <Card className="p-1.5 aspect-square flex flex-col justify-center">
+                <div className="flex items-center justify-center gap-1 mb-0.5">
+                  <TrendingUp className="h-2.5 w-2.5 text-green-600" />
+                  <span className="text-xs font-medium">High</span>
                 </div>
-                <div className="text-lg font-bold text-green-600">{stats.highest}</div>
+                <div className="text-sm font-bold text-green-600 text-center">{stats.highest}</div>
               </Card>
               
-              <Card className="p-2">
-                <div className="flex items-center gap-1 mb-1">
-                  <TrendingDown className="h-3 w-3 text-red-600" />
-                  <span className="text-xs font-medium">Lowest</span>
+              <Card className="p-1.5 aspect-square flex flex-col justify-center">
+                <div className="flex items-center justify-center gap-1 mb-0.5">
+                  <TrendingDown className="h-2.5 w-2.5 text-red-600" />
+                  <span className="text-xs font-medium">Low</span>
                 </div>
-                <div className="text-lg font-bold text-red-600">{stats.lowest}</div>
+                <div className="text-sm font-bold text-red-600 text-center">{stats.lowest}</div>
               </Card>
               
-              <Card className="p-2">
-                <div className="flex items-center gap-1 mb-1">
-                  <Target className="h-3 w-3 text-blue-600" />
-                  <span className="text-xs font-medium">Average</span>
+              <Card className="p-1.5 aspect-square flex flex-col justify-center">
+                <div className="flex items-center justify-center gap-1 mb-0.5">
+                  <Target className="h-2.5 w-2.5 text-blue-600" />
+                  <span className="text-xs font-medium">Avg</span>
                 </div>
-                <div className="text-lg font-bold text-blue-600">{stats.average}</div>
+                <div className="text-sm font-bold text-blue-600 text-center">{stats.average}</div>
               </Card>
             </div>
           )}
@@ -202,7 +202,7 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
                         borderRadius: '6px',
                         fontSize: '12px'
                       }}
-                      formatter={(value: any, name: string) => [
+                      formatter={(value: any) => [
                         `${value} ${value === 1 ? 'vote' : 'votes'}`,
                         'Votes'
                       ]}
