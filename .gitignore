@@ -9,8 +9,13 @@ dev-debug.log
 # Dependency directories
 node_modules/
 
-# Environment variables
+# Environment variables (실제 값이 들어있는 파일들)
 .env
+.env.local
+.env.*.local
+.env.docker
+server/.env
+client/.env
 
 # Editor directories and files
 .idea

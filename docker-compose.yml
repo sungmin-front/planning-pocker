@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # 서버 (Planning Poker Backend)
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: planning-poker-server
+    environment:
+      - NODE_ENV=production
+      - PORT=9000
+      - JIRA_BASE_URL=${JIRA_BASE_URL}
+      - JIRA_EMAIL=${JIRA_EMAIL}
+      - JIRA_API_TOKEN=${JIRA_API_TOKEN}
+      - JIRA_DEFAULT_PROJECT_KEY=${JIRA_DEFAULT_PROJECT_KEY}
+    networks:
+      - planning-poker-network
+    restart: unless-stopped
+
+  # 클라이언트 (Planning Poker Frontend)
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=http://localhost/api
+        - VITE_WEBSOCKET_URL=ws://localhost
+    container_name: planning-poker-client
+    networks:
+      - planning-poker-network
+    restart: unless-stopped
+
+  # Nginx (Reverse Proxy)
+  nginx:
+    image: nginx:alpine
+    container_name: planning-poker-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - server
+      - client
+    networks:
+      - planning-poker-network
+    restart: unless-stopped
+
+networks:
+  planning-poker-network:
+    driver: bridge
+
+volumes:
+  planning-poker-data:
