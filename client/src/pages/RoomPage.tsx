@@ -205,35 +205,38 @@ export const RoomPage: React.FC = () => {
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col">
             {/* Current Story */}
             {currentStory && <CurrentStory />}
 
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              {/* Players */}
-              <div className="xl:col-span-2">
+            {/* Main Content - Players with Compact Voting Controls */}
+            <div className="flex-1 flex flex-col">
+              <div className="relative">
                 <ResponsivePlayerLayout 
                   players={room.players}
                   currentStory={currentStory}
                   currentPlayerId={currentPlayer?.id || ''}
                 />
+                
+                {/* Compact Voting Controls in Poker Table */}
+                {isHost && (
+                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
+                    <VotingControls compact={true} />
+                  </div>
+                )}
               </div>
+            </div>
 
-              {/* Right Panel - Voting Controls */}
-              <div className="space-y-6">
-                {/* Voting Interface */}
-                <ResponsiveVotingInterface />
-                
-                {/* Host Voting Controls */}
-                {isHost && <VotingControls />}
-                
-                {/* Voting Results */}
-                <VotingResults />
-                
-                {/* Finalize Points (Host Only) */}
-                <FinalizePoints />
-              </div>
+            {/* Bottom Panel - Cards */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Voting Interface */}
+              <ResponsiveVotingInterface />
+              
+              {/* Voting Results */}
+              <VotingResults />
+              
+              {/* Finalize Points (Host Only) */}
+              <FinalizePoints />
             </div>
           </div>
         </div>
@@ -260,36 +263,38 @@ export const RoomPage: React.FC = () => {
           {/* Current Story */}
           {currentStory && <CurrentStory />}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Players */}
-            <div className="lg:col-span-2">
-              <ResponsivePlayerLayout 
-                players={room.players}
-                currentStory={currentStory}
-                currentPlayerId={currentPlayer?.id || ''}
-              />
-            </div>
+          {/* Players with Compact Voting Controls */}
+          <div className="relative mb-6">
+            <ResponsivePlayerLayout 
+              players={room.players}
+              currentStory={currentStory}
+              currentPlayerId={currentPlayer?.id || ''}
+            />
+            
+            {/* Compact Voting Controls in Poker Table */}
+            {isHost && (
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
+                <VotingControls compact={true} />
+              </div>
+            )}
+          </div>
 
-            {/* Right Panel */}
-            <div className="space-y-6">
-              {/* Voting Interface */}
-              <ResponsiveVotingInterface />
-              
-              {/* Host Voting Controls */}
-              {isHost && <VotingControls />}
-              
-              {/* Voting Results */}
-              <VotingResults />
-              
-              {/* Finalize Points (Host Only) */}
-              <FinalizePoints />
-              
-              {/* Host Actions (Mobile) */}
-              <HostActions />
-              
-              {/* Stories (Mobile) */}
-              <StoryList stories={room.stories} />
-            </div>
+          {/* Bottom Cards Grid */}
+          <div className="grid grid-cols-1 gap-4 mb-6">
+            {/* Voting Interface */}
+            <ResponsiveVotingInterface />
+            
+            {/* Voting Results */}
+            <VotingResults />
+            
+            {/* Finalize Points (Host Only) */}
+            <FinalizePoints />
+            
+            {/* Host Actions (Mobile) */}
+            <HostActions />
+            
+            {/* Stories (Mobile) */}
+            <StoryList stories={room.stories} />
           </div>
         </div>
       </div>

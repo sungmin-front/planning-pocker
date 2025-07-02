@@ -1,11 +1,14 @@
 import React from 'react';
 import { useRoom } from '@/contexts/RoomContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Eye, RotateCcw, Users, SkipForward } from 'lucide-react';
+import { Eye, RotateCcw, SkipForward } from 'lucide-react';
 
-export const VotingControls: React.FC = () => {
+interface VotingControlsProps {
+  compact?: boolean;
+}
+
+export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false }) => {
   const { room, isHost, revealVotes, restartVoting, skipStory } = useRoom();
 
   // Only render for hosts
@@ -43,6 +46,77 @@ export const VotingControls: React.FC = () => {
     }
   };
 
+  const getStatusBadge = () => {
+    switch (currentStory.status) {
+      case 'voting':
+        return <Badge variant="default" className="bg-blue-100 text-blue-800 text-xs">투표중</Badge>;
+      case 'revealed':
+        return <Badge variant="default" className="bg-green-100 text-green-800 text-xs">공개됨</Badge>;
+      case 'closed':
+        return <Badge variant="default" className="bg-gray-100 text-gray-800 text-xs">완료</Badge>;
+      case 'skipped':
+        return <Badge variant="default" className="bg-yellow-100 text-yellow-800 text-xs">건너뜀</Badge>;
+      default:
+        return <Badge variant="outline" className="text-xs">준비</Badge>;
+    }
+  };
+
+  // Compact version for poker table
+  if (compact) {
+    return (
+      <div data-testid="voting-controls-compact" className="flex items-center gap-2 p-2 bg-white/90 backdrop-blur-sm rounded-lg border border-white/20 shadow-sm">
+        {getStatusBadge()}
+        
+        {/* Voting progress indicator */}
+        {currentStory.status === 'voting' && (
+          <span className="text-xs text-gray-600">
+            {totalVotes}/{totalPlayers}
+          </span>
+        )}
+
+        {/* Control Buttons - Compact */}
+        <div className="flex gap-1">
+          {currentStory.status === 'voting' && (
+            <Button
+              onClick={handleRevealVotes}
+              size="sm"
+              disabled={totalVotes === 0}
+              data-testid="reveal-votes-button"
+              className="h-7 px-2 text-xs"
+            >
+              <Eye className="h-3 w-3" />
+            </Button>
+          )}
+
+          {(currentStory.status === 'revealed' || currentStory.status === 'voting') && (
+            <Button
+              onClick={handleRestartVoting}
+              variant="outline"
+              size="sm"
+              data-testid="restart-voting-button"
+              className="h-7 px-2 text-xs"
+            >
+              <RotateCcw className="h-3 w-3" />
+            </Button>
+          )}
+
+          {(currentStory.status === 'voting' || currentStory.status === 'revealed') && (
+            <Button
+              onClick={handleSkipStory}
+              variant="destructive"
+              size="sm"
+              data-testid="skip-story-button"
+              className="h-7 px-2 text-xs"
+            >
+              <SkipForward className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Original full version for sidebar
   const getStatusDisplay = () => {
     switch (currentStory.status) {
       case 'voting':
@@ -76,86 +150,82 @@ export const VotingControls: React.FC = () => {
   const status = getStatusDisplay();
 
   return (
-    <Card data-testid="voting-controls" className="w-full">
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          Voting Controls
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Status Display */}
-        <div className="space-y-2">
-          {status.badge}
-          <p className="text-sm text-muted-foreground">{status.description}</p>
-        </div>
+    <div data-testid="voting-controls" className="w-full bg-white rounded-lg border p-4 space-y-4">
+      <h3 className="text-lg font-semibold flex items-center gap-2">
+        Voting Controls
+      </h3>
+      
+      {/* Status Display */}
+      <div className="space-y-2">
+        {status.badge}
+        <p className="text-sm text-muted-foreground">{status.description}</p>
+      </div>
 
-        {/* Progress Bar for Voting Phase */}
-        {currentStory.status === 'voting' && totalPlayers > 0 && (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Voting Progress</span>
-              <span>{votingProgress}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${votingProgress}%` }}
-              />
-            </div>
+      {/* Progress Bar for Voting Phase */}
+      {currentStory.status === 'voting' && totalPlayers > 0 && (
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Voting Progress</span>
+            <span>{votingProgress}%</span>
           </div>
-        )}
-
-        {/* Control Buttons */}
-        <div className="space-y-2">
-          {/* Reveal Votes Button */}
-          {currentStory.status === 'voting' && (
-            <Button
-              onClick={handleRevealVotes}
-              className="w-full"
-              disabled={totalVotes === 0}
-              data-testid="reveal-votes-button"
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Reveal Votes
-              {totalVotes > 0 && ` (${totalVotes})`}
-            </Button>
-          )}
-
-          {/* Restart Voting Button */}
-          {(currentStory.status === 'revealed' || currentStory.status === 'voting') && (
-            <Button
-              onClick={handleRestartVoting}
-              variant="outline"
-              className="w-full"
-              data-testid="restart-voting-button"
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Restart Voting
-            </Button>
-          )}
-
-          {/* Skip Story Button */}
-          {(currentStory.status === 'voting' || currentStory.status === 'revealed') && (
-            <Button
-              onClick={handleSkipStory}
-              variant="destructive"
-              className="w-full"
-              data-testid="skip-story-button"
-            >
-              <SkipForward className="h-4 w-4 mr-2" />
-              Skip Story
-            </Button>
-          )}
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${votingProgress}%` }}
+            />
+          </div>
         </div>
+      )}
 
-        {/* Help Text */}
-        {currentStory.status === 'voting' && totalVotes === 0 && (
-          <p className="text-xs text-muted-foreground text-center">
-            Wait for players to vote before revealing results
-          </p>
+      {/* Control Buttons */}
+      <div className="space-y-2">
+        {/* Reveal Votes Button */}
+        {currentStory.status === 'voting' && (
+          <Button
+            onClick={handleRevealVotes}
+            className="w-full"
+            disabled={totalVotes === 0}
+            data-testid="reveal-votes-button"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Reveal Votes
+            {totalVotes > 0 && ` (${totalVotes})`}
+          </Button>
         )}
-      </CardContent>
-    </Card>
+
+        {/* Restart Voting Button */}
+        {(currentStory.status === 'revealed' || currentStory.status === 'voting') && (
+          <Button
+            onClick={handleRestartVoting}
+            variant="outline"
+            className="w-full"
+            data-testid="restart-voting-button"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Restart Voting
+          </Button>
+        )}
+
+        {/* Skip Story Button */}
+        {(currentStory.status === 'voting' || currentStory.status === 'revealed') && (
+          <Button
+            onClick={handleSkipStory}
+            variant="destructive"
+            className="w-full"
+            data-testid="skip-story-button"
+          >
+            <SkipForward className="h-4 w-4 mr-2" />
+            Skip Story
+          </Button>
+        )}
+      </div>
+
+      {/* Help Text */}
+      {currentStory.status === 'voting' && totalVotes === 0 && (
+        <p className="text-xs text-muted-foreground text-center">
+          Wait for players to vote before revealing results
+        </p>
+      )}
+    </div>
   );
 };
