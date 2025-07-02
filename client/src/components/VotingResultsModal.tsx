@@ -40,6 +40,7 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
   onFinalize,
 }) => {
   const [selectedFinalPoint, setSelectedFinalPoint] = useState<string>('');
+
   if (totalVotes === 0) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
