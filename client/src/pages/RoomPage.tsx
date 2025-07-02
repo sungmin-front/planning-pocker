@@ -15,7 +15,7 @@ import {
   SidebarContent,
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
+  SidebarTrigger
 } from "@/components/ui/sidebar";
 import { VotingResults } from "@/components/VotingResults";
 import { useRoom } from "@/contexts/RoomContext";
@@ -198,7 +198,7 @@ export const RoomPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <SidebarProvider>
         {/* Desktop Layout: Sidebar + Main Content */}
-        <div className="hidden lg:flex h-screen">
+        <div className="hidden lg:flex h-screen w-full">
           <div className="flex h-full flex-1">
             {/* Collapsible Backlog Sidebar */}
             <Sidebar className="border-r border-white/20">
@@ -208,29 +208,23 @@ export const RoomPage: React.FC = () => {
             </Sidebar>
 
             {/* Main Content Area */}
-            <SidebarInset className="flex-1 flex flex-col overflow-hidden">
+            <SidebarInset className="w-full flex-1 flex flex-col gap-4 overflow-hidden p-4">
               {/* Header - Fixed */}
-              <div className="bg-white/50 backdrop-blur-sm border-b border-white/20 p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-4">
+              <div className="bg-white/50 backdrop-blur-sm border-b border-white/20">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-start gap-4">
                     {/* Sidebar Toggle Button */}
-                    <div className="mb-4">
                       <SidebarTrigger>
-                        <Button variant="outline" size="sm">
-                          <PanelLeftOpen className="h-4 w-4" />
-                          Toggle Backlog
+                        <Button size="icon" variant="outline" className="h-10 w-10">
+                          <PanelLeftOpen className="h-6 w-6" />
                         </Button>
                       </SidebarTrigger>
-                    </div>
-                    <div className="flex flex-col">
-
-                    <h1 className="text-3xl font-bold">{room.name}</h1>
-                    <p className="text-muted-foreground">Room ID: {room.id}</p>
+                    <div className="flex gap-2 items-end">
+                      <h1 className="text-3xl font-bold">{room.name}</h1>
                     </div>
                   </div>
-                  </div>
-                  <div>
                   <div className="flex items-center gap-4">
+                  <Badge variant="outline">{room.id}</Badge>
                     {isHost && <Badge variant="default">Host</Badge>}
                     <SyncButton />
                     <Button variant="outline" onClick={handleLeaveRoom}>
@@ -241,7 +235,7 @@ export const RoomPage: React.FC = () => {
               </div>
 
               {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col">
+              <div className="flex-1 overflow-y-auto flex flex-col gap-4">
                 {/* Host Actions */}
                 <HostActions />
 
@@ -277,7 +271,7 @@ export const RoomPage: React.FC = () => {
         </div>
 
         {/* Mobile Layout: Sidebar + Main Content */}
-        <div className="lg:hidden h-screen">
+        <div className="lg:hidden h-screen w-full">
           <div className="flex h-full">
             {/* Mobile Collapsible Backlog Sidebar */}
             <Sidebar className="border-r border-white/20" variant="inset">
@@ -287,21 +281,33 @@ export const RoomPage: React.FC = () => {
             </Sidebar>
 
             {/* Mobile Main Content Area */}
-            <SidebarInset className="flex-1 flex flex-col overflow-hidden">
+            <SidebarInset className="w-full flex-1 flex flex-col gap-4 overflow-hidden p-4">
               {/* Mobile Header - Fixed */}
-              <div className="bg-white/50 backdrop-blur-sm border-b border-white/20 p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-2">
-                    <SidebarTrigger />
-                    <div>
+              <div className="bg-white/50 backdrop-blur-sm border-b border-white/20">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-start gap-2">
+                    <SidebarTrigger>
+                      <Button size="icon" variant="outline" className="h-8 w-8">
+                        <PanelLeftOpen className="h-4 w-4" />
+                      </Button>
+                    </SidebarTrigger>
+                    <div className="flex gap-2 items-end">
                       <h1 className="text-xl font-bold">{room.name}</h1>
-                      <p className="text-sm text-muted-foreground">Room ID: {room.id}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {isHost && <Badge variant="default" className="text-xs">Host</Badge>}
+                    <Badge variant="outline" className="text-xs">{room.id}</Badge>
+                    {isHost && (
+                      <Badge variant="default" className="text-xs">
+                        Host
+                      </Badge>
+                    )}
                     <SyncButton />
-                    <Button variant="outline" size="sm" onClick={handleLeaveRoom}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLeaveRoom}
+                    >
                       Leave
                     </Button>
                   </div>
@@ -309,7 +315,7 @@ export const RoomPage: React.FC = () => {
               </div>
 
               {/* Mobile Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto flex flex-col gap-4">
                 {/* Host Actions */}
                 <HostActions />
 
