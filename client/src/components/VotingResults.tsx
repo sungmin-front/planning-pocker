@@ -2,6 +2,7 @@ import React from 'react';
 import { useRoom } from '@/contexts/RoomContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface VoteDistribution {
   value: string;
@@ -41,33 +42,28 @@ export const VotingResults: React.FC = () => {
     );
   }
 
+  // All possible vote options (including those with 0 votes)
+  const VOTE_OPTIONS = ['1', '2', '3', '5', '8', '13', '21', '?', '☕'];
+  
   // Calculate vote distribution
   const distribution = new Map<string, number>();
   voteValues.forEach(vote => {
     distribution.set(vote, (distribution.get(vote) || 0) + 1);
   });
 
-  // Convert to array and sort logically
-  const sortedDistribution: VoteDistribution[] = Array.from(distribution.entries())
-    .map(([value, count]) => ({
-      value,
-      count,
-      percentage: Math.round((count / totalVotes) * 100)
-    }))
-    .sort((a, b) => {
-      // Sort numbers first, then special characters
-      const aIsNum = !isNaN(Number(a.value));
-      const bIsNum = !isNaN(Number(b.value));
-      
-      if (aIsNum && bIsNum) {
-        return Number(a.value) - Number(b.value);
-      }
-      if (aIsNum && !bIsNum) return -1;
-      if (!aIsNum && bIsNum) return 1;
-      
-      // Both are special characters, sort alphabetically
-      return a.value.localeCompare(b.value);
-    });
+  // Create complete distribution including 0-vote options
+  const sortedDistribution: VoteDistribution[] = VOTE_OPTIONS.map(option => ({
+    value: option,
+    count: distribution.get(option) || 0,
+    percentage: Math.round(((distribution.get(option) || 0) / totalVotes) * 100)
+  }));
+
+  // Prepare data for line chart
+  const chartData = sortedDistribution.map(item => ({
+    name: item.value,
+    votes: item.count,
+    percentage: item.percentage
+  }));
 
   // Find most voted value(s)
   const maxCount = Math.max(...sortedDistribution.map(d => d.count));
@@ -96,7 +92,7 @@ export const VotingResults: React.FC = () => {
       <CardHeader>
         <CardTitle className="text-lg">Voting Results</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {/* Consensus Indicator */}
         <div className="flex items-center gap-2">
           <Badge 
@@ -112,52 +108,69 @@ export const VotingResults: React.FC = () => {
           </span>
         </div>
 
-        {/* Vote Distribution */}
-        <div className="space-y-2">
-          {sortedDistribution.map((item, index) => (
+        {/* Line Chart */}
+        <div className="h-40">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis 
+                dataKey="name" 
+                tick={{ fontSize: 12 }}
+                stroke="#64748b"
+              />
+              <YAxis 
+                tick={{ fontSize: 12 }}
+                stroke="#64748b"
+                allowDecimals={false}
+              />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '6px',
+                  fontSize: '12px'
+                }}
+                formatter={(value: any, name: string) => [
+                  `${value} ${value === 1 ? 'vote' : 'votes'}`,
+                  'Votes'
+                ]}
+                labelFormatter={(label) => `Option: ${label}`}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="votes" 
+                stroke="#3b82f6" 
+                strokeWidth={2}
+                dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Vote Distribution - Compact Version */}
+        <div className="grid grid-cols-3 gap-2">
+          {sortedDistribution.filter(item => item.count > 0).map((item) => (
             <div 
               key={item.value} 
               data-testid={`vote-item-${item.value}`}
-              className={`flex items-center justify-between p-3 rounded-lg border ${
+              className={`p-2 rounded-lg border text-center ${
                 mostVotedValues.length === 1 && item.count === maxCount 
                   ? 'bg-primary/10 border-primary' 
                   : 'bg-gray-50'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <div 
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
-                    mostVotedValues.length === 1 && item.count === maxCount
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-white border-2'
-                  }`}
-                  data-testid={mostVotedValues.length === 1 && item.count === maxCount ? 'most-voted' : undefined}
-                >
-                  {item.value}
-                </div>
-                <div>
-                  <div className="font-medium">
-                    {item.count} {item.count === 1 ? 'vote' : 'votes'}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {item.percentage}% of total
-                  </div>
-                </div>
+              <div 
+                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm mx-auto mb-1 ${
+                  mostVotedValues.length === 1 && item.count === maxCount
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-white border-2'
+                }`}
+              >
+                {item.value}
               </div>
-              
-              {/* Visual bar */}
-              <div className="flex-1 max-w-32 mx-4">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${
-                      mostVotedValues.length === 1 && item.count === maxCount
-                        ? 'bg-primary'
-                        : 'bg-gray-400'
-                    }`}
-                    style={{ width: `${item.percentage}%` }}
-                  />
-                </div>
-              </div>
+              <div className="text-xs font-medium">{item.count}</div>
+              <div className="text-xs text-muted-foreground">{item.percentage}%</div>
             </div>
           ))}
         </div>

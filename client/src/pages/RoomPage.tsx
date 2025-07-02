@@ -17,7 +17,6 @@ import {
   SidebarProvider,
   SidebarTrigger
 } from "@/components/ui/sidebar";
-import { VotingResults } from "@/components/VotingResults";
 import { useRoom } from "@/contexts/RoomContext";
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import { PanelLeftOpen } from "lucide-react";
@@ -258,9 +257,6 @@ export const RoomPage: React.FC = () => {
 
                   {/* Other Components - Grid Layout */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Voting Results */}
-                    <VotingResults />
-
                     {/* Finalize Points (Host Only) */}
                     <FinalizePoints />
                   </div>
@@ -334,9 +330,6 @@ export const RoomPage: React.FC = () => {
 
                 {/* Other Components */}
                 <div className="space-y-4">
-                  {/* Voting Results */}
-                  <VotingResults />
-
                   {/* Finalize Points (Host Only) */}
                   <FinalizePoints />
                 </div>
