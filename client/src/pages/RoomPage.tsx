@@ -5,6 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { 
+  SidebarProvider, 
+  Sidebar, 
+  SidebarContent, 
+  SidebarTrigger,
+  SidebarInset
+} from '@/components/ui/sidebar';
+import { PanelLeftOpen, PanelLeftClose } from 'lucide-react';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { ResponsiveVotingInterface } from '@/components/ResponsiveVotingInterface';
@@ -176,38 +184,52 @@ export const RoomPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Desktop Layout: Sidebar + Main Content */}
-      <div className="hidden lg:flex h-screen">
-        {/* Left Sidebar - Backlog */}
-        <div className="w-80 bg-white/50 backdrop-blur-sm border-r border-white/20 p-4 flex flex-col">
-          <BacklogSidebar stories={room.stories} />
-        </div>
+      <div className="hidden lg:block h-screen">
+        <SidebarProvider>
+          <div className="flex h-full">
+            {/* Collapsible Backlog Sidebar */}
+            <Sidebar className="border-r border-white/20">
+              <SidebarContent className="bg-white/50 backdrop-blur-sm">
+                <BacklogSidebar stories={room.stories} />
+              </SidebarContent>
+            </Sidebar>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header */}
-          <div className="bg-white/50 backdrop-blur-sm border-b border-white/20 p-4">
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <h1 className="text-3xl font-bold">{room.name}</h1>
-                <p className="text-muted-foreground">Room ID: {room.id}</p>
+            {/* Main Content Area */}
+            <SidebarInset className="flex-1 flex flex-col overflow-hidden">
+              {/* Header - Fixed */}
+              <div className="bg-white/50 backdrop-blur-sm border-b border-white/20 p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h1 className="text-3xl font-bold">{room.name}</h1>
+                    <p className="text-muted-foreground">Room ID: {room.id}</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {isHost && <Badge variant="default">Host</Badge>}
+                    <SyncButton />
+                    <Button variant="outline" onClick={handleLeaveRoom}>
+                      Leave Room
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Host Actions */}
+                <HostActions />
               </div>
-              <div className="flex items-center gap-4">
-                {isHost && <Badge variant="default">Host</Badge>}
-                <SyncButton />
-                <Button variant="outline" onClick={handleLeaveRoom}>
-                  Leave Room
-                </Button>
-              </div>
-            </div>
-            
-            {/* Host Actions */}
-            <HostActions />
-          </div>
 
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col">
-            {/* Current Story */}
-            {currentStory && <CurrentStory />}
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col">
+                {/* Sidebar Toggle Button */}
+                <div className="mb-4">
+                  <SidebarTrigger>
+                    <Button variant="outline" size="sm">
+                      <PanelLeftOpen className="h-4 w-4" />
+                      Toggle Backlog
+                    </Button>
+                  </SidebarTrigger>
+                </div>
+                
+                {/* Current Story */}
+                {currentStory && <CurrentStory />}
 
             {/* Main Content - Players */}
             <div className="flex-1 flex flex-col">
@@ -218,22 +240,24 @@ export const RoomPage: React.FC = () => {
               />
             </div>
 
-            {/* Bottom Panel - Cards */}
-            <div className="mt-6 space-y-4">
-              {/* Voting Interface - Full Width */}
-              <ResponsiveVotingInterface />
-              
-              {/* Other Components - Grid Layout */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Voting Results */}
-                <VotingResults />
-                
-                {/* Finalize Points (Host Only) */}
-                <FinalizePoints />
+                {/* Bottom Panel - Cards */}
+                <div className="mt-6 space-y-4">
+                  {/* Voting Interface - Full Width */}
+                  <ResponsiveVotingInterface />
+                  
+                  {/* Other Components - Grid Layout */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Voting Results */}
+                    <VotingResults />
+                    
+                    {/* Finalize Points (Host Only) */}
+                    <FinalizePoints />
+                  </div>
+                </div>
               </div>
-            </div>
+            </SidebarInset>
           </div>
-        </div>
+        </SidebarProvider>
       </div>
 
       {/* Mobile Layout: Traditional Stacked */}
