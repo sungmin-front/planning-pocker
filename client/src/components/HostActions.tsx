@@ -5,6 +5,7 @@ import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { AddStoryModal } from '@/components/HostControls/AddStoryModal';
 import { JiraIntegrationModal } from '@/components/HostControls/JiraIntegrationModal';
+import { VotingControls } from '@/components/HostControls/VotingControls';
 import { Plus, FileText, Play } from 'lucide-react';
 
 export const HostActions: React.FC = () => {
@@ -33,7 +34,7 @@ export const HostActions: React.FC = () => {
   return (
     <>
       {/* Host Actions Bar - Only visible on larger screens */}
-      <div className="hidden lg:block mb-6">
+      <div className="hidden lg:block mb-6 space-y-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -67,10 +68,13 @@ export const HostActions: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Voting Controls */}
+        <VotingControls />
       </div>
 
       {/* Mobile Host Actions - Shown in sidebar for mobile */}
-      <div className="lg:hidden">
+      <div className="lg:hidden space-y-4">
         <Card>
           <CardContent className="p-4">
             <div className="space-y-2">
@@ -99,6 +103,9 @@ export const HostActions: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Voting Controls */}
+        <VotingControls />
       </div>
 
       {/* Modals */}
