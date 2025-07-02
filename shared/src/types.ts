@@ -1,6 +1,6 @@
 export type VoteValue = '1' | '2' | '3' | '5' | '8' | '13' | '21' | '34' | '55' | '89' | '?' | '☕';
 
-export type StoryStatus = 'voting' | 'revealed' | 'closed';
+export type StoryStatus = 'voting' | 'revealed' | 'closed' | 'skipped';
 
 export interface Player {
   id: string;
@@ -49,6 +49,7 @@ export type MessageType =
   | 'STORY_REVEAL_VOTES'
   | 'STORY_RESTART_VOTING'
   | 'STORY_SET_FINAL_POINT'
+  | 'STORY_SKIP'
   | 'ROOM_TRANSFER_HOST'
   | 'ROOM_SYNC'
   | 'HOST_DELEGATE'

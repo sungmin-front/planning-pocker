@@ -29,7 +29,8 @@ export const CurrentStory: React.FC = () => {
     pending: 'Waiting to start',
     voting: 'Voting in progress',
     revealed: 'Votes revealed',
-    closed: 'Finalized'
+    closed: 'Finalized',
+    skipped: 'Skipped'
   };
 
   const statusMessage = statusMessages[currentStory.status] || currentStory.status;

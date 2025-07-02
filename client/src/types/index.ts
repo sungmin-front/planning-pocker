@@ -28,6 +28,7 @@ export interface RoomContextType {
   revealVotes: (storyId: string) => void;
   restartVoting: (storyId: string) => void;
   setFinalPoint: (storyId: string, point: VoteValue) => void;
+  skipStory: (storyId: string) => void;
   transferHost: (toNickname: string) => void;
   syncRoom: () => void;
   clearJoinError: () => void;

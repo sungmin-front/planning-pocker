@@ -335,6 +335,71 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           }
           break;
 
+        case 'story:skip:response':
+          console.log('Received story:skip:response message:', message.payload);
+          if (message.payload && message.payload.success && message.payload.story && room) {
+            const { story } = message.payload;
+            // Update the specific story with skipped status
+            const updatedStories = room.stories.map(roomStory => {
+              if (roomStory.id === story.id) {
+                return {
+                  ...roomStory,
+                  status: story.status as 'skipped'
+                };
+              }
+              return roomStory;
+            });
+            
+            const updatedRoom = {
+              ...room,
+              stories: updatedStories
+            };
+            console.log('Updated room with skipped story:', updatedRoom);
+            setRoom(updatedRoom);
+            
+            toast({
+              title: "Story Skipped",
+              description: `Story "${story.title}" has been skipped.`,
+            });
+          } else if (message.payload && !message.payload.success) {
+            toast({
+              title: "Failed to Skip Story",
+              description: message.payload.error || "Failed to skip story",
+              variant: "destructive",
+            });
+          }
+          break;
+
+        case 'story:skipped':
+          console.log('Received story:skipped message:', message.payload);
+          if (message.payload && message.payload.story && room) {
+            const { story } = message.payload;
+            // Update the specific story with skipped status
+            const updatedStories = room.stories.map(roomStory => {
+              if (roomStory.id === story.id) {
+                return {
+                  ...roomStory,
+                  status: story.status as 'skipped'
+                };
+              }
+              return roomStory;
+            });
+            
+            const updatedRoom = {
+              ...room,
+              stories: updatedStories
+            };
+            console.log('Updated room with skipped story notification:', updatedRoom);
+            setRoom(updatedRoom);
+            
+            // Show notification for all players
+            toast({
+              title: "Story Skipped",
+              description: `Story "${story.title}" has been skipped by the host.`,
+            });
+          }
+          break;
+
         case 'player:kicked':
           console.log('Received player:kicked message:', message.payload);
           toast({
@@ -484,6 +549,15 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     });
   };
 
+  const skipStory = (storyId: string) => {
+    if (!room || !isHost) return;
+    
+    send({
+      type: 'STORY_SKIP',
+      payload: { storyId }
+    });
+  };
+
   const transferHost = (toNickname: string) => {
     if (!room || !isHost) return;
     
@@ -521,6 +595,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     revealVotes,
     restartVoting,
     setFinalPoint,
+    skipStory,
     transferHost,
     syncRoom,
     clearJoinError,

@@ -199,6 +199,35 @@ wss.on('connection', function connection(ws) {
           break;
         }
 
+        case 'STORY_SKIP': {
+          const { storyId } = message.payload;
+          const result = roomManager.skipStory(socketId, storyId);
+          
+          if (result.success && result.story) {
+            const roomId = roomManager.getUserRoom(socketId);
+            if (roomId) {
+              // Broadcast the skipped story to all clients in room
+              wss.clients.forEach(client => {
+                const clientSocketId = getSocketId(client);
+                if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                  client.send(JSON.stringify({
+                    type: 'story:skipped',
+                    payload: {
+                      story: result.story
+                    }
+                  }));
+                }
+              });
+            }
+          }
+          
+          ws.send(JSON.stringify({
+            type: 'story:skip:response',
+            payload: result
+          }));
+          break;
+        }
+
         case 'ROOM_TRANSFER_HOST': {
           const { toNickname } = message.payload;
           const result = roomManager.transferHost(socketId, toNickname);
