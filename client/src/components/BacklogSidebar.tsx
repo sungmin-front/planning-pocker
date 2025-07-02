@@ -120,10 +120,12 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
     
     // Add select action for hosts
     if (isHost) {
+      const isFinalized = story.final_point !== undefined && story.final_point !== null;
+      
       availableActions.push({
         id: 'select-story',
-        label: '투표 안건으로 선택',
-        icon: '📋',
+        label: isFinalized ? '재상정하기' : '투표 안건으로 선택',
+        icon: isFinalized ? '🔄' : '📋',
         action: () => handleSelectStory(story.id)
       });
     }
@@ -323,16 +325,22 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
           <div className="space-y-2 pr-3">
             {sortedAndFilteredStories.map(story => {
               const isActive = story.id === currentStoryId;
+              const isFinalized = story.final_point !== undefined && story.final_point !== null;
               const statusIcon = statusIcons[story.status] || '❓';
               
               return (
                 <div
                   key={story.id}
                   data-testid={`story-item-${story.id}`}
-                  className={`p-3 border rounded-lg bg-white transition-all duration-200 cursor-pointer hover:border-gray-300 hover:shadow-sm ${
-                    isActive ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200'
-                  }`}
+                  className={`p-3 border rounded-lg transition-all duration-200 cursor-pointer hover:border-gray-300 hover:shadow-sm ${
+                    isActive 
+                      ? 'border-blue-500 bg-blue-50 shadow-md' 
+                      : isFinalized
+                        ? 'border-green-200 bg-green-50 hover:border-green-300'
+                        : 'border-gray-200 bg-white'
+                  } ${isFinalized && isHost ? 'hover:bg-green-100' : ''}`}
                   onClick={(e) => handleCardClick(story, e)}
+                  title={isFinalized && isHost ? '완료된 이슈 - 클릭하여 재상정' : undefined}
                 >
                   {/* Story Header */}
                   <div className="flex items-start justify-between mb-2">
