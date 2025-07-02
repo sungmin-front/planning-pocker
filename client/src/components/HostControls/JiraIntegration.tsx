@@ -55,7 +55,10 @@ interface JiraIntegrationProps {
 export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStoriesImported }) => {
   const [isConfigured, setIsConfigured] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState(false);
+  const [loadingSprints, setLoadingSprints] = useState(false);
+  const [loadingIssues, setLoadingIssues] = useState(false);
+  const [loadingImport, setLoadingImport] = useState(false);
   const [hasDefaultProject, setHasDefaultProject] = useState(false);
   const [defaultProjectKey, setDefaultProjectKey] = useState<string>('');
   const [sprints, setSprints] = useState<JiraSprint[]>([]);
@@ -71,7 +74,7 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
 
   const checkJiraStatus = async () => {
     try {
-      setLoading(true);
+      setLoadingStatus(true);
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/jira/status`);
       const data = await response.json();
       setIsConfigured(data.configured);
@@ -102,13 +105,13 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
         variant: 'destructive'
       });
     } finally {
-      setLoading(false);
+      setLoadingStatus(false);
     }
   };
 
   const fetchDefaultProjectSprints = async () => {
     try {
-      setLoading(true);
+      setLoadingSprints(true);
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/jira/default-project/sprints`);
       const data = await response.json();
       setSprints(data.sprints || []);
@@ -123,13 +126,13 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
         variant: 'destructive'
       });
     } finally {
-      setLoading(false);
+      setLoadingSprints(false);
     }
   };
 
   const fetchSprintIssues = async (sprintId: string) => {
     try {
-      setLoading(true);
+      setLoadingIssues(true);
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/jira/sprints/${sprintId}/issues`);
       const data = await response.json();
       // 에픽 제외 필터링
@@ -147,7 +150,7 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
         variant: 'destructive'
       });
     } finally {
-      setLoading(false);
+      setLoadingIssues(false);
     }
   };
 
@@ -185,7 +188,7 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
     }
 
     try {
-      setLoading(true);
+      setLoadingImport(true);
       const selectedIssueObjects = issues.filter(issue => selectedIssues.has(issue.id));
       
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/jira/issues/import`, {
@@ -218,7 +221,7 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
         variant: 'destructive'
       });
     } finally {
-      setLoading(false);
+      setLoadingImport(false);
     }
   };
 
@@ -232,8 +235,8 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={checkJiraStatus} disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button onClick={checkJiraStatus} disabled={loadingStatus}>
+            {loadingStatus && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             다시 확인
           </Button>
         </CardContent>
@@ -251,8 +254,8 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={checkJiraStatus} disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button onClick={checkJiraStatus} disabled={loadingStatus}>
+            {loadingStatus && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             연결 재시도
           </Button>
         </CardContent>
@@ -270,8 +273,8 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={checkJiraStatus} disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button onClick={checkJiraStatus} disabled={loadingStatus}>
+            {loadingStatus && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             다시 확인
           </Button>
         </CardContent>
@@ -365,39 +368,39 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
               <div className="pt-2">
                 <Button
                   onClick={importSelectedIssues}
-                  disabled={loading || selectedIssues.size === 0}
+                  disabled={loadingImport || selectedIssues.size === 0}
                   className="w-full"
                 >
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {loadingImport && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   선택한 이슈를 스토리로 가져오기 ({selectedIssues.size}개)
                 </Button>
               </div>
             </div>
           )}
 
-          {sprints.length === 0 && !loading && (
+          {sprints.length === 0 && !loadingSprints && (
             <p className="text-sm text-gray-500 text-center py-4">
               프로젝트 {defaultProjectKey}에 활성/예정 스프린트가 없습니다.
             </p>
           )}
 
-          {sprints.length === 0 && loading && (
+          {sprints.length === 0 && loadingSprints && (
             <div className="flex items-center justify-center py-4">
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
               <span className="text-sm text-gray-500">스프린트를 불러오는 중...</span>
             </div>
           )}
 
-          {selectedSprint && issues.length === 0 && !loading && (
+          {selectedSprint && issues.length === 0 && !loadingIssues && (
             <p className="text-sm text-gray-500 text-center py-4">
               선택한 스프린트에 이슈가 없습니다.
             </p>
           )}
 
-          {loading && (
+          {selectedSprint && loadingIssues && (
             <div className="flex items-center justify-center py-4">
               <Loader2 className="h-6 w-6 animate-spin mr-2" />
-              <span className="text-sm text-gray-500">로딩 중...</span>
+              <span className="text-sm text-gray-500">이슈를 불러오는 중...</span>
             </div>
           )}
         </CardContent>
