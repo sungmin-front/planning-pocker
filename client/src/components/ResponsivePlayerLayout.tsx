@@ -1,5 +1,6 @@
 import React from 'react';
 import { PlayerCard } from '@/components/PlayerCard';
+import { VoteProgressRing } from '@/components/VoteProgressRing';
 import { cn } from '@/lib/utils';
 import { Player, Story } from '@/types';
 
@@ -44,10 +45,11 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
 
   const renderCircularTable = () => {
     const containerWidth = 600;
-    const containerHeight = 400;
+    const containerHeight = 500; // Increased height for vertical growth
     const centerX = containerWidth / 2;
     const centerY = containerHeight / 2;
-    const radius = Math.min(140, Math.max(100, players.length * 15)); // Smaller radius
+    // Increased radius to account for larger center box (300x140)
+    const radius = Math.min(200, Math.max(180, players.length * 15));
 
     return (
       <div 
@@ -55,20 +57,45 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
         className="relative mx-auto"
         style={{ width: `${containerWidth}px`, height: `${containerHeight}px` }}
       >
-        {/* Center message */}
-        <div className="absolute inset-0 flex items-center justify-center z-0">
-          <div className="text-center">
+        {/* Center message with progress border */}
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <div className="relative">
             {currentStory ? (
-              <div className="bg-blue-50 rounded-lg p-4 shadow-sm max-w-xs">
-                <h3 className="text-base font-medium text-blue-900 mb-1">
-                  {currentStory.title}
-                </h3>
-                <p className="text-sm text-blue-700">
-                  {isRevealed ? 'Votes revealed!' : 'Pick your cards!'}
-                </p>
+              <div className="relative" style={{ width: '300px', height: '140px' }}>
+                <VoteProgressRing
+                  players={players}
+                  currentStory={currentStory}
+                  width={300}
+                  height={140}
+                  strokeWidth={4}
+                />
+                <div 
+                  className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm absolute z-10 flex flex-col justify-center items-center text-center"
+                  style={{ 
+                    width: '280px', 
+                    height: '120px', 
+                    padding: '16px',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                >
+                  <h3 className="text-base font-medium text-gray-900 mb-1 truncate w-full">
+                    {currentStory.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {isRevealed ? 'Votes revealed!' : 'Pick your cards!'}
+                  </p>
+                  <div className="text-xs text-gray-500">
+                    {players.filter(p => p.id in currentStory.votes).length}/{players.length} voted
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
+              <div 
+                className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm border flex items-center justify-center text-center"
+                style={{ width: '280px', height: '120px' }}
+              >
                 <p className="text-sm text-gray-600">Ready to start voting</p>
               </div>
             )}
@@ -112,10 +139,10 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
   return (
     <div 
       data-testid="responsive-player-layout"
-      className="w-full"
+      className="w-full flex-1 flex flex-col"
       aria-label={`${players.length} players in room`}
     >
-      <div className="bg-white rounded-lg p-6">
+      <div className="bg-white rounded-lg p-6 flex-1 flex items-center justify-center">
         {renderCircularTable()}
       </div>
     </div>
