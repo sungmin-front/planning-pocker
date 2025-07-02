@@ -142,6 +142,14 @@ class RoomManager {
             return {};
         const leavingPlayer = room.players.find(p => p.socketId === socketId);
         const wasHost = leavingPlayer?.isHost || false;
+        // Remove player's votes only from ongoing voting (not completed votes)
+        if (leavingPlayer) {
+            room.stories.forEach(story => {
+                if (story.votes && story.votes[leavingPlayer.id] && story.status === 'voting') {
+                    delete story.votes[leavingPlayer.id];
+                }
+            });
+        }
         room.players = room.players.filter(p => p.socketId !== socketId);
         room.socketIds.delete(socketId);
         delete this.socketUserMap[socketId];
@@ -162,8 +170,8 @@ class RoomManager {
             newHost
         };
     }
-    addStory(roomId, title, description, hostSocketId) {
-        const room = this.rooms.get(roomId);
+    addStory(roomId, title, description, hostSocketId, jiraMetadata) {
+        const room = this.rooms.get(roomId.toUpperCase());
         if (!room)
             return null;
         // Check if the requester is the host
@@ -178,7 +186,8 @@ class RoomManager {
             title,
             description,
             status: 'voting',
-            votes: {}
+            votes: {},
+            ...(jiraMetadata && { jiraMetadata })
         };
         room.stories.push(story);
         return story;
@@ -240,23 +249,30 @@ class RoomManager {
         return { success: true };
     }
     revealVotes(socketId, storyId) {
+        console.log(`[RoomManager] revealVotes called - socketId: ${socketId}, storyId: ${storyId}`);
         const userInfo = this.socketUserMap[socketId];
         if (!userInfo?.roomId) {
+            console.log(`[RoomManager] revealVotes failed - user not in room. SocketId: ${socketId}`);
             return { success: false, error: 'Not in a room' };
         }
         const room = this.rooms.get(userInfo.roomId);
         if (!room) {
+            console.log(`[RoomManager] revealVotes failed - room not found. RoomId: ${userInfo.roomId}`);
             return { success: false, error: 'Room not found' };
         }
         const player = room.players.find(p => p.socketId === socketId);
         if (!player?.isHost) {
+            console.log(`[RoomManager] revealVotes failed - player is not host. Player:`, player);
             return { success: false, error: 'Only the host can reveal votes' };
         }
         const story = room.stories.find(s => s.id === storyId);
         if (!story) {
+            console.log(`[RoomManager] revealVotes failed - story not found. StoryId: ${storyId}, Available stories:`, room.stories.map(s => s.id));
             return { success: false, error: 'Story not found' };
         }
+        console.log(`[RoomManager] revealVotes success - revealing votes for story ${storyId}. Current status: ${story.status}, votes:`, story.votes);
         story.status = 'revealed';
+        console.log(`[RoomManager] revealVotes - story status changed to 'revealed'`);
         return { success: true, story };
     }
     restartVoting(socketId, storyId) {
@@ -362,6 +378,72 @@ class RoomManager {
             success: true,
             roomState,
             playerState
+        };
+    }
+    delegateHost(socketId, newHostId) {
+        const userInfo = this.socketUserMap[socketId];
+        if (!userInfo?.roomId) {
+            return { success: false, error: 'Not in a room' };
+        }
+        const room = this.rooms.get(userInfo.roomId);
+        if (!room) {
+            return { success: false, error: 'Room not found' };
+        }
+        const currentHost = room.players.find(p => p.socketId === socketId);
+        if (!currentHost?.isHost) {
+            return { success: false, error: 'Only the host can delegate host role' };
+        }
+        const targetPlayer = room.players.find(p => p.id === newHostId);
+        if (!targetPlayer) {
+            return { success: false, error: 'Target player not found' };
+        }
+        if (targetPlayer.id === currentHost.id) {
+            return { success: false, error: 'Cannot delegate host role to yourself' };
+        }
+        // Transfer host role
+        currentHost.isHost = false;
+        targetPlayer.isHost = true;
+        return {
+            success: true,
+            newHost: targetPlayer,
+            oldHost: currentHost,
+            roomId: userInfo.roomId
+        };
+    }
+    kickPlayer(socketId, playerId) {
+        const userInfo = this.socketUserMap[socketId];
+        if (!userInfo?.roomId) {
+            return { success: false, error: 'Not in a room' };
+        }
+        const room = this.rooms.get(userInfo.roomId);
+        if (!room) {
+            return { success: false, error: 'Room not found' };
+        }
+        const currentHost = room.players.find(p => p.socketId === socketId);
+        if (!currentHost?.isHost) {
+            return { success: false, error: 'Only the host can kick players' };
+        }
+        const targetPlayer = room.players.find(p => p.id === playerId);
+        if (!targetPlayer) {
+            return { success: false, error: 'Target player not found' };
+        }
+        if (targetPlayer.id === currentHost.id) {
+            return { success: false, error: 'Cannot kick yourself' };
+        }
+        // Remove player from room
+        room.players = room.players.filter(p => p.id !== playerId);
+        // Remove player's socket mapping
+        delete this.socketUserMap[targetPlayer.socketId];
+        // Remove player's votes from ongoing voting sessions
+        room.stories.forEach(story => {
+            if (story.votes && story.votes[playerId] && story.status === 'voting') {
+                delete story.votes[playerId];
+            }
+        });
+        return {
+            success: true,
+            kickedPlayer: targetPlayer,
+            roomId: userInfo.roomId
         };
     }
     getRoomState(roomId) {

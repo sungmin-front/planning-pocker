@@ -1,4 +1,4 @@
-import { Player, Story, VoteValue } from '@planning-poker/shared';
+import { Player, Story, VoteValue, JiraMetadata } from '@planning-poker/shared';
 import { ServerRoom } from './types';
 export declare class RoomManager {
     private rooms;
@@ -19,7 +19,7 @@ export declare class RoomManager {
         hostChanged?: boolean;
         newHost?: Player;
     };
-    addStory(roomId: string, title: string, description?: string, hostSocketId?: string): Story | null;
+    addStory(roomId: string, title: string, description?: string, hostSocketId?: string, jiraMetadata?: JiraMetadata): Story | null;
     selectStory(roomId: string, storyId: string, hostSocketId: string): {
         success: boolean;
         error?: string;
@@ -55,6 +55,19 @@ export declare class RoomManager {
         error?: string;
         roomState?: any;
         playerState?: any;
+    };
+    delegateHost(socketId: string, newHostId: string): {
+        success: boolean;
+        error?: string;
+        newHost?: Player;
+        oldHost?: Player;
+        roomId?: string;
+    };
+    kickPlayer(socketId: string, playerId: string): {
+        success: boolean;
+        error?: string;
+        kickedPlayer?: Player;
+        roomId?: string;
     };
     getRoomState(roomId: string): {
         roomId: string;

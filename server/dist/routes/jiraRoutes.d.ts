@@ -1,2 +1,3 @@
 import { Router } from 'express';
-export declare const jiraRouter: Router;
+import { RoomManager } from '../roomManager';
+export declare const createJiraRouter: (roomManager: RoomManager, wss?: any) => Router;
