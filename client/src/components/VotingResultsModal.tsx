@@ -102,13 +102,12 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
 
   const stats = calculateStats();
 
-  // Find most voted value(s)
-  const maxCount = Math.max(...sortedDistribution.map(d => d.count));
-  const mostVotedValues = sortedDistribution.filter(d => d.count === maxCount);
-
   // Determine consensus type
   const getConsensusType = () => {
     const uniqueVotes = sortedDistribution.filter(d => d.count > 0).length;
+    const maxCount = Math.max(...sortedDistribution.map(d => d.count));
+    const mostVotedValues = sortedDistribution.filter(d => d.count === maxCount);
+    
     if (uniqueVotes === 1) return 'unanimous';
     if (mostVotedValues.length > 1 && maxCount > 1) return 'tied';
     return 'split decision';
@@ -223,48 +222,6 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
             </CardContent>
           </Card>
 
-          {/* Vote Distribution - Compact Version */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Detailed Results</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-3">
-                {sortedDistribution.filter(item => item.count > 0).map((item) => (
-                  <div 
-                    key={item.value}
-                    className={`p-3 rounded-lg border text-center ${
-                      mostVotedValues.length === 1 && item.count === maxCount 
-                        ? 'bg-primary/10 border-primary' 
-                        : 'bg-gray-50'
-                    }`}
-                  >
-                    <div 
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-2 ${
-                        mostVotedValues.length === 1 && item.count === maxCount
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-white border-2'
-                      }`}
-                    >
-                      {item.value}
-                    </div>
-                    <div className="text-sm font-medium">{item.count} votes</div>
-                    <div className="text-xs text-muted-foreground">{item.percentage}%</div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Most Voted Summary */}
-          {mostVotedValues.length === 1 && (
-            <div className="text-center p-4 bg-primary/5 rounded-lg border">
-              <p className="text-sm font-medium">
-                Most voted: <span className="font-bold text-primary text-lg">{mostVotedValues[0].value}</span>
-                {' '}({mostVotedValues[0].count} {mostVotedValues[0].count === 1 ? 'vote' : 'votes'})
-              </p>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>
