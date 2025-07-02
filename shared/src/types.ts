@@ -10,6 +10,16 @@ export interface Player {
   isSpectator: boolean;
 }
 
+export interface JiraMetadata {
+  key: string;
+  issueType: string;
+  status: string;
+  assignee: string | null;
+  priority: string | null;
+  storyPoints: number | null;
+  jiraUrl: string;
+}
+
 export interface Story {
   id: string;
   title: string;
@@ -17,6 +27,7 @@ export interface Story {
   status: StoryStatus;
   votes: Record<string, VoteValue>;
   final_point?: VoteValue | null;
+  jiraMetadata?: JiraMetadata;
 }
 
 export interface Room {

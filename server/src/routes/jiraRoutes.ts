@@ -1,7 +1,11 @@
 import { Request, Response, Router } from 'express';
 import { jiraClient, JiraIssue } from '../jiraClient';
+import { RoomManager } from '../roomManager';
+import { v4 as uuidv4 } from 'uuid';
 
-export const jiraRouter: Router = Router();
+// Factory function to create jira router with room manager dependency
+export const createJiraRouter = (roomManager: RoomManager, wss?: any): Router => {
+  const jiraRouter: Router = Router();
 
 /**
  * GET /api/jira/status
@@ -225,22 +229,72 @@ jiraRouter.post('/issues/import', async (req: Request, res: Response) => {
     // Convert Jira issues to story format
     const stories = issues.map(issue => ({
       title: `[${issue.key}] ${issue.summary}`,
-      description: [
-        issue.description || '',
-        '',
-        `**Issue Type:** ${issue.issueType.name}`,
-        `**Status:** ${issue.status.name}`,
-        issue.assignee ? `**Assignee:** ${issue.assignee.displayName}` : '',
-        issue.priority ? `**Priority:** ${issue.priority.name}` : '',
-        issue.storyPoints ? `**Story Points:** ${issue.storyPoints}` : '',
-        `**Jira Link:** ${process.env.JIRA_BASE_URL}/browse/${issue.key}`
-      ].filter(line => line !== '').join('\n')
+      description: issue.description || '',
+      jiraMetadata: {
+        key: issue.key,
+        issueType: issue.issueType.name,
+        status: issue.status.name,
+        assignee: issue.assignee?.displayName || null,
+        priority: issue.priority?.name || null,
+        storyPoints: issue.storyPoints || null,
+        jiraUrl: `${process.env.JIRA_BASE_URL}/browse/${issue.key}`
+      }
     }));
+
+    // Actually add stories to the room using roomManager
+    // For Jira import, we bypass host validation by not providing hostSocketId
+    console.log(`Adding ${stories.length} stories to room ${roomId} (original: ${req.body.roomId})`);
+    
+    // Debug: check if room exists
+    const room = roomManager.getRoom(roomId);
+    if (!room) {
+      console.log(`Room ${roomId} not found! Available rooms might have different IDs.`);
+      // Try with uppercase
+      const upperRoom = roomManager.getRoom(roomId.toUpperCase());
+      console.log(`Trying uppercase ${roomId.toUpperCase()}: ${upperRoom ? 'found' : 'not found'}`);
+    } else {
+      console.log(`Room ${roomId} found with ${room.players.length} players`);
+    }
+    
+    const addedStories = [];
+    for (const story of stories) {
+      console.log(`Attempting to add story: ${story.title}`);
+      const result = roomManager.addStory(roomId, story.title, story.description, undefined, story.jiraMetadata);
+      if (result) {
+        console.log(`Successfully added story with ID: ${result.id}`);
+        addedStories.push(result);
+      } else {
+        console.log(`Failed to add story: ${story.title} - room not found or other error`);
+      }
+    }
+    console.log(`Successfully added ${addedStories.length} out of ${stories.length} stories`);
+
+    // Broadcast story creation to all WebSocket clients in the room
+    if (wss && addedStories.length > 0) {
+      console.log(`Broadcasting ${addedStories.length} new stories to WebSocket clients`);
+      const roomState = roomManager.getRoomState(roomId);
+      
+      // Helper function to get socket ID (same as in index.ts)
+      function getSocketId(ws: any): string {
+        return (ws as any).id || ((ws as any).id = uuidv4());
+      }
+      
+      wss.clients.forEach((client: any) => {
+        const clientSocketId = getSocketId(client);
+        if (roomManager.getUserRoom(clientSocketId) === roomId) {
+          console.log(`Sending room:updated to client ${clientSocketId} after Jira import`);
+          client.send(JSON.stringify({
+            type: 'room:updated',
+            payload: roomState
+          }));
+        }
+      });
+    }
 
     res.json({
       success: true,
-      stories,
-      message: `Converted ${stories.length} Jira issues to stories`
+      stories: addedStories,
+      message: `Successfully imported ${addedStories.length} Jira issues as stories`
     });
   } catch (error) {
     console.error('Error importing Jira issues:', error);
@@ -249,3 +303,6 @@ jiraRouter.post('/issues/import', async (req: Request, res: Response) => {
     });
   }
 });
+
+  return jiraRouter;
+};
