@@ -209,22 +209,13 @@ export const RoomPage: React.FC = () => {
             {/* Current Story */}
             {currentStory && <CurrentStory />}
 
-            {/* Main Content - Players with Compact Voting Controls */}
+            {/* Main Content - Players */}
             <div className="flex-1 flex flex-col">
-              <div className="relative">
-                <ResponsivePlayerLayout 
-                  players={room.players}
-                  currentStory={currentStory}
-                  currentPlayerId={currentPlayer?.id || ''}
-                />
-                
-                {/* Compact Voting Controls in Poker Table */}
-                {isHost && (
-                  <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
-                    <VotingControls compact={true} />
-                  </div>
-                )}
-              </div>
+              <ResponsivePlayerLayout 
+                players={room.players}
+                currentStory={currentStory}
+                currentPlayerId={currentPlayer?.id || ''}
+              />
             </div>
 
             {/* Bottom Panel - Cards */}
@@ -263,20 +254,13 @@ export const RoomPage: React.FC = () => {
           {/* Current Story */}
           {currentStory && <CurrentStory />}
 
-          {/* Players with Compact Voting Controls */}
-          <div className="relative mb-6">
+          {/* Players */}
+          <div className="mb-6">
             <ResponsivePlayerLayout 
               players={room.players}
               currentStory={currentStory}
               currentPlayerId={currentPlayer?.id || ''}
             />
-            
-            {/* Compact Voting Controls in Poker Table */}
-            {isHost && (
-              <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
-                <VotingControls compact={true} />
-              </div>
-            )}
           </div>
 
           {/* Bottom Cards Grid */}

@@ -2,6 +2,7 @@ import React from 'react';
 import { PlayerCard } from '@/components/PlayerCard';
 import { cn } from '@/lib/utils';
 import { Player, Story } from '@/types';
+import { VotingControls } from '@/components/HostControls/VotingControls';
 
 interface ResponsivePlayerLayoutProps {
   players: Player[];
@@ -55,17 +56,20 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
         className="relative mx-auto"
         style={{ width: `${containerWidth}px`, height: `${containerHeight}px` }}
       >
-        {/* Center message */}
+        {/* Center message with VotingControls */}
         <div className="absolute inset-0 flex items-center justify-center z-0">
           <div className="text-center">
             {currentStory ? (
-              <div className="bg-blue-50 rounded-lg p-4 shadow-sm max-w-xs">
+              <div className="bg-blue-50 rounded-lg p-4 shadow-sm max-w-xs space-y-3">
                 <h3 className="text-base font-medium text-blue-900 mb-1">
                   {currentStory.title}
                 </h3>
                 <p className="text-sm text-blue-700">
                   {isRevealed ? 'Votes revealed!' : 'Pick your cards!'}
                 </p>
+                
+                {/* Compact Voting Controls inside the text box */}
+                <VotingControls compact={true} />
               </div>
             ) : (
               <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
