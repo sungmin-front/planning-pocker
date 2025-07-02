@@ -27,9 +27,9 @@ cd planning-poker
 
 2. **환경변수 설정**
 ```bash
-./scripts/setup-env.sh
-# 또는
 npm run setup:env
+# 또는
+./scripts/setup-env.sh
 ```
 
 3. **환경변수 파일 편집**
