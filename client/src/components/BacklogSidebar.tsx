@@ -2,17 +2,23 @@ import React, { useState } from 'react';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 // import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { AddStoryModal } from '@/components/HostControls/AddStoryModal';
+import { JiraIntegrationModal } from '@/components/HostControls/JiraIntegrationModal';
+import { Plus, FileText } from 'lucide-react';
 
 interface BacklogSidebarProps {
   stories: any[];
 }
 
 export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
-  const { room, isHost } = useRoom();
+  const { room, isHost, syncRoom } = useRoom();
   const { send } = useWebSocket();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; storyId: string } | null>(null);
+  const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
+  const [isJiraModalOpen, setIsJiraModalOpen] = useState(false);
 
   if (!room) return null;
 
@@ -103,30 +109,94 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
 
   if (stories.length === 0) {
     return (
-      <Card className="h-full">
-        <CardHeader>
-          <CardTitle className="text-lg">Backlog</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center text-gray-500 py-8">
-            <p className="text-sm">No stories yet.</p>
-            {isHost && <p className="text-xs mt-1">Add stories to get started.</p>}
-          </div>
-        </CardContent>
-      </Card>
+      <>
+        <Card className="h-full">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center justify-between">
+              Backlog
+              {isHost && (
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    onClick={() => setIsAddStoryModalOpen(true)}
+                    className="h-6 px-2 text-xs"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsJiraModalOpen(true)}
+                    className="h-6 px-2 text-xs"
+                  >
+                    <FileText className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center text-gray-500 py-8">
+              <p className="text-sm">No stories yet.</p>
+              {isHost && <p className="text-xs mt-1">Use the + button to add stories.</p>}
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Modals */}
+        {isHost && (
+          <>
+            <AddStoryModal 
+              isOpen={isAddStoryModalOpen} 
+              onClose={() => setIsAddStoryModalOpen(false)} 
+            />
+            
+            <JiraIntegrationModal
+              isOpen={isJiraModalOpen}
+              onClose={() => setIsJiraModalOpen(false)}
+              roomId={room.id}
+              onStoriesImported={() => {
+                syncRoom();
+              }}
+            />
+          </>
+        )}
+      </>
     );
   }
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="flex-none">
-        <CardTitle className="text-lg flex items-center justify-between">
-          Backlog
-          <Badge variant="secondary" className="text-xs">
-            {stories.length}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
+    <>
+      <Card className="h-full flex flex-col">
+        <CardHeader className="flex-none">
+          <CardTitle className="text-lg flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              Backlog
+              <Badge variant="secondary" className="text-xs">
+                {stories.length}
+              </Badge>
+            </div>
+            {isHost && (
+              <div className="flex gap-1">
+                <Button
+                  size="sm"
+                  onClick={() => setIsAddStoryModalOpen(true)}
+                  className="h-6 px-2 text-xs"
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsJiraModalOpen(true)}
+                  className="h-6 px-2 text-xs"
+                >
+                  <FileText className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+          </CardTitle>
+        </CardHeader>
       <CardContent className="flex-1 min-h-0 p-3">
         <div className="h-full overflow-y-auto">
           <div className="space-y-2 pr-3">
@@ -217,5 +287,25 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
         </div>
       )}
     </Card>
+      
+      {/* Modals */}
+      {isHost && (
+        <>
+          <AddStoryModal 
+            isOpen={isAddStoryModalOpen} 
+            onClose={() => setIsAddStoryModalOpen(false)} 
+          />
+          
+          <JiraIntegrationModal
+            isOpen={isJiraModalOpen}
+            onClose={() => setIsJiraModalOpen(false)}
+            roomId={room.id}
+            onStoriesImported={() => {
+              syncRoom();
+            }}
+          />
+        </>
+      )}
+    </>
   );
 };
