@@ -22,7 +22,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
 
   useEffect(() => {
     // Configure WebSocket with environment variable
-    const wsUrl = import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8080';
+    const wsUrl = import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:9000';
     socketInstance.configure({ url: wsUrl });
 
     // Set up event listeners

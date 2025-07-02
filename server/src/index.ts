@@ -6,13 +6,13 @@ import { RoomManager } from './roomManager';
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
-import { jiraRouter } from './routes/jiraRoutes';
+import { createJiraRouter } from './routes/jiraRoutes';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-const port = process.env.PORT ? parseInt(process.env.PORT) : 8080;
+const port = process.env.PORT ? parseInt(process.env.PORT) : 9000;
 
 // Create Express app and HTTP server
 const app = express();
@@ -21,9 +21,6 @@ const server = createServer(app);
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Routes
-app.use('/api/jira', jiraRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -34,6 +31,9 @@ app.get('/health', (req, res) => {
 const wss = new WebSocketServer({ server });
 const roomManager = new RoomManager();
 const clients = new Map<string, WebSocket>();
+
+// Routes (after roomManager and wss are created)
+app.use('/api/jira', createJiraRouter(roomManager, wss));
 
 // Start the combined server
 server.listen(port, () => {
