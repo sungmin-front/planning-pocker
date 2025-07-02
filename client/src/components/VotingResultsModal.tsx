@@ -58,15 +58,13 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
     percentage: totalVotes > 0 ? ((distribution.get(option) || 0) / totalVotes) * 100 : 0
   }));
 
-  // Chart data for line chart (only non-zero values)
-  const chartData = sortedDistribution
-    .filter(d => d.count > 0)
-    .map(d => ({
-      name: d.value,
-      vote: d.value,
-      votes: d.count,
-      percentage: d.percentage
-    }));
+  // Chart data for line chart (all values including zero votes)
+  const chartData = sortedDistribution.map(d => ({
+    name: d.value,
+    vote: d.value,
+    votes: d.count,
+    percentage: d.percentage
+  }));
 
   // Calculate statistics for numeric values only
   const calculateStats = () => {
