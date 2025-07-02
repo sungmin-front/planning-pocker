@@ -1,8 +1,9 @@
 import React from 'react';
 import { useRoom } from '@/contexts/RoomContext';
+import { useWebSocket } from '@/contexts/WebSocketContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Eye, RotateCcw, SkipForward } from 'lucide-react';
+import { Eye, RotateCcw, SkipForward, Play } from 'lucide-react';
 
 interface VotingControlsProps {
   compact?: boolean;
@@ -10,9 +11,45 @@ interface VotingControlsProps {
 
 export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false }) => {
   const { room, isHost, revealVotes, restartVoting, skipStory } = useRoom();
+  const { send } = useWebSocket();
 
   // Only render for hosts
-  if (!isHost || !room || !room.currentStoryId) {
+  if (!isHost || !room) {
+    return null;
+  }
+
+  // Handle starting voting on first story
+  const handleStartVotingOnFirstStory = () => {
+    if (room.stories.length > 0) {
+      const firstStory = room.stories[0];
+      send({
+        type: 'STORY_SELECT',
+        payload: {
+          storyId: firstStory.id
+        }
+      });
+    }
+  };
+
+  // If no current story but there are stories, show start voting option
+  if (!room.currentStoryId && room.stories.length > 0) {
+    return (
+      <div className="w-full bg-white rounded-lg border p-3">
+        <h3 className="text-base font-medium mb-3">Voting Controls</h3>
+        <Button
+          onClick={handleStartVotingOnFirstStory}
+          size="sm"
+          className="w-full h-8 text-sm"
+        >
+          <Play className="h-3 w-3 mr-2" />
+          Start Voting on First Story
+        </Button>
+      </div>
+    );
+  }
+
+  // If no stories at all, show nothing
+  if (!room.currentStoryId) {
     return null;
   }
 
@@ -150,80 +187,80 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
   const status = getStatusDisplay();
 
   return (
-    <div data-testid="voting-controls" className="w-full bg-white rounded-lg border p-4 space-y-4">
-      <h3 className="text-lg font-semibold flex items-center gap-2">
+    <div data-testid="voting-controls" className="w-full bg-white rounded-lg border p-3 space-y-3">
+      <h3 className="text-base font-medium">
         Voting Controls
       </h3>
       
       {/* Status Display */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         {status.badge}
-        <p className="text-sm text-muted-foreground">{status.description}</p>
+        <p className="text-xs text-muted-foreground">{status.description}</p>
       </div>
 
       {/* Progress Bar for Voting Phase */}
       {currentStory.status === 'voting' && totalPlayers > 0 && (
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>Voting Progress</span>
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs">
+            <span>Progress</span>
             <span>{votingProgress}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
             <div 
-              className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+              className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
               style={{ width: `${votingProgress}%` }}
             />
           </div>
         </div>
       )}
 
-      {/* Control Buttons */}
-      <div className="space-y-2">
+      {/* Control Buttons - Compact Grid */}
+      <div className="grid grid-cols-2 gap-2">
         {/* Reveal Votes Button */}
         {currentStory.status === 'voting' && (
           <Button
             onClick={handleRevealVotes}
-            className="w-full"
+            size="sm"
+            className="h-8 text-xs col-span-2"
             disabled={totalVotes === 0}
             data-testid="reveal-votes-button"
           >
-            <Eye className="h-4 w-4 mr-2" />
-            Reveal Votes
-            {totalVotes > 0 && ` (${totalVotes})`}
+            <Eye className="h-3 w-3 mr-1" />
+            Reveal{totalVotes > 0 && ` (${totalVotes})`}
           </Button>
         )}
 
-        {/* Restart Voting Button */}
+        {/* Restart and Skip Buttons */}
         {(currentStory.status === 'revealed' || currentStory.status === 'voting') && (
-          <Button
-            onClick={handleRestartVoting}
-            variant="outline"
-            className="w-full"
-            data-testid="restart-voting-button"
-          >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Restart Voting
-          </Button>
-        )}
-
-        {/* Skip Story Button */}
-        {(currentStory.status === 'voting' || currentStory.status === 'revealed') && (
-          <Button
-            onClick={handleSkipStory}
-            variant="destructive"
-            className="w-full"
-            data-testid="skip-story-button"
-          >
-            <SkipForward className="h-4 w-4 mr-2" />
-            Skip Story
-          </Button>
+          <>
+            <Button
+              onClick={handleRestartVoting}
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              data-testid="restart-voting-button"
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              Restart
+            </Button>
+            <Button
+              onClick={handleSkipStory}
+              variant="destructive"
+              size="sm"
+              className="h-8 text-xs"
+              data-testid="skip-story-button"
+            >
+              <SkipForward className="h-3 w-3 mr-1" />
+              Skip
+            </Button>
+          </>
         )}
       </div>
 
       {/* Help Text */}
       {currentStory.status === 'voting' && totalVotes === 0 && (
         <p className="text-xs text-muted-foreground text-center">
-          Wait for players to vote before revealing results
+          Wait for votes before revealing
         </p>
       )}
     </div>
