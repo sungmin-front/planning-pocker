@@ -103,16 +103,7 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
   // Compact version for poker table
   if (compact) {
     return (
-      <div data-testid="voting-controls-compact" className="flex items-center gap-2 p-2 bg-white/90 backdrop-blur-sm rounded-lg border border-white/20 shadow-sm">
-        {getStatusBadge()}
-        
-        {/* Voting progress indicator */}
-        {currentStory.status === 'voting' && (
-          <span className="text-xs text-gray-600">
-            {totalVotes}/{totalPlayers}
-          </span>
-        )}
-
+      <div data-testid="voting-controls-compact" className="flex items-center gap-1 p-2 bg-white/90 backdrop-blur-sm rounded-lg border border-white/20 shadow-sm">
         {/* Control Buttons - Compact */}
         <div className="flex gap-1">
           {currentStory.status === 'voting' && (
@@ -161,7 +152,7 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
       case 'voting':
         return {
           badge: <Badge variant="default" className="bg-blue-100 text-blue-800">Voting in Progress</Badge>,
-          description: `${totalVotes} of ${totalPlayers} players have voted (${votingProgress}%)`
+          description: 'Players are currently voting'
         };
       case 'revealed':
         return {
@@ -195,23 +186,6 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
         {/* Left Side: Status and Progress */}
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <h3 className="text-base font-medium whitespace-nowrap">Voting Controls</h3>
-          
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            {status.badge}
-            
-            {/* Progress Bar for Voting Phase - Inline */}
-            {currentStory.status === 'voting' && totalPlayers > 0 && (
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <div className="flex-1 bg-gray-200 rounded-full h-2 min-w-0">
-                  <div 
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${votingProgress}%` }}
-                  />
-                </div>
-                <span className="text-xs text-gray-600 whitespace-nowrap">{votingProgress}%</span>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Right Side: Control Buttons */}
@@ -226,7 +200,7 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
               data-testid="reveal-votes-button"
             >
               <Eye className="h-3 w-3 mr-1" />
-              Reveal{totalVotes > 0 && ` (${totalVotes})`}
+              Reveal
             </Button>
           )}
 
