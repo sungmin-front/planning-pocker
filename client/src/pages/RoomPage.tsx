@@ -12,11 +12,11 @@ import { ResponsivePlayerLayout } from '@/components/ResponsivePlayerLayout';
 import { CurrentStory } from '@/components/CurrentStory';
 import { StoryList } from '@/components/StoryList';
 import { VotingResults } from '@/components/VotingResults';
-import { AddStoryModal } from '@/components/HostControls/AddStoryModal';
-import { JiraIntegrationModal } from '@/components/HostControls/JiraIntegrationModal';
 import { VotingControls } from '@/components/HostControls/VotingControls';
 import { SyncButton } from '@/components/SyncButton';
 import { FinalizePoints } from '@/components/FinalizePoints';
+import { HostActions } from '@/components/HostActions';
+import { BacklogSidebar } from '@/components/BacklogSidebar';
 // import { VOTE_OPTIONS } from '@planning-poker/shared';
 const VOTE_OPTIONS = ['0', '1', '2', '3', '5', '8', '13', '21', '?', '☕'];
 
@@ -28,8 +28,7 @@ export const RoomPage: React.FC = () => {
   const nickname = searchParams.get('nickname');
   const [nicknameInput, setNicknameInput] = useState(nickname || '');
   const [isJoining, setIsJoining] = useState(false);
-  const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
-  const [isJiraModalOpen, setIsJiraModalOpen] = useState(false);
+  // Modal states moved to HostActions component
   
   const { room, currentPlayer, isHost, joinRoom, leaveRoom, vote, syncRoom, joinError, nicknameSuggestions, clearJoinError } = useRoom();
   const { isConnected, send } = useWebSocket();
@@ -175,113 +174,125 @@ export const RoomPage: React.FC = () => {
     : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">{room.name}</h1>
-            <p className="text-muted-foreground">Room ID: {room.id}</p>
-          </div>
-          <div className="flex items-center gap-4">
-            {isHost && <Badge variant="default">Host</Badge>}
-            <SyncButton />
-            <Button variant="outline" onClick={handleLeaveRoom}>
-              Leave Room
-            </Button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Desktop Layout: Sidebar + Main Content */}
+      <div className="hidden lg:flex h-screen">
+        {/* Left Sidebar - Backlog */}
+        <div className="w-80 bg-white/50 backdrop-blur-sm border-r border-white/20 p-4 flex flex-col">
+          <BacklogSidebar stories={room.stories} />
         </div>
 
-        {/* Current Story */}
-        {currentStory && <CurrentStory />}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Players */}
-          <div className="lg:col-span-2">
-            <ResponsivePlayerLayout 
-              players={room.players}
-              currentStory={currentStory}
-              currentPlayerId={currentPlayer?.id || ''}
-            />
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="bg-white/50 backdrop-blur-sm border-b border-white/20 p-4">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h1 className="text-3xl font-bold">{room.name}</h1>
+                <p className="text-muted-foreground">Room ID: {room.id}</p>
+              </div>
+              <div className="flex items-center gap-4">
+                {isHost && <Badge variant="default">Host</Badge>}
+                <SyncButton />
+                <Button variant="outline" onClick={handleLeaveRoom}>
+                  Leave Room
+                </Button>
+              </div>
+            </div>
+            
+            {/* Host Actions */}
+            <HostActions />
           </div>
 
-          {/* Right Panel */}
-          <div className="space-y-6">
-            {/* Voting Interface */}
-            <ResponsiveVotingInterface />
-            
-            {/* Host Voting Controls */}
-            {isHost && <VotingControls />}
-            
-            {/* Voting Results */}
-            <VotingResults />
-            
-            {/* Finalize Points (Host Only) */}
-            <FinalizePoints />
-            
-            {/* Add Story Button (Host Only) */}
-            {isHost && (
-              <Card>
-                <CardContent className="p-4">
-                  <div className="space-y-2">
-                    <Button 
-                      onClick={() => setIsAddStoryModalOpen(true)}
-                      className="w-full"
-                    >
-                      + Add Story
-                    </Button>
-                    <Button 
-                      onClick={() => setIsJiraModalOpen(true)}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      📋 Import from Jira
-                    </Button>
-                    {room.stories.length > 0 && (
-                      <Button 
-                        onClick={() => {
-                          // Set first story as current for voting
-                          const firstStory = room.stories[0];
-                          send({
-                            type: 'STORY_SELECT',
-                            payload: {
-                              storyId: firstStory.id
-                            }
-                          });
-                        }}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        Start Voting on First Story
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
-            {/* Stories */}
-            <StoryList stories={room.stories} />
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {/* Current Story */}
+            {currentStory && <CurrentStory />}
+
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              {/* Players */}
+              <div className="xl:col-span-2">
+                <ResponsivePlayerLayout 
+                  players={room.players}
+                  currentStory={currentStory}
+                  currentPlayerId={currentPlayer?.id || ''}
+                />
+              </div>
+
+              {/* Right Panel - Voting Controls */}
+              <div className="space-y-6">
+                {/* Voting Interface */}
+                <ResponsiveVotingInterface />
+                
+                {/* Host Voting Controls */}
+                {isHost && <VotingControls />}
+                
+                {/* Voting Results */}
+                <VotingResults />
+                
+                {/* Finalize Points (Host Only) */}
+                <FinalizePoints />
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      
-      {/* Add Story Modal */}
-      <AddStoryModal 
-        isOpen={isAddStoryModalOpen} 
-        onClose={() => setIsAddStoryModalOpen(false)} 
-      />
-      
-      {/* Jira Integration Modal */}
-      <JiraIntegrationModal
-        isOpen={isJiraModalOpen}
-        onClose={() => setIsJiraModalOpen(false)}
-        roomId={room.id}
-        onStoriesImported={() => {
-          // Refresh room state after importing stories
-          syncRoom();
-        }}
-      />
+
+      {/* Mobile Layout: Traditional Stacked */}
+      <div className="lg:hidden p-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-3xl font-bold">{room.name}</h1>
+              <p className="text-muted-foreground">Room ID: {room.id}</p>
+            </div>
+            <div className="flex items-center gap-4">
+              {isHost && <Badge variant="default">Host</Badge>}
+              <SyncButton />
+              <Button variant="outline" onClick={handleLeaveRoom}>
+                Leave Room
+              </Button>
+            </div>
+          </div>
+
+          {/* Current Story */}
+          {currentStory && <CurrentStory />}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Players */}
+            <div className="lg:col-span-2">
+              <ResponsivePlayerLayout 
+                players={room.players}
+                currentStory={currentStory}
+                currentPlayerId={currentPlayer?.id || ''}
+              />
+            </div>
+
+            {/* Right Panel */}
+            <div className="space-y-6">
+              {/* Voting Interface */}
+              <ResponsiveVotingInterface />
+              
+              {/* Host Voting Controls */}
+              {isHost && <VotingControls />}
+              
+              {/* Voting Results */}
+              <VotingResults />
+              
+              {/* Finalize Points (Host Only) */}
+              <FinalizePoints />
+              
+              {/* Host Actions (Mobile) */}
+              <HostActions />
+              
+              {/* Stories (Mobile) */}
+              <StoryList stories={room.stories} />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
