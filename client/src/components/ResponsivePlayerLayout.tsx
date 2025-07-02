@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Player, Story } from '@/types';
+import { useRoom } from '@/contexts/RoomContext';
+import { useWebSocket } from '@/contexts/WebSocketContext';
 
 interface ResponsivePlayerLayoutProps {
   players: Player[];
@@ -19,6 +21,16 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
   currentPlayerId,
 }) => {
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+  const { isHost } = useRoom();
+  const { send } = useWebSocket();
+
+  // Handle finalizing story points
+  const handleFinalize = (storyId: string, finalPoint: string) => {
+    send({
+      type: 'STORY_FINALIZE',
+      payload: { storyId, finalPoint }
+    });
+  };
 
   // Auto-open modal when votes are revealed
   useEffect(() => {
@@ -178,6 +190,9 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
           onClose={() => setIsStatsModalOpen(false)}
           votes={currentStory.votes || {}}
           totalVotes={Object.keys(currentStory.votes || {}).length}
+          isHost={isHost}
+          storyId={currentStory.id}
+          onFinalize={handleFinalize}
         />
       )}
     </>

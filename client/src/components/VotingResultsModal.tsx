@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { BarChart3, TrendingUp, TrendingDown, Target } from 'lucide-react';
+import { BarChart3, TrendingUp, TrendingDown, Target, Check } from 'lucide-react';
 
 interface VoteDistribution {
   value: string;
@@ -23,6 +25,9 @@ interface VotingResultsModalProps {
   onClose: () => void;
   votes: Record<string, string>;
   totalVotes: number;
+  isHost?: boolean;
+  storyId?: string;
+  onFinalize?: (storyId: string, finalPoint: string) => void;
 }
 
 export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
@@ -30,7 +35,11 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
   onClose,
   votes,
   totalVotes,
+  isHost = false,
+  storyId,
+  onFinalize,
 }) => {
+  const [selectedFinalPoint, setSelectedFinalPoint] = useState<string>('');
   if (totalVotes === 0) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -102,6 +111,42 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
 
   const stats = calculateStats();
 
+  // Find closest value to average
+  const findClosestToAverage = () => {
+    if (stats.numericVotesOnly.length === 0) return '';
+    
+    const VOTE_OPTIONS = ['1', '2', '3', '5', '8', '13', '21'];
+    const numericOptions = VOTE_OPTIONS.map(Number);
+    
+    let closest = numericOptions[0];
+    let minDiff = Math.abs(numericOptions[0] - stats.average);
+    
+    for (const option of numericOptions) {
+      const diff = Math.abs(option - stats.average);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = option;
+      }
+    }
+    
+    return closest.toString();
+  };
+
+  // Set default selected value when modal opens
+  useEffect(() => {
+    if (isOpen && isHost && stats.numericVotesOnly.length > 0) {
+      setSelectedFinalPoint(findClosestToAverage());
+    }
+  }, [isOpen, isHost, stats.average, stats.numericVotesOnly.length]);
+
+  // Handle finalize
+  const handleFinalize = () => {
+    if (storyId && onFinalize && selectedFinalPoint) {
+      onFinalize(storyId, selectedFinalPoint);
+      onClose();
+    }
+  };
+
   // Determine consensus type
   const getConsensusType = () => {
     const uniqueVotes = sortedDistribution.filter(d => d.count > 0).length;
@@ -149,26 +194,26 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
           {/* Statistics Cards */}
           {stats.numericVotesOnly.length > 0 && (
             <div className="grid grid-cols-3 gap-2">
-              <Card className="p-1.5 aspect-square flex flex-col justify-center">
+              <Card className="p-1.5 flex flex-col justify-center">
                 <div className="flex items-center justify-center gap-1 mb-0.5">
                   <TrendingUp className="h-2.5 w-2.5 text-green-600" />
-                  <span className="text-xs font-medium">High</span>
+                  <span className="text-xs font-medium">Highest</span>
                 </div>
                 <div className="text-sm font-bold text-green-600 text-center">{stats.highest}</div>
               </Card>
               
-              <Card className="p-1.5 aspect-square flex flex-col justify-center">
+              <Card className="p-1.5 flex flex-col justify-center">
                 <div className="flex items-center justify-center gap-1 mb-0.5">
                   <TrendingDown className="h-2.5 w-2.5 text-red-600" />
-                  <span className="text-xs font-medium">Low</span>
+                  <span className="text-xs font-medium">Lowest</span>
                 </div>
                 <div className="text-sm font-bold text-red-600 text-center">{stats.lowest}</div>
               </Card>
               
-              <Card className="p-1.5 aspect-square flex flex-col justify-center">
+              <Card className="p-1.5 flex flex-col justify-center">
                 <div className="flex items-center justify-center gap-1 mb-0.5">
                   <Target className="h-2.5 w-2.5 text-blue-600" />
-                  <span className="text-xs font-medium">Avg</span>
+                  <span className="text-xs font-medium">Average</span>
                 </div>
                 <div className="text-sm font-bold text-blue-600 text-center">{stats.average}</div>
               </Card>
@@ -213,14 +258,54 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
                       dataKey="votes" 
                       stroke="#3b82f6" 
                       strokeWidth={2}
-                      dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+                      dot={{ fill: '#3b82f6', strokeWidth: 1, r: 2 }}
+                      activeDot={{ r: 3, stroke: '#3b82f6', strokeWidth: 1 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
+
+          {/* Host Finalize Section */}
+          {isHost && storyId && onFinalize && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Finalize Story Points</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <Select value={selectedFinalPoint} onValueChange={setSelectedFinalPoint}>
+                      <SelectTrigger className="h-8">
+                        <SelectValue placeholder="Select final point" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1</SelectItem>
+                        <SelectItem value="2">2</SelectItem>
+                        <SelectItem value="3">3</SelectItem>
+                        <SelectItem value="5">5</SelectItem>
+                        <SelectItem value="8">8</SelectItem>
+                        <SelectItem value="13">13</SelectItem>
+                        <SelectItem value="21">21</SelectItem>
+                        <SelectItem value="?">?</SelectItem>
+                        <SelectItem value="☕">☕</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button 
+                    onClick={handleFinalize}
+                    disabled={!selectedFinalPoint}
+                    size="sm"
+                    className="h-8"
+                  >
+                    <Check className="h-3 w-3 mr-1" />
+                    Finalize
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
         </div>
       </DialogContent>
