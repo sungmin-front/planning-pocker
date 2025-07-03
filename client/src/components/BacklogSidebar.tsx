@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
@@ -11,12 +11,11 @@ import { AddStoryModal } from '@/components/HostControls/AddStoryModal';
 import { JiraIntegrationModal } from '@/components/HostControls/JiraIntegrationModal';
 import { Plus, FileText, ChevronsUp, ChevronUp, Menu, ChevronDown, ChevronsDown, ArrowUpDown, Filter } from 'lucide-react';
 
+import type { SortOption, FilterOption } from '@planning-poker/shared';
+
 interface BacklogSidebarProps {
   stories: any[];
 }
-
-type SortOption = 'priority-desc' | 'priority-asc' | 'ticket-desc' | 'ticket-asc' | 'created-desc' | 'created-asc';
-type FilterOption = 'all' | 'story' | 'task' | 'bug';
 
 export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
   const { room, isHost, syncRoom } = useRoom();
@@ -24,8 +23,33 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; story: any } | null>(null);
   const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
   const [isJiraModalOpen, setIsJiraModalOpen] = useState(false);
-  const [sortOption, setSortOption] = useState<SortOption>('created-desc');
-  const [filterOption, setFilterOption] = useState<FilterOption>('all');
+  
+  // Get sort/filter settings from room state (controlled by host)
+  const sortOption = room?.backlogSettings?.sortOption || 'created-desc';
+  const filterOption = room?.backlogSettings?.filterOption || 'all';
+
+  // Handle sort/filter changes (host only)
+  const handleSortChange = (value: SortOption) => {
+    if (!isHost) return;
+    send({
+      type: 'BACKLOG_SETTINGS_UPDATE',
+      payload: {
+        sortOption: value,
+        filterOption
+      }
+    });
+  };
+
+  const handleFilterChange = (value: FilterOption) => {
+    if (!isHost) return;
+    send({
+      type: 'BACKLOG_SETTINGS_UPDATE',
+      payload: {
+        sortOption,
+        filterOption: value
+      }
+    });
+  };
 
   if (!room) return null;
 
@@ -287,8 +311,8 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
           
           {/* Sort and Filter Controls */}
           <div className="flex gap-2 mt-3">
-            <Select value={sortOption} onValueChange={(value: SortOption) => setSortOption(value)}>
-              <SelectTrigger className="h-7 text-xs flex-1">
+            <Select value={sortOption} onValueChange={handleSortChange} disabled={!isHost}>
+              <SelectTrigger className={`h-7 text-xs flex-1 ${!isHost ? 'opacity-60 cursor-not-allowed' : ''}`}>
                 <div className="flex items-center gap-1">
                   <ArrowUpDown className="h-3 w-3" />
                   <SelectValue placeholder="정렬" />
@@ -304,8 +328,8 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
               </SelectContent>
             </Select>
             
-            <Select value={filterOption} onValueChange={(value: FilterOption) => setFilterOption(value)}>
-              <SelectTrigger className="h-7 text-xs flex-1">
+            <Select value={filterOption} onValueChange={handleFilterChange} disabled={!isHost}>
+              <SelectTrigger className={`h-7 text-xs flex-1 ${!isHost ? 'opacity-60 cursor-not-allowed' : ''}`}>
                 <div className="flex items-center gap-1">
                   <Filter className="h-3 w-3" />
                   <SelectValue placeholder="필터" />
@@ -319,6 +343,12 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
               </SelectContent>
             </Select>
           </div>
+          
+          {!isHost && (
+            <div className="text-xs text-gray-500 mt-2 text-center">
+              정렬 및 필터는 호스트만 변경할 수 있습니다
+            </div>
+          )}
         </CardHeader>
       <CardContent className="flex-1 min-h-0 p-3">
         <div className="h-full overflow-y-auto">
