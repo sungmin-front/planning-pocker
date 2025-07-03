@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ContextMenu } from '@/components/ui/context-menu';
 import { AddStoryModal } from '@/components/HostControls/AddStoryModal';
 import { JiraIntegrationModal } from '@/components/HostControls/JiraIntegrationModal';
-import { Plus, FileText, ChevronsUp, ChevronUp, Menu, ChevronDown, ChevronsDown, ArrowUpDown, Filter } from 'lucide-react';
+import { Plus, ChevronsUp, ChevronUp, Menu, ChevronDown, ChevronsDown, ArrowUpDown, Filter } from 'lucide-react';
 
 import type { SortOption, FilterOption } from '@planning-poker/shared';
 
@@ -258,9 +258,9 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
                     size="sm"
                     variant="outline"
                     onClick={() => setIsJiraModalOpen(true)}
-                    className="h-6 px-2 text-xs"
+                    className="h-6 px-2 text-xs bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700"
                   >
-                    <FileText className="h-3 w-3" />
+                    JIRA
                   </Button>
                 </div>
               )}
@@ -320,9 +320,9 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
                   size="sm"
                   variant="outline"
                   onClick={() => setIsJiraModalOpen(true)}
-                  className="h-6 px-2 text-xs"
+                  className="h-6 px-2 text-xs bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700"
                 >
-                  <FileText className="h-3 w-3" />
+                  JIRA
                 </Button>
               </div>
             )}
