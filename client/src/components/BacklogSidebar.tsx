@@ -64,6 +64,13 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
     'lowest': 1
   };
 
+  // Extract numeric part from ticket key (e.g., "PROJ-123" -> 123)
+  const extractTicketNumber = (ticketKey: string): number => {
+    if (!ticketKey) return 0;
+    const match = ticketKey.match(/(\d+)$/);
+    return match ? parseInt(match[1], 10) : 0;
+  };
+
   // Sort and filter stories
   const sortedAndFilteredStories = useMemo(() => {
     let filtered = stories;
@@ -97,10 +104,22 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
         case 'ticket-desc':
           const aTicket = a.jiraMetadata?.jiraKey || a.title || '';
           const bTicket = b.jiraMetadata?.jiraKey || b.title || '';
+          const aTicketNum = extractTicketNumber(aTicket);
+          const bTicketNum = extractTicketNumber(bTicket);
+          // If both have numbers, compare numerically; otherwise fall back to string comparison
+          if (aTicketNum && bTicketNum) {
+            return bTicketNum - aTicketNum;
+          }
           return bTicket.localeCompare(aTicket);
         case 'ticket-asc':
           const aTicketAsc = a.jiraMetadata?.jiraKey || a.title || '';
           const bTicketAsc = b.jiraMetadata?.jiraKey || b.title || '';
+          const aTicketNumAsc = extractTicketNumber(aTicketAsc);
+          const bTicketNumAsc = extractTicketNumber(bTicketAsc);
+          // If both have numbers, compare numerically; otherwise fall back to string comparison
+          if (aTicketNumAsc && bTicketNumAsc) {
+            return aTicketNumAsc - bTicketNumAsc;
+          }
           return aTicketAsc.localeCompare(bTicketAsc);
         case 'created-desc':
           return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
