@@ -64,4 +64,4 @@ EXPOSE 9000
 WORKDIR /app/server
 
 # 서버 시작 (컴파일된 JavaScript 실행)
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/server/src/index.js"]

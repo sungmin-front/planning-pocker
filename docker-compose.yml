@@ -27,6 +27,52 @@ services:
       - planning-poker-network
     restart: unless-stopped
 
+  # MongoDB (Database)
+  mongodb:
+    image: mongo:7
+    container_name: planning-poker-mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password123
+      - MONGO_INITDB_DATABASE=planning_poker
+    ports:
+      - "27017:27017"
+    volumes:
+      - planning-poker-data:/data/db
+    networks:
+      - planning-poker-network
+    restart: unless-stopped
+
+  # MongoDB UI (Modern - Mongoku)
+  mongoku:
+    image: huggingface/mongoku:latest
+    container_name: planning-poker-mongoku
+    environment:
+      - MONGOKU_DEFAULT_HOST=mongodb://admin:password123@mongodb:27017/
+    ports:
+      - "3100:3100"
+    depends_on:
+      - mongodb
+    networks:
+      - planning-poker-network
+    restart: unless-stopped
+
+  # MongoDB UI (Classic - Mongo Express) - backup option
+  mongo-express:
+    image: mongo-express:latest
+    container_name: planning-poker-mongo-express
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=password123
+      - ME_CONFIG_MONGODB_URL=mongodb://admin:password123@mongodb:27017/
+      - ME_CONFIG_BASICAUTH=false
+      - ME_CONFIG_OPTIONS_READONLY=true
+    depends_on:
+      - mongodb
+    networks:
+      - planning-poker-network
+    restart: unless-stopped
+
   # Nginx (Reverse Proxy)
   nginx:
     image: nginx:alpine
@@ -40,6 +86,7 @@ services:
     depends_on:
       - server
       - client
+      - mongodb
     networks:
       - planning-poker-network
     restart: unless-stopped

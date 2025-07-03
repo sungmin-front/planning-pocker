@@ -7,10 +7,17 @@ import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import { createJiraRouter } from './routes/jiraRoutes';
+import { exportRouter } from './routes/exportRoutes';
 import * as dotenv from 'dotenv';
+import Database from './database';
+import StoryResultService from './services/StoryResultService';
+import RoomSessionService from './services/RoomSessionService';
 
 // Load environment variables
 dotenv.config();
+
+// Initialize database connection
+Database.connect().catch(console.error);
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 9000;
 
@@ -31,9 +38,12 @@ app.get('/health', (req, res) => {
 const wss = new WebSocketServer({ server });
 const roomManager = new RoomManager();
 const clients = new Map<string, WebSocket>();
+const storyResultService = StoryResultService;
+const roomSessionService = RoomSessionService;
 
 // Routes (after roomManager and wss are created)
 app.use('/api/jira', createJiraRouter(roomManager, wss));
+app.use('/api/export', exportRouter);
 
 // Start the combined server
 server.listen(port, () => {
@@ -76,6 +86,11 @@ wss.on('connection', function connection(ws) {
               const roomState = roomManager.getRoomState(roomId);
               console.log('RoomState after vote:', JSON.stringify(roomState, null, 2));
               
+              // RoomSession: 투표 기록
+              if (player) {
+                roomSessionService.recordVote(roomId, storyId, player, voteValue).catch(console.error);
+              }
+              
               // Broadcast updated room state to all clients
               wss.clients.forEach(client => {
                 const clientSocketId = getSocketId(client);
@@ -111,6 +126,12 @@ wss.on('connection', function connection(ws) {
             console.log(`[WebSocket] Broadcasting votes revealed to room: ${roomId}`);
             
             if (roomId) {
+              // RoomSession: 투표 공개 및 통계 저장
+              const room = roomManager.getRoom(roomId);
+              if (room && result.story.votes) {
+                roomSessionService.revealVotes(roomId, storyId, result.story.votes, room.players).catch(console.error);
+              }
+              
               // Broadcast revealed votes to all clients in room
               let broadcastCount = 0;
               wss.clients.forEach(client => {
@@ -148,6 +169,9 @@ wss.on('connection', function connection(ws) {
           if (result.success) {
             const roomId = roomManager.getUserRoom(socketId);
             if (roomId) {
+              // RoomSession: 투표 재시작
+              roomSessionService.restartVoting(roomId, storyId).catch(console.error);
+              
               // Broadcast voting restart to all clients in room
               wss.clients.forEach(client => {
                 const clientSocketId = getSocketId(client);
@@ -175,6 +199,33 @@ wss.on('connection', function connection(ws) {
           if (result.success && result.story) {
             const roomId = roomManager.getUserRoom(socketId);
             if (roomId) {
+              const room = roomManager.getRoom(roomId);
+              const playerObj = room?.players.find(p => p.socketId === socketId);
+              
+              // 스토리 완료 결과 저장
+              if (room && result.story && playerObj) {
+                const playerNicknames: Record<string, string> = {};
+                room.players.forEach(p => {
+                  playerNicknames[p.id] = p.nickname;
+                });
+                
+                // 기존 StoryResult 저장 (하위호환성)
+                storyResultService.saveStoryResult(
+                  room.id,
+                  room.name,
+                  result.story.id,
+                  result.story.title,
+                  result.story.description,
+                  result.story.votes,
+                  point,
+                  { playerId: playerObj.id, nickname: playerObj.nickname },
+                  playerNicknames
+                ).catch(console.error);
+                
+                // RoomSession: 스토리 완료
+                roomSessionService.completeStory(room.id, result.story.id, point, playerObj).catch(console.error);
+              }
+              
               // Broadcast the final point to all clients in room
               wss.clients.forEach(client => {
                 const clientSocketId = getSocketId(client);
@@ -281,6 +332,9 @@ wss.on('connection', function connection(ws) {
           const room = roomManager.createRoom(nickname, socketId);
           console.log(`Room created: ${room.id}`);
           
+          // RoomSession: 새 세션 생성 또는 재개
+          roomSessionService.createOrResumeSession(room).catch(console.error);
+          
           // Send room state to the host
           const publicRoom = {
             id: room.id,
@@ -334,6 +388,9 @@ wss.on('connection', function connection(ws) {
           
           if (joinResult.success && joinResult.room) {
             console.log(`Player ${nickname} successfully joined room ${roomId}`);
+            
+            // RoomSession: 세션 업데이트 (참여자 추가)
+            roomSessionService.createOrResumeSession(joinResult.room).catch(console.error);
             
             // Send room state to the joining player
             const publicRoom = {
