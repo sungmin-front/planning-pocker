@@ -115,7 +115,7 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
                   <p className="text-sm text-gray-600 mb-2">
                     {isRevealed ? 'Votes revealed!' : 'Pick your cards!'}
                   </p>
-                  {isRevealed ? (
+                  {isRevealed && !isStatsModalOpen ? (
                     <Button
                       size="sm"
                       onClick={() => setIsStatsModalOpen(true)}
@@ -124,6 +124,10 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
                       <BarChart3 className="h-3 w-3 mr-1" />
                       View Statistics
                     </Button>
+                  ) : isRevealed && isStatsModalOpen ? (
+                    <div className="text-xs text-gray-500">
+                      Statistics are open
+                    </div>
                   ) : (
                     <div className="text-xs text-gray-500">
                       {players.filter(p => p.id in currentStory.votes).length}/{players.length} voted
