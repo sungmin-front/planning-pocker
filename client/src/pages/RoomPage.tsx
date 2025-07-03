@@ -21,6 +21,7 @@ import { useWebSocket } from "@/contexts/WebSocketContext";
 import { PanelLeftOpen } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import LanguageToggle from "@/components/LanguageToggle";
 
 export const RoomPage: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -93,6 +94,9 @@ export const RoomPage: React.FC = () => {
   if (!room || !currentPlayer) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="absolute top-4 right-4">
+          <LanguageToggle />
+        </div>
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-semibold leading-none tracking-tight">
@@ -224,6 +228,7 @@ export const RoomPage: React.FC = () => {
                   <div className="flex items-center gap-4">
                   <Badge variant="outline">{room.id}</Badge>
                     {isHost && <Badge variant="default">Host</Badge>}
+                    <LanguageToggle />
                     <SyncButton />
                     <Button variant="outline" onClick={handleLeaveRoom}>
                       Leave Room

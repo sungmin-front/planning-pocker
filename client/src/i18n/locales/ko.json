@@ -1,0 +1,146 @@
+{
+  "app": {
+    "title": "Planning Poker",
+    "description": "팀과 함께 스토리 포인트를 추정하세요"
+  },
+  "common": {
+    "cancel": "취소",
+    "confirm": "확인",
+    "close": "닫기",
+    "save": "저장",
+    "delete": "삭제",
+    "edit": "편집",
+    "loading": "로딩 중...",
+    "error": "오류",
+    "success": "성공",
+    "warning": "경고",
+    "info": "정보",
+    "retry": "다시 시도",
+    "back": "뒤로",
+    "next": "다음",
+    "previous": "이전",
+    "all": "전체",
+    "none": "없음",
+    "select": "선택",
+    "selectAll": "전체 선택",
+    "deselectAll": "전체 해제"
+  },
+  "connection": {
+    "connectToServer": "서버에 연결",
+    "connectToStart": "플레이를 시작하려면 연결하세요",
+    "serverConnected": "서버에 연결됨",
+    "serverDisconnected": "서버 연결이 끊어짐",
+    "connectToServerFirst": "먼저 서버에 연결하세요"
+  },
+  "user": {
+    "nickname": "닉네임",
+    "enterNickname": "닉네임을 입력하세요",
+    "yourNickname": "당신의 닉네임",
+    "tryTheseSuggestions": "이런 닉네임은 어떠세요:"
+  },
+  "room": {
+    "roomId": "룸 ID",
+    "enterRoomId": "룸 ID를 입력하세요",
+    "createNewRoom": "새 룸 만들기",
+    "creating": "생성 중...",
+    "joinRoom": "룸 참가",
+    "joining": "참가 중...",
+    "orJoinExistingRoom": "또는 기존 룸에 참가",
+    "roomNotFound": "룸을 찾을 수 없습니다",
+    "roomFull": "룸이 가득 찼습니다"
+  },
+  "voting": {
+    "castYourVote": "투표하세요",
+    "noStoryToVoteOn": "투표할 스토리가 없습니다",
+    "submittingVote": "투표 제출 중...",
+    "clearVote": "투표 취소",
+    "votingResults": "투표 결과",
+    "noVotesCast": "투표한 사람이 없습니다",
+    "totalVote": "총 {{count}}표",
+    "mostVoted": "최다 득표:",
+    "unanimous": "만장일치",
+    "tied": "동점",
+    "splitDecision": "의견 분산"
+  },
+  "story": {
+    "story": "스토리",
+    "stories": "스토리들",
+    "noStories": "스토리가 없습니다",
+    "addStory": "스토리 추가",
+    "selectAsVotingItem": "📋 투표 안건으로 선택"
+  },
+  "issueTypes": {
+    "story": "스토리",
+    "bug": "버그", 
+    "task": "작업",
+    "epic": "에픽",
+    "subtask": "하위 작업"
+  },
+  "backlog": {
+    "completed": "완료됨",
+    "clickToReopen": "완료된 이슈 - 클릭하여 재상정",
+    "reopenIssue": "재상정하기",
+    "selectAsVotingItem": "투표 안건으로 선택",
+    "openJiraIssue": "Jira 이슈 열기",
+    "sort": "정렬",
+    "filter": "필터",
+    "sortOptions": {
+      "newest": "최신순",
+      "oldest": "오래된순", 
+      "priorityHigh": "우선순위 높음",
+      "priorityLow": "우선순위 낮음",
+      "ticketDesc": "티켓번호 내림차순",
+      "ticketAsc": "티켓번호 오름차순"
+    },
+    "filterOptions": {
+      "all": "전체",
+      "story": "스토리",
+      "task": "작업",
+      "bug": "버그"
+    },
+    "hostOnlyMessage": "정렬 및 필터는 호스트만 변경할 수 있습니다"
+  },
+  "jira": {
+    "integration": "Jira 연동",
+    "connecting": "연결 중...",
+    "connected": "연결됨",
+    "disconnected": "연결 끊김",
+    "retryConnection": "연결 재시도",
+    "checkAgain": "다시 확인",
+    "errors": {
+      "defaultProjectRequired": "Jira 기본 프로젝트 설정 필요",
+      "defaultProjectMessage": "서버 환경변수에 JIRA_DEFAULT_PROJECT_KEY를 설정해주세요.",
+      "configurationRequired": "Jira 설정 필요",
+      "connectionFailed": "Jira 연결 실패",
+      "connectionFailedMessage": "Jira 서버에 연결할 수 없습니다.",
+      "sprintLoadFailed": "스프린트 목록 로드 실패",
+      "sprintLoadFailedMessage": "기본 프로젝트 스프린트 목록을 불러올 수 없습니다.",
+      "issueLoadFailed": "이슈 목록 로드 실패",
+      "issueLoadFailedMessage": "스프린트 이슈를 불러올 수 없습니다.",
+      "noIssuesSelected": "이슈 선택 필요",
+      "noIssuesSelectedMessage": "가져올 이슈를 선택해주세요.",
+      "importFailed": "가져오기 실패",
+      "importFailedMessage": "Jira 이슈를 가져오는 중 오류가 발생했습니다."
+    },
+    "success": {
+      "importSuccess": "Jira 이슈 가져오기 성공"
+    },
+    "selectSprint": "스프린트 선택",
+    "selectSprintPlaceholder": "스프린트를 선택하세요",
+    "selectIssues": "이슈 선택",
+    "assignee": "담당자:",
+    "importSelectedIssues": "선택한 이슈를 스토리로 가져오기",
+    "loadingSprints": "스프린트를 불러오는 중...",
+    "loadingIssues": "이슈를 불러오는 중..."
+  },
+  "hostControls": {
+    "status": {
+      "voting": "투표중",
+      "revealed": "공개됨", 
+      "completed": "완료",
+      "skipped": "건너뜀",
+      "ready": "준비"
+    },
+    "nextIssue": "다음 이슈: {{title}}"
+  }
+}

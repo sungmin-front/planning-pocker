@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { useRoom } from '@/contexts/RoomContext';
+import LanguageToggle from '@/components/LanguageToggle';
 
 export const HomePage: React.FC = () => {
   const [roomId, setRoomId] = useState('');
@@ -14,6 +16,7 @@ export const HomePage: React.FC = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const { isConnected, connect } = useWebSocket();
   const { createRoom, joinRoom, joinError, nicknameSuggestions, clearJoinError } = useRoom();
 
@@ -68,21 +71,24 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageToggle />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Planning Poker</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('app.title')}</CardTitle>
           <p className="text-muted-foreground">
-            Estimate story points with your team
+            {t('app.description')}
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
           {!isConnected && (
             <div className="text-center">
               <Button onClick={handleConnect} className="w-full">
-                Connect to Server
+                {t('connection.connectToServer')}
               </Button>
               <p className="text-sm text-muted-foreground mt-2">
-                Connect to start playing
+                {t('connection.connectToStart')}
               </p>
             </div>
           )}
@@ -91,11 +97,11 @@ export const HomePage: React.FC = () => {
             <>
               <form onSubmit={handleCreateRoom}>
                 <div className="space-y-2">
-                  <Label htmlFor="nickname">Your Nickname</Label>
+                  <Label htmlFor="nickname">{t('user.yourNickname')}</Label>
                   <Input
                     id="nickname"
                     type="text"
-                    placeholder="Enter your nickname"
+                    placeholder={t('user.enterNickname')}
                     value={nickname}
                     onChange={(e) => {
                       setNickname(e.target.value);
@@ -110,7 +116,7 @@ export const HomePage: React.FC = () => {
                   className="w-full mt-4"
                   disabled={!nickname.trim() || isCreating}
                 >
-                  {isCreating ? 'Creating...' : 'Create New Room'}
+                  {isCreating ? t('room.creating') : t('room.createNewRoom')}
                 </Button>
               </form>
 
@@ -120,18 +126,18 @@ export const HomePage: React.FC = () => {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
-                    Or join existing room
+                    {t('room.orJoinExistingRoom')}
                   </span>
                 </div>
               </div>
 
               <form onSubmit={handleJoinRoom}>
                 <div className="space-y-2">
-                  <Label htmlFor="roomId">Room ID</Label>
+                  <Label htmlFor="roomId">{t('room.roomId')}</Label>
                   <Input
                     id="roomId"
                     type="text"
-                    placeholder="Enter room ID"
+                    placeholder={t('room.enterRoomId')}
                     value={roomId}
                     onChange={(e) => setRoomId(e.target.value.toUpperCase())}
                     onKeyDown={handleKeyDown}
@@ -144,7 +150,7 @@ export const HomePage: React.FC = () => {
                   className="w-full mt-4"
                   disabled={!roomId.trim() || !nickname.trim()}
                 >
-                  Join Room
+                  {t('room.joinRoom')}
                 </Button>
               </form>
 
@@ -154,7 +160,7 @@ export const HomePage: React.FC = () => {
                   <p className="text-sm text-yellow-800 mb-2">{joinError}</p>
                   {nicknameSuggestions.length > 0 && (
                     <div>
-                      <p className="text-sm text-yellow-700 mb-2">Try these suggestions:</p>
+                      <p className="text-sm text-yellow-700 mb-2">{t('user.tryTheseSuggestions')}</p>
                       <div className="flex flex-wrap gap-2">
                         {nicknameSuggestions.map((suggestion, index) => (
                           <button

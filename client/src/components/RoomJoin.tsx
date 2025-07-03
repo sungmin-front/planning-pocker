@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import LanguageToggle from '@/components/LanguageToggle';
 
 interface FormData {
   roomId: string;
@@ -22,6 +24,7 @@ export const RoomJoin: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { roomId: urlRoomId } = useParams<{ roomId: string }>();
+  const { t } = useTranslation();
   const { joinRoom, joinError, nicknameSuggestions, clearJoinError } = useRoom();
   const { isConnected } = useWebSocket();
   
@@ -156,22 +159,25 @@ export const RoomJoin: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageToggle />
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <h1 className="text-2xl font-semibold leading-none tracking-tight">Join Room</h1>
+          <h1 className="text-2xl font-semibold leading-none tracking-tight">{t('room.joinRoom')}</h1>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Room ID Input */}
             <div className="space-y-2">
-              <Label htmlFor="roomId">Room ID</Label>
+              <Label htmlFor="roomId">{t('room.roomId')}</Label>
               <Input
                 id="roomId"
                 type="text"
                 value={formData.roomId}
                 onChange={handleInputChange('roomId')}
                 onKeyDown={handleKeyDown}
-                placeholder="Enter room ID"
+                placeholder={t('room.enterRoomId')}
                 disabled={isFormDisabled || !!urlRoomId}
                 readOnly={!!urlRoomId}
                 className={errors.roomId ? 'border-red-500' : ''}
@@ -183,14 +189,14 @@ export const RoomJoin: React.FC = () => {
 
             {/* Nickname Input */}
             <div className="space-y-2">
-              <Label htmlFor="nickname">Your Nickname</Label>
+              <Label htmlFor="nickname">{t('user.yourNickname')}</Label>
               <Input
                 id="nickname"
                 type="text"
                 value={formData.nickname}
                 onChange={handleInputChange('nickname')}
                 onKeyDown={handleKeyDown}
-                placeholder="Enter your nickname"
+                placeholder={t('user.enterNickname')}
                 disabled={isFormDisabled}
                 className={errors.nickname || joinError?.includes('already taken') ? 'border-red-500' : ''}
               />
@@ -204,7 +210,7 @@ export const RoomJoin: React.FC = () => {
                   <p className="text-sm text-yellow-800 mb-2">{joinError}</p>
                   {nicknameSuggestions.length > 0 && (
                     <div>
-                      <p className="text-sm text-yellow-700 mb-2">Try these suggestions:</p>
+                      <p className="text-sm text-yellow-700 mb-2">{t('user.tryTheseSuggestions')}</p>
                       <div className="flex flex-wrap gap-2">
                         {nicknameSuggestions.map((suggestion, index) => (
                           <button
@@ -241,7 +247,7 @@ export const RoomJoin: React.FC = () => {
             {/* Connection Status */}
             {!isConnected && (
               <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                <p className="text-sm text-yellow-600">Connect to server first</p>
+                <p className="text-sm text-yellow-600">{t('connection.connectToServerFirst')}</p>
               </div>
             )}
 
@@ -254,14 +260,14 @@ export const RoomJoin: React.FC = () => {
                 disabled={isLoading}
                 className="flex-1"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 type="submit"
                 disabled={isFormDisabled}
                 className="flex-1"
               >
-                {isLoading ? 'Joining...' : 'Join Room'}
+                {isLoading ? t('room.joining') : t('room.joinRoom')}
               </Button>
             </div>
           </form>
