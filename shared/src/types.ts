@@ -2,6 +2,14 @@ export type VoteValue = '1' | '2' | '3' | '5' | '8' | '13' | '21' | '34' | '55' 
 
 export type StoryStatus = 'voting' | 'revealed' | 'closed' | 'skipped';
 
+export type SortOption = 'priority-desc' | 'priority-asc' | 'ticket-desc' | 'ticket-asc' | 'created-desc' | 'created-asc';
+export type FilterOption = 'all' | 'story' | 'task' | 'bug';
+
+export interface BacklogSettings {
+  sortOption: SortOption;
+  filterOption: FilterOption;
+}
+
 export interface Player {
   id: string;
   nickname: string;
@@ -37,6 +45,7 @@ export interface Room {
   stories: Story[];
   createdAt: Date;
   currentStoryId?: string | null;
+  backlogSettings?: BacklogSettings;
 }
 
 export type MessageType = 
@@ -53,7 +62,8 @@ export type MessageType =
   | 'ROOM_TRANSFER_HOST'
   | 'ROOM_SYNC'
   | 'HOST_DELEGATE'
-  | 'PLAYER_KICK';
+  | 'PLAYER_KICK'
+  | 'BACKLOG_SETTINGS_UPDATE';
 
 export interface WebSocketMessage {
   type: MessageType;

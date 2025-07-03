@@ -209,12 +209,29 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
               name: message.payload.name || room.name,
               players: message.payload.players || room.players,
               stories: message.payload.stories || room.stories,
-              currentStoryId: message.payload.currentStoryId
+              currentStoryId: message.payload.currentStoryId,
+              backlogSettings: message.payload.backlogSettings || room.backlogSettings
             };
             console.log('Updated room with vote data:', updatedRoom);
             setRoom(updatedRoom);
           } else {
             console.log('room:updated message not processed - room ID mismatch or missing data');
+          }
+          break;
+
+        case 'backlog:settingsUpdated':
+          console.log('Received backlog:settingsUpdated message:', message.payload);
+          if (message.payload && room) {
+            const { sortOption, filterOption } = message.payload;
+            const updatedRoom = {
+              ...room,
+              backlogSettings: {
+                sortOption,
+                filterOption
+              }
+            };
+            console.log('Updated room with backlog settings:', updatedRoom);
+            setRoom(updatedRoom);
           }
           break;
 

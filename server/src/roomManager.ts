@@ -1,4 +1,4 @@
-import { Room, Player, Story, VoteValue, JiraMetadata } from '@planning-poker/shared';
+import { Room, Player, Story, VoteValue, JiraMetadata, BacklogSettings } from '@planning-poker/shared';
 import { generateRoomId, releaseRoomId } from './utils';
 import { ServerRoom, SocketUserMap } from './types';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,7 +26,11 @@ export class RoomManager {
       stories: [],
       createdAt: new Date(),
       socketIds: new Set([hostSocketId]),
-      currentStoryId: undefined
+      currentStoryId: undefined,
+      backlogSettings: {
+        sortOption: 'created-desc',
+        filterOption: 'all'
+      }
     };
 
     this.rooms.set(roomId, room);
@@ -574,6 +578,26 @@ export class RoomManager {
     };
   }
 
+  updateBacklogSettings(socketId: string, settings: BacklogSettings): { success: boolean; error?: string; settings?: BacklogSettings } {
+    const userInfo = this.socketUserMap[socketId];
+    if (!userInfo?.roomId) {
+      return { success: false, error: 'Not in a room' };
+    }
+
+    const room = this.rooms.get(userInfo.roomId);
+    if (!room) {
+      return { success: false, error: 'Room not found' };
+    }
+
+    const player = room.players.find(p => p.socketId === socketId);
+    if (!player?.isHost) {
+      return { success: false, error: 'Only the host can change backlog settings' };
+    }
+
+    room.backlogSettings = settings;
+    return { success: true, settings };
+  }
+
   getRoomState(roomId: string) {
     const room = this.rooms.get(roomId);
     if (!room) return null;
@@ -589,7 +613,8 @@ export class RoomManager {
         hasVoted: room.currentStoryId && room.stories.find(s => s.id === room.currentStoryId)?.votes?.[p.id] !== undefined
       })),
       stories: room.stories,
-      currentStoryId: room.currentStoryId
+      currentStoryId: room.currentStoryId,
+      backlogSettings: room.backlogSettings
     };
   }
 }

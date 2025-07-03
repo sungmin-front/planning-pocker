@@ -610,6 +610,38 @@ wss.on('connection', function connection(ws) {
           break;
         }
 
+        case 'BACKLOG_SETTINGS_UPDATE': {
+          const { sortOption, filterOption } = message.payload;
+          console.log(`Backlog settings update requested by ${socketId}:`, { sortOption, filterOption });
+          
+          const result = roomManager.updateBacklogSettings(socketId, { sortOption, filterOption });
+          
+          if (result.success) {
+            const roomId = roomManager.getUserRoom(socketId);
+            if (roomId) {
+              // Broadcast settings update to all clients in room
+              wss.clients.forEach(client => {
+                const clientSocketId = getSocketId(client);
+                if (roomManager.getUserRoom(clientSocketId) === roomId) {
+                  client.send(JSON.stringify({
+                    type: 'backlog:settingsUpdated',
+                    payload: {
+                      sortOption,
+                      filterOption
+                    }
+                  }));
+                }
+              });
+            }
+          }
+
+          ws.send(JSON.stringify({
+            type: 'backlog:settings:response',
+            payload: result
+          }));
+          break;
+        }
+
         default:
           console.log('Unknown message type:', message.type);
       }
