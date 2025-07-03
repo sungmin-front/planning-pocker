@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   voteCount = {},
   showVoteCount = false
 }) => {
+  const { t } = useTranslation();
   const isVotingDisabled = disabled || !currentStoryId || isLoading;
 
   const handleVote = (vote: string) => {
@@ -55,16 +57,16 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   return (
     <Card className={cn('w-full', className)}>
       <CardHeader>
-        <CardTitle>Cast your vote</CardTitle>
+        <CardTitle>{t('voting.castYourVote')}</CardTitle>
       </CardHeader>
       <CardContent>
         {!currentStoryId ? (
           <div className="text-center py-4">
-            <p className="text-muted-foreground">No story to vote on</p>
+            <p className="text-muted-foreground">{t('voting.noStoryToVoteOn')}</p>
           </div>
         ) : isLoading ? (
           <div className="text-center py-4">
-            <p className="text-muted-foreground">Submitting vote...</p>
+            <p className="text-muted-foreground">{t('voting.submittingVote')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -117,7 +119,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
                   disabled={isVotingDisabled}
                   className="text-muted-foreground hover:text-foreground"
                 >
-                  Clear Vote
+                  {t('voting.clearVote')}
                 </Button>
               </div>
             )}

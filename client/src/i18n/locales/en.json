@@ -1,0 +1,147 @@
+{
+  "app": {
+    "title": "Planning Poker",
+    "description": "Estimate story points with your team"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info",
+    "retry": "Retry",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "all": "All",
+    "none": "None",
+    "select": "Select",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All"
+  },
+  "connection": {
+    "connectToServer": "Connect to Server",
+    "connectToStart": "Connect to start playing",
+    "serverConnected": "Connected to server",
+    "serverDisconnected": "Disconnected from server",
+    "connectToServerFirst": "Connect to server first"
+  },
+  "user": {
+    "nickname": "Nickname",
+    "enterNickname": "Enter your nickname",
+    "yourNickname": "Your Nickname",
+    "tryTheseSuggestions": "Try these suggestions:"
+  },
+  "room": {
+    "roomId": "Room ID",
+    "enterRoomId": "Enter room ID",
+    "createNewRoom": "Create New Room",
+    "creating": "Creating...",
+    "joinRoom": "Join Room",
+    "joining": "Joining...",
+    "orJoinExistingRoom": "Or join existing room",
+    "roomNotFound": "Room not found",
+    "roomFull": "Room is full"
+  },
+  "voting": {
+    "castYourVote": "Cast your vote",
+    "noStoryToVoteOn": "No story to vote on",
+    "submittingVote": "Submitting vote...",
+    "clearVote": "Clear Vote",
+    "votingResults": "Voting Results",
+    "noVotesCast": "No votes cast",
+    "totalVote": "{{count}} total vote",
+    "totalVote_other": "{{count}} total votes",
+    "mostVoted": "Most voted:",
+    "unanimous": "Unanimous",
+    "tied": "Tied",
+    "splitDecision": "Split Decision"
+  },
+  "story": {
+    "story": "Story",
+    "stories": "Stories",
+    "noStories": "No stories",
+    "addStory": "Add Story",
+    "selectAsVotingItem": "📋 Select as voting item"
+  },
+  "issueTypes": {
+    "story": "Story",
+    "bug": "Bug",
+    "task": "Task", 
+    "epic": "Epic",
+    "subtask": "Subtask"
+  },
+  "backlog": {
+    "completed": "Completed",
+    "clickToReopen": "Completed issue - Click to reopen",
+    "reopenIssue": "Reopen Issue",
+    "selectAsVotingItem": "Select as voting item",
+    "openJiraIssue": "Open Jira Issue",
+    "sort": "Sort",
+    "filter": "Filter",
+    "sortOptions": {
+      "newest": "Newest First",
+      "oldest": "Oldest First",
+      "priorityHigh": "Priority High",
+      "priorityLow": "Priority Low", 
+      "ticketDesc": "Ticket Number Desc",
+      "ticketAsc": "Ticket Number Asc"
+    },
+    "filterOptions": {
+      "all": "All",
+      "story": "Story",
+      "task": "Task",
+      "bug": "Bug"
+    },
+    "hostOnlyMessage": "Sorting and filtering can only be changed by the host"
+  },
+  "jira": {
+    "integration": "Jira Integration",
+    "connecting": "Connecting...",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "retryConnection": "Retry Connection",
+    "checkAgain": "Check Again",
+    "errors": {
+      "defaultProjectRequired": "Jira Default Project Setup Required",
+      "defaultProjectMessage": "Please set JIRA_DEFAULT_PROJECT_KEY in server environment variables.",
+      "configurationRequired": "Jira Configuration Required",
+      "connectionFailed": "Jira Connection Failed",
+      "connectionFailedMessage": "Unable to connect to Jira server.",
+      "sprintLoadFailed": "Sprint List Load Failed",
+      "sprintLoadFailedMessage": "Unable to load default project sprint list.",
+      "issueLoadFailed": "Issue List Load Failed",
+      "issueLoadFailedMessage": "Unable to load sprint issues.",
+      "noIssuesSelected": "Issue Selection Required",
+      "noIssuesSelectedMessage": "Please select issues to import.",
+      "importFailed": "Import Failed",
+      "importFailedMessage": "An error occurred while importing Jira issues."
+    },
+    "success": {
+      "importSuccess": "Jira Issues Import Success"
+    },
+    "selectSprint": "Select Sprint",
+    "selectSprintPlaceholder": "Choose a sprint",
+    "selectIssues": "Select Issues",
+    "assignee": "Assignee:",
+    "importSelectedIssues": "Import Selected Issues as Stories",
+    "loadingSprints": "Loading sprints...",
+    "loadingIssues": "Loading issues..."
+  },
+  "hostControls": {
+    "status": {
+      "voting": "Voting",
+      "revealed": "Revealed",
+      "completed": "Completed", 
+      "skipped": "Skipped",
+      "ready": "Ready"
+    },
+    "nextIssue": "Next Issue: {{title}}"
+  }
+}

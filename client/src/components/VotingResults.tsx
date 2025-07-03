@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRoom } from '@/contexts/RoomContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,7 @@ interface VoteDistribution {
 }
 
 export const VotingResults: React.FC = () => {
+  const { t } = useTranslation();
   const { room } = useRoom();
 
   // Only render if room exists and has a current story that's revealed
@@ -33,10 +35,10 @@ export const VotingResults: React.FC = () => {
     return (
       <Card data-testid="voting-results" className="w-full">
         <CardHeader>
-          <CardTitle className="text-lg">Voting Results</CardTitle>
+          <CardTitle className="text-lg">{t('voting.votingResults')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">No votes cast</p>
+          <p className="text-muted-foreground">{t('voting.noVotesCast')}</p>
         </CardContent>
       </Card>
     );
@@ -90,7 +92,7 @@ export const VotingResults: React.FC = () => {
   return (
     <Card data-testid="voting-results" className="w-full">
       <CardHeader>
-        <CardTitle className="text-lg">Voting Results</CardTitle>
+        <CardTitle className="text-lg">{t('voting.votingResults')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Consensus Indicator */}
@@ -99,12 +101,12 @@ export const VotingResults: React.FC = () => {
             data-testid="consensus-indicator"
             className={getConsensusColor()}
           >
-            {consensusType === 'unanimous' && 'Unanimous'}
-            {consensusType === 'tied' && 'Tied'}
-            {consensusType === 'split decision' && 'Split Decision'}
+            {consensusType === 'unanimous' && t('voting.unanimous')}
+            {consensusType === 'tied' && t('voting.tied')}
+            {consensusType === 'split decision' && t('voting.splitDecision')}
           </Badge>
           <span data-testid="total-votes" className="text-sm text-muted-foreground">
-            {totalVotes} total {totalVotes === 1 ? 'vote' : 'votes'}
+            {t('voting.totalVote', { count: totalVotes })}
           </span>
         </div>
 
@@ -179,8 +181,8 @@ export const VotingResults: React.FC = () => {
         {mostVotedValues.length === 1 && (
           <div className="text-center p-3 bg-primary/5 rounded-lg border">
             <p className="text-sm font-medium">
-              Most voted: <span className="font-bold text-primary">{mostVotedValues[0].value}</span>
-              {' '}({mostVotedValues[0].count} {mostVotedValues[0].count === 1 ? 'vote' : 'votes'})
+              {t('voting.mostVoted')} <span className="font-bold text-primary">{mostVotedValues[0].value}</span>
+              {' '}({t('voting.totalVote', { count: mostVotedValues[0].count })})
             </p>
           </div>
         )}
