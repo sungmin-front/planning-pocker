@@ -4,6 +4,8 @@ export interface ServerRoom extends Room {
   socketIds: Set<string>;
 }
 
+export { Player, Story };
+
 export interface SocketUserMap {
   [socketId: string]: {
     roomId?: string;

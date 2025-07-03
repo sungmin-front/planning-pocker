@@ -2,6 +2,7 @@ import { Room, Player, Story, VoteValue, JiraMetadata, BacklogSettings } from '@
 import { generateRoomId, releaseRoomId } from './utils';
 import { ServerRoom, SocketUserMap } from './types';
 import { v4 as uuidv4 } from 'uuid';
+import RoomSessionService from './services/RoomSessionService';
 
 export class RoomManager {
   private rooms = new Map<string, ServerRoom>();
@@ -221,6 +222,10 @@ export class RoomManager {
     };
 
     room.stories.push(story);
+    
+    // RoomSession: 스토리 추가
+    RoomSessionService.addStory(room.id, story).catch(console.error);
+    
     return story;
   }
 
@@ -244,6 +249,9 @@ export class RoomManager {
     // Set the current story for voting
     room.currentStoryId = storyId;
     story.status = 'voting';
+    
+    // RoomSession: 투표 세션 시작
+    RoomSessionService.startVotingSession(room.id, storyId).catch(console.error);
     
     return { success: true };
   }

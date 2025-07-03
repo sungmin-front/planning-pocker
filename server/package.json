@@ -15,10 +15,12 @@
   },
   "dependencies": {
     "@planning-poker/shared": "workspace:*",
+    "@types/mongoose": "^5.11.97",
     "axios": "^1.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.0",
     "express": "^4.18.0",
+    "mongoose": "^8.16.1",
     "uuid": "^9.0.0",
     "ws": "^8.13.0"
   },

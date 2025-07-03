@@ -1,5 +1,6 @@
 import { BacklogSidebar } from "@/components/BacklogSidebar";
 import { CurrentStory } from "@/components/CurrentStory";
+import { ExportButton } from "@/components/ExportButton";
 import { HostActions } from "@/components/HostActions";
 import { ResponsivePlayerLayout } from "@/components/ResponsivePlayerLayout";
 import { ResponsiveVotingInterface } from "@/components/ResponsiveVotingInterface";
@@ -229,6 +230,7 @@ export const RoomPage: React.FC = () => {
                   <Badge variant="outline">{room.id}</Badge>
                     {isHost && <Badge variant="default">Host</Badge>}
                     <LanguageToggle />
+                    <ExportButton roomId={room.id} />
                     <SyncButton />
                     <Button variant="outline" onClick={handleLeaveRoom}>
                       Leave Room
@@ -298,6 +300,7 @@ export const RoomPage: React.FC = () => {
                         Host
                       </Badge>
                     )}
+                    <ExportButton roomId={room.id} size="sm" />
                     <SyncButton />
                     <Button
                       variant="outline"
