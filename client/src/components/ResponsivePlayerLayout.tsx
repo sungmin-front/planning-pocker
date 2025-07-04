@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PlayerCard } from '@/components/PlayerCard';
 import { VoteProgressRing } from '@/components/VoteProgressRing';
-import { VotingResultsModal } from '@/components/VotingResultsModal';
 import { Button } from '@/components/ui/button';
 import { BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,36 +12,20 @@ interface ResponsivePlayerLayoutProps {
   players: Player[];
   currentStory: Story | null;
   currentPlayerId: string;
+  isStatsModalOpen?: boolean;
+  onOpenStatsModal?: () => void;
 }
 
 export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
   players,
   currentStory,
   currentPlayerId,
+  isStatsModalOpen = false,
+  onOpenStatsModal,
 }) => {
-  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const { isHost } = useRoom();
   const { send } = useWebSocket();
 
-  // Handle finalizing story points
-  const handleFinalize = (storyId: string, finalPoint: string) => {
-    send({
-      type: 'STORY_SET_FINAL_POINT',
-      payload: { storyId, point: finalPoint }
-    });
-  };
-
-  // Auto-open modal when votes are revealed
-  useEffect(() => {
-    if (currentStory?.status === 'revealed' && Object.keys(currentStory.votes || {}).length > 0) {
-      // Add a small delay to ensure single modal opening
-      const timeoutId = setTimeout(() => {
-        setIsStatsModalOpen(true);
-      }, 100);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [currentStory?.status, currentStory?.id]); // Use currentStory.id instead of votes to prevent re-triggering
 
   if (players.length === 0) {
     return (
@@ -118,7 +101,7 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
                   {isRevealed && !isStatsModalOpen ? (
                     <Button
                       size="sm"
-                      onClick={() => setIsStatsModalOpen(true)}
+                      onClick={() => onOpenStatsModal?.()}
                       className="h-7 px-3 text-xs"
                     >
                       <BarChart3 className="h-3 w-3 mr-1" />
@@ -191,19 +174,6 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
           {renderCircularTable()}
         </div>
       </div>
-
-      {/* Voting Results Modal */}
-      {currentStory && (
-        <VotingResultsModal
-          isOpen={isStatsModalOpen}
-          onClose={() => setIsStatsModalOpen(false)}
-          votes={currentStory.votes || {}}
-          totalVotes={Object.keys(currentStory.votes || {}).length}
-          isHost={isHost}
-          storyId={currentStory.id}
-          onFinalize={handleFinalize}
-        />
-      )}
     </>
   );
 };
