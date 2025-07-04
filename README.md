@@ -1,5 +1,13 @@
 # Planning Poker
 
+> 🎯 Real-time Scrum Planning Poker with Jira Integration  
+> WebSocket 기반 실시간 스토리 포인트 추정 도구
+
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
+
 실시간 스크럼 플래닝 포커 애플리케이션입니다. Jira와 연동하여 이슈를 가져와서 스토리 포인트를 추정할 수 있습니다.
 
 ## ✨ 주요 기능
@@ -9,63 +17,89 @@
 - 🎨 **직관적 UI**: Jira 스타일의 우선순위 화살표와 배지 시스템
 - 👥 **호스트 관리**: 컨텍스트 메뉴를 통한 쉬운 스토리 선택
 - 🚀 **간편한 배포**: Docker로 원클릭 환경 구성
+- 📊 **통계 및 내보내기**: 세션 결과를 JSON/CSV/HTML로 내보내기
+- 🌍 **다국어 지원**: 한국어/영어 지원
 
-## 🚀 빠른 시작
+## 🚀 초간단 시작하기
+
+### 🔥 원클릭 설치 (추천)
+
+```bash
+# 저장소 클론
+git clone <repository-url>
+cd planning-poker
+
+# 원클릭 설치 및 실행 🚀
+pnpm run quickstart
+```
+
+또는 **Make** 사용:
+```bash
+make quickstart
+```
+
+### 🐳 Docker 원클릭 (프로덕션 권장)
+
+```bash
+# Docker 환경으로 바로 시작
+pnpm run quickstart:docker
+# 또는
+make quickstart-docker
+```
 
 ### 📋 사전 요구사항
-- Node.js 20+
-- pnpm
-- Docker (선택사항)
+- **Node.js** 18+ 
+- **pnpm** (자동 설치됨)
+- **Docker** (Docker 사용시)
 
-### 🔧 환경 설정
+## 📖 상세 설정 가이드
 
-1. **저장소 클론**
+처음 사용하시나요? **위의 원클릭 설치**를 먼저 시도해보세요! 
+
+### 🔧 수동 설정 (고급 사용자)
+
+#### 1. 저장소 클론
 ```bash
 git clone <repository-url>
 cd planning-poker
 ```
 
-2. **환경변수 설정**
+#### 2. 환경변수 설정
 ```bash
+# 환경변수 템플릿 생성
 npm run setup:env
-# 또는
-./scripts/setup-env.sh
+make setup  # 또는 Make 사용
 ```
 
-3. **환경변수 파일 편집**
+#### 3. Jira 연동 설정
 ```bash
-# Jira 설정 정보 입력
-vi .env
-vi server/.env  
-vi client/.env
+# 환경변수 파일 편집 (실제 값으로 변경)
+vi .env              # 메인 설정
+vi server/.env       # 서버 설정  
+vi client/.env       # 클라이언트 설정
+vi .env.docker       # Docker 설정
 ```
 
-### 🏃‍♂️ 개발 환경 실행
-
+#### 4. 개발 환경 실행
 ```bash
 # 의존성 설치
-pnpm install
+npm install
+make install  # 또는 Make 사용
 
-# 개발 서버 시작 (서버 + 클라이언트)
-npm run dev
+# 개발 서버 시작
+npm start
+make start  # 또는 Make 사용
 
-# 브라우저에서 접속
-# http://localhost:4000
+# 접속: http://localhost:4000
 ```
 
-### 🐳 Docker 환경 실행
-
+#### 5. Docker 환경 실행
 ```bash
-# Docker 환경변수 설정
-vi .env.docker
-
 # Docker 환경 시작  
-./scripts/start-docker.sh
-# 또는
 npm run docker:start
+make docker-start  # 또는 Make 사용
 
-# 브라우저에서 접속
-# http://localhost
+# 접속: http://localhost
 ```
 
 ## 🏗️ 프로젝트 구조
@@ -87,36 +121,113 @@ planning-poker/
 └── docker-compose.yml      # Docker 구성
 ```
 
-## 🔧 개발 가이드
+## 🛠️ 개발자 명령어 가이드
 
-### 스크립트 명령어
+### 🔥 핵심 명령어 (가장 많이 사용)
+
+| 명령어 | pnpm | make | 설명 |
+|--------|-----|------|------|
+| **빠른 시작** | `pnpm run quickstart` | `make quickstart` | 설정 + 설치 + 실행 |
+| **개발 서버** | `pnpm start` | `make start` | 개발 서버 시작 |
+| **검증** | `pnpm run validate` | `make validate` | 코드 품질 + 테스트 |
+| **Docker 시작** | `pnpm run docker:start` | `make docker-start` | Docker 환경 시작 |
+
+### 📦 설치 및 설정
 
 ```bash
-# 개발 환경
-npm run dev              # 서버 + 클라이언트 동시 실행
-npm run dev:server       # 서버만 실행
-npm run dev:client       # 클라이언트만 실행
+# 🚀 원클릭 설정
+pnpm run quickstart        # 설정 + 설치 + 실행
+pnpm run bootstrap         # 설정 + 설치만
+make quickstart          # Make 버전
 
-# 빌드
-npm run build           # 전체 빌드
-npm run build:server    # 서버 빌드  
-npm run build:client    # 클라이언트 빌드
-
-# 테스트
-npm test               # 전체 테스트
-npm run test:server    # 서버 테스트
-npm run test:client    # 클라이언트 테스트
-
-# Docker
-./scripts/start-docker.sh      # Docker 환경 시작
-./scripts/stop-docker.sh       # Docker 환경 정지
-npm run docker:start           # Docker 환경 시작 (npm)
-npm run docker:stop            # Docker 환경 정지 (npm)
-
-# 환경 설정
-npm run setup:env              # 환경변수 파일 생성
-npm run setup                  # 환경설정 + 의존성 설치
+# 🔧 개별 설정
+pnpm run setup:env        # 환경변수 파일 생성
+pnpm install              # 의존성 설치 (직접)
+pnpm run setup            # 환경변수 파일만 생성
 ```
+
+### 💻 개발 환경
+
+```bash
+# 🏃 서버 실행
+pnpm start                # 개발 서버 시작 (추천)
+pnpm run dev              # 서버 + 클라이언트 동시 실행
+pnpm run dev:server       # 서버만 실행
+pnpm run dev:client       # 클라이언트만 실행
+
+# 🏗️ 빌드
+pnpm run build            # 전체 빌드
+```
+
+### 🐳 Docker 명령어
+
+```bash
+# 🚀 Docker 환경
+pnpm run docker:start     # Docker 환경 시작
+pnpm run docker:stop      # Docker 환경 정지
+make docker-start        # Make 버전
+make docker-stop         # Make 버전
+```
+
+### 🧪 테스트 및 품질 관리
+
+```bash
+# ✅ 테스트
+pnpm test                 # 전체 테스트
+pnpm run health           # 빠른 상태 확인
+
+# 📝 코드 품질
+pnpm run lint             # 코드 품질 검사
+pnpm run format           # 코드 포맷팅
+pnpm run validate         # 테스트 + 린트
+
+# 🔍 프로젝트 검증
+./scripts/validate.sh    # 전체 검증
+./scripts/validate.sh --quick  # 빠른 검증
+```
+
+### 🔄 유지보수
+
+```bash
+# 🧹 정리
+pnpm run clean            # 빌드 파일 정리
+pnpm run reset            # 전체 재설치
+make clean              # Make 버전
+make reset              # Make 버전
+```
+
+### 🆘 문제 해결
+
+```bash
+# ❓ 도움말
+make help               # 사용 가능한 Make 명령어 보기
+./planning-poker help   # CLI 도움말 보기
+pnpm run validate        # 프로젝트 상태 점검
+./planning-poker status # 프로젝트 상태 확인
+```
+
+## 🔧 CLI 도구 사용법
+
+Planning Poker는 사용하기 쉬운 CLI 도구를 제공합니다:
+
+```bash
+# CLI 도구 사용
+./planning-poker <command>
+
+# 예시
+./planning-poker quickstart    # 빠른 시작
+./planning-poker start         # 개발 서버 시작  
+./planning-poker validate      # 프로젝트 검증
+./planning-poker help          # 도움말 보기
+```
+
+**주요 CLI 명령어:**
+- `quickstart` - 전체 설정 + 설치 + 실행
+- `start` - 개발 서버 시작
+- `validate` - 프로젝트 상태 검증
+- `docker-start` - Docker 환경 시작
+- `status` - 현재 상태 확인
+- `help` - 전체 명령어 목록
 
 ### 개발 워크플로우
 
