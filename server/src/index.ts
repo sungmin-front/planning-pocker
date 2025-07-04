@@ -45,6 +45,89 @@ const roomSessionService = RoomSessionService;
 app.use('/api/jira', createJiraRouter(roomManager, wss));
 app.use('/api/export', exportRouter);
 
+// Debug endpoints for room management inspection
+app.get('/api/debug/rooms', (_req, res) => {
+  const allRooms = roomManager.getAllRooms();
+  const rooms = Array.from(allRooms.entries()).map(([id, room]) => ({
+    id,
+    name: room.name,
+    playerCount: room.players.length,
+    storyCount: room.stories.length,
+    createdAt: room.createdAt,
+    currentStoryId: room.currentStoryId,
+    players: room.players.map(p => ({
+      id: p.id,
+      nickname: p.nickname,
+      isHost: p.isHost,
+      isSpectator: p.isSpectator,
+      socketId: p.socketId
+    })),
+    backlogSettings: room.backlogSettings
+  }));
+  
+  res.json({
+    totalRooms: rooms.length,
+    totalActivePlayers: rooms.reduce((sum, room) => sum + room.playerCount, 0),
+    rooms
+  });
+});
+
+app.get('/api/debug/rooms/:roomId', (req, res) => {
+  const { roomId } = req.params;
+  const room = roomManager.getRoom(roomId.toUpperCase());
+  
+  if (!room) {
+    return res.status(404).json({ error: 'Room not found' });
+  }
+  
+  res.json({
+    room: {
+      id: room.id,
+      name: room.name,
+      players: room.players,
+      stories: room.stories,
+      createdAt: room.createdAt,
+      currentStoryId: room.currentStoryId,
+      backlogSettings: room.backlogSettings,
+      socketIds: Array.from(room.socketIds)
+    },
+    roomState: roomManager.getRoomState(room.id)
+  });
+});
+
+app.get('/api/debug/sockets', (req, res) => {
+  const socketMap = (roomManager as any).socketUserMap;
+  const activeClients = Array.from(clients.keys());
+  
+  res.json({
+    totalConnectedClients: activeClients.length,
+    totalMappedSockets: Object.keys(socketMap).length,
+    socketMappings: socketMap,
+    activeClientIds: activeClients,
+    unmappedClients: activeClients.filter(clientId => !socketMap[clientId])
+  });
+});
+
+app.post('/api/debug/rooms/:roomId/cleanup', (req, res) => {
+  const { roomId } = req.params;
+  const room = roomManager.getRoom(roomId.toUpperCase());
+  
+  if (!room) {
+    return res.status(404).json({ error: 'Room not found' });
+  }
+  
+  // Force remove all players to trigger cleanup
+  const playerSocketIds = Array.from(room.socketIds);
+  playerSocketIds.forEach(socketId => {
+    roomManager.removePlayer(socketId);
+  });
+  
+  res.json({ 
+    message: `Room ${roomId} cleaned up`, 
+    removedPlayers: playerSocketIds.length 
+  });
+});
+
 // Start the combined server
 server.listen(port, () => {
   console.log(`Planning Poker server running on port ${port}`);
