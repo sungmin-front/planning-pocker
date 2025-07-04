@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { API_BASE_URL } from '@/utils/api';
 import { Loader2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
@@ -75,7 +76,7 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
   const checkJiraStatus = async () => {
     try {
       setLoadingStatus(true);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/jira/status`);
+      const response = await fetch(`${API_BASE_URL}/jira/status`);
       const data = await response.json();
       setIsConfigured(data.configured);
       setIsConnected(data.connected);
@@ -112,7 +113,7 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
   const fetchDefaultProjectSprints = async () => {
     try {
       setLoadingSprints(true);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/jira/default-project/sprints`);
+      const response = await fetch(`${API_BASE_URL}/jira/default-project/sprints`);
       const data = await response.json();
       setSprints(data.sprints || []);
       setSelectedSprint('');
@@ -133,7 +134,7 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
   const fetchSprintIssues = async (sprintId: string) => {
     try {
       setLoadingIssues(true);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/jira/sprints/${sprintId}/issues`);
+      const response = await fetch(`${API_BASE_URL}/jira/sprints/${sprintId}/issues`);
       const data = await response.json();
       // 에픽 제외 필터링
       const filteredIssues = (data.issues || []).filter((issue: JiraIssue) => 
@@ -191,7 +192,7 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
       setLoadingImport(true);
       const selectedIssueObjects = issues.filter(issue => selectedIssues.has(issue.id));
       
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/jira/issues/import`, {
+      const response = await fetch(`${API_BASE_URL}/jira/issues/import`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

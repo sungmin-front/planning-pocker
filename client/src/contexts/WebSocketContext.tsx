@@ -22,7 +22,20 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
 
   useEffect(() => {
     // Configure WebSocket with environment variable
-    const wsUrl = import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:9000';
+    let wsUrl = import.meta.env.VITE_WEBSOCKET_URL;
+    
+    // If no URL provided (production with proxy), construct relative WebSocket URL
+    if (!wsUrl) {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host;
+      wsUrl = `${protocol}//${host}`;
+    }
+    
+    // Fallback for development
+    if (!wsUrl) {
+      wsUrl = 'ws://localhost:9000';
+    }
+    
     socketInstance.configure({ url: wsUrl });
 
     // Set up event listeners
