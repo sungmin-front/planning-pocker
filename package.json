@@ -21,7 +21,19 @@
     "setup:env": "./scripts/setup-env.sh",
     "docker:start": "./scripts/start-docker.sh",
     "docker:stop": "./scripts/stop-docker.sh",
-    "setup": "./scripts/setup-env.sh && pnpm install"
+    "setup": "./scripts/setup-env.sh",
+    "quickstart": "pnpm run setup:env && pnpm install && pnpm run dev",
+    "quickstart:docker": "pnpm run setup:env && pnpm run docker:start",
+    "install": "pnpm install --frozen-lockfile",
+    "start": "pnpm run dev",
+    "postinstall": "echo '✅ Dependencies installed successfully! Run: pnpm start'",
+    "validate": "./scripts/validate.sh",
+    "reset": "pnpm run clean && pnpm install",
+    "check": "pnpm run --recursive check",
+    "format": "pnpm run --recursive format",
+    "health": "pnpm run test && pnpm run lint",
+    "prepare": "echo 'Planning Poker setup complete. Ready to start development!'",
+    "bootstrap": "pnpm run setup:env && pnpm install && echo '🚀 Ready to go! Run: pnpm start'"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.0.0",

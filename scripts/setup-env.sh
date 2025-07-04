@@ -99,7 +99,7 @@ echo "  - JIRA_DEFAULT_PROJECT_KEY: 프로젝트 키"
 
 echo ""
 echo "🚀 설정 완료 후 실행 방법:"
-echo "  개발 환경: npm run dev"
+echo "  개발 환경: pnpm run dev"
 echo "  Docker 환경: ./start-docker.sh"
 
 echo ""
