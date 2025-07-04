@@ -26,6 +26,20 @@ client/.env
 *.sln
 *.sw?
 
+# Security-sensitive files (API keys, configs, etc.)
+.cursor/
+.roo/
+.roomodes/
+.taskmaster/
+*.mcp.json
+mcp.json
+
+# AI Assistant configuration files
+.claude/
+.anthropic/
+cursor-rules/
+.cursorrules
+
 # OS specific
 .DS_Store
 
