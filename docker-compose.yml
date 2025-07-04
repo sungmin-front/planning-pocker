@@ -20,8 +20,8 @@ services:
       context: .
       dockerfile: ./client/Dockerfile
       args:
-        - VITE_API_BASE_URL=http://localhost/api
-        - VITE_WEBSOCKET_URL=ws://localhost
+        - VITE_API_BASE_URL=
+        - VITE_WEBSOCKET_URL=
     container_name: planning-poker-client
     networks:
       - planning-poker-network
