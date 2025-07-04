@@ -1,17 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { PlayerCard } from '@/components/PlayerCard';
 import { VoteProgressRing } from '@/components/VoteProgressRing';
 import { Button } from '@/components/ui/button';
 import { BarChart3 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Player, Story } from '@/types';
-import { useRoom } from '@/contexts/RoomContext';
-import { useWebSocket } from '@/contexts/WebSocketContext';
 
 interface ResponsivePlayerLayoutProps {
   players: Player[];
   currentStory: Story | null;
-  currentPlayerId: string;
   isStatsModalOpen?: boolean;
   onOpenStatsModal?: () => void;
 }
@@ -19,12 +15,9 @@ interface ResponsivePlayerLayoutProps {
 export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
   players,
   currentStory,
-  currentPlayerId,
   isStatsModalOpen = false,
   onOpenStatsModal,
 }) => {
-  const { isHost } = useRoom();
-  const { send } = useWebSocket();
 
 
   if (players.length === 0) {
@@ -77,6 +70,7 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
     const playerSpacing = Math.max(10, players.length > 6 ? (isMobile ? 10 : 15) : (isMobile ? 15 : 20));
     const radiusX = Math.max(baseHorizontalRadius, baseHorizontalRadius + (players.length * playerSpacing * 0.7));
     const radiusY = Math.max(baseVerticalRadius, baseVerticalRadius + (players.length * playerSpacing * 0.5));
+    
 
     return (
       <div 
@@ -161,29 +155,14 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
           
           // Calculate position around ellipse - start from top and distribute evenly
           const angle = (index / players.length) * 2 * Math.PI - Math.PI / 2; // Start from top
+          
+          // Use the ellipse radii directly - no complex adjustments
           const x = centerX + radiusX * Math.cos(angle);
           const y = centerY + radiusY * Math.sin(angle);
           
-          // Calculate distance from center to ensure no overlap with center table
-          const distanceFromCenterX = Math.abs(x - centerX);
-          const distanceFromCenterY = Math.abs(y - centerY);
+          const adjustedX = x;
+          const adjustedY = y;
           
-          // Minimum distance based on center table size plus buffer
-          const minDistanceX = (centerTableWidth / 2) + 50; // 50px buffer
-          const minDistanceY = (centerTableHeight / 2) + 40; // 40px buffer
-          
-          let adjustedX = x;
-          let adjustedY = y;
-          
-          // Adjust position if too close to center table
-          if (distanceFromCenterX < minDistanceX || distanceFromCenterY < minDistanceY) {
-            const scaleX = distanceFromCenterX < minDistanceX ? minDistanceX / distanceFromCenterX : 1;
-            const scaleY = distanceFromCenterY < minDistanceY ? minDistanceY / distanceFromCenterY : 1;
-            const scale = Math.max(scaleX, scaleY);
-            
-            adjustedX = centerX + (x - centerX) * scale;
-            adjustedY = centerY + (y - centerY) * scale;
-          }
           
           return (
             <div
