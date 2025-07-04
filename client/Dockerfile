@@ -25,9 +25,9 @@ COPY client/tailwind.config.js ./client/
 COPY client/postcss.config.js ./client/
 COPY client/components.json ./client/
 
-# 빌드 시 환경변수 설정
-ARG VITE_API_BASE_URL=http://localhost/api
-ARG VITE_WEBSOCKET_URL=ws://localhost
+# 빌드 시 환경변수 설정 - 비워둬서 동적 URL 생성되도록 함
+ARG VITE_API_BASE_URL=
+ARG VITE_WEBSOCKET_URL=
 
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_WEBSOCKET_URL=$VITE_WEBSOCKET_URL
