@@ -1,0 +1,206 @@
+#!/bin/bash
+
+# Planning Poker CLI Wrapper
+# Provides easy command-line interface for all common tasks
+
+set -e
+
+# Colors
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+# Helper functions
+print_header() {
+    echo -e "${GREEN}"
+    echo "╔════════════════════════════════════════╗"
+    echo "║           Planning Poker CLI           ║"
+    echo "║      Real-time Scrum Planning Tool     ║"
+    echo "╚════════════════════════════════════════╝"
+    echo -e "${NC}"
+}
+
+print_usage() {
+    print_header
+    echo "Usage: ./planning-poker <command> [options]"
+    echo ""
+    echo -e "${GREEN}🚀 Quick Start Commands:${NC}"
+    echo "  quickstart          Complete setup and start development"
+    echo "  quickstart-docker   Setup and start with Docker"
+    echo "  start              Start development servers"
+    echo ""
+    echo -e "${GREEN}📦 Setup Commands:${NC}"
+    echo "  setup              Create environment configuration files"
+    echo "  install            Install dependencies"
+    echo "  bootstrap          Complete setup (setup + install)"
+    echo ""
+    echo -e "${GREEN}🐳 Docker Commands:${NC}"
+    echo "  docker-start       Start Docker environment"
+    echo "  docker-stop        Stop Docker environment"
+    echo ""
+    echo -e "${GREEN}🧪 Quality Commands:${NC}"
+    echo "  test               Run all tests"
+    echo "  lint               Check code quality"
+    echo "  validate           Run comprehensive validation"
+    echo "  health             Quick health check"
+    echo ""
+    echo -e "${GREEN}🔧 Utility Commands:${NC}"
+    echo "  build              Build for production"
+    echo "  clean              Clean build artifacts"
+    echo "  reset              Clean and reinstall everything"
+    echo "  format             Format code"
+    echo ""
+    echo -e "${GREEN}ℹ️  Information Commands:${NC}"
+    echo "  help               Show this help message"
+    echo "  version            Show version information"
+    echo "  status             Show project status"
+    echo ""
+    echo -e "${YELLOW}Examples:${NC}"
+    echo "  ./planning-poker quickstart    # Set up and start everything"
+    echo "  ./planning-poker start         # Start development"
+    echo "  ./planning-poker validate      # Check project health"
+    echo "  ./planning-poker docker-start  # Start with Docker"
+}
+
+print_version() {
+    local version=$(node -p "require('./package.json').version" 2>/dev/null || echo "unknown")
+    echo -e "${GREEN}Planning Poker v${version}${NC}"
+    echo "Real-time Scrum Planning Tool"
+    echo ""
+    echo "System Information:"
+    echo "  Node.js: $(node --version 2>/dev/null || echo 'not found')"
+    echo "  pnpm: $(pnpm --version 2>/dev/null || echo 'not found')"
+    echo "  Docker: $(docker --version 2>/dev/null | cut -d' ' -f3 | cut -d',' -f1 || echo 'not found')"
+}
+
+print_status() {
+    echo -e "${BLUE}🔍 Project Status${NC}"
+    echo "==================="
+    
+    # Check environment files
+    local env_files=(".env" "server/.env" "client/.env" ".env.docker")
+    echo ""
+    echo "Environment Files:"
+    for file in "${env_files[@]}"; do
+        if [ -f "$file" ]; then
+            echo -e "  ✅ $file"
+        else
+            echo -e "  ❌ $file (missing)"
+        fi
+    done
+    
+    # Check dependencies
+    echo ""
+    echo "Dependencies:"
+    if [ -d "node_modules" ]; then
+        echo -e "  ✅ Root dependencies installed"
+    else
+        echo -e "  ❌ Root dependencies missing"
+    fi
+    
+    local workspaces=("client" "server" "shared")
+    for workspace in "${workspaces[@]}"; do
+        if [ -d "$workspace/node_modules" ]; then
+            echo -e "  ✅ $workspace dependencies installed"
+        else
+            echo -e "  ❌ $workspace dependencies missing"
+        fi
+    done
+    
+    # Check ports
+    echo ""
+    echo "Port Status:"
+    local ports=(4000 9000 80)
+    for port in "${ports[@]}"; do
+        if lsof -i :$port >/dev/null 2>&1; then
+            echo -e "  ⚠️  Port $port is in use"
+        else
+            echo -e "  ✅ Port $port is available"
+        fi
+    done
+}
+
+# Main command handler
+case "${1:-help}" in
+    "quickstart")
+        echo -e "${GREEN}🚀 Starting QuickStart...${NC}"
+        pnpm run quickstart
+        ;;
+    "quickstart-docker")
+        echo -e "${GREEN}🐳 Starting Docker QuickStart...${NC}"
+        pnpm run quickstart:docker
+        ;;
+    "start")
+        echo -e "${GREEN}🚀 Starting development servers...${NC}"
+        pnpm start
+        ;;
+    "setup")
+        echo -e "${BLUE}🔧 Setting up environment...${NC}"
+        pnpm run setup:env
+        ;;
+    "install")
+        echo -e "${BLUE}📦 Installing dependencies...${NC}"
+        pnpm install
+        ;;
+    "bootstrap")
+        echo -e "${GREEN}🎯 Complete bootstrap...${NC}"
+        pnpm run bootstrap
+        ;;
+    "docker-start")
+        echo -e "${BLUE}🐳 Starting Docker environment...${NC}"
+        pnpm run docker:start
+        ;;
+    "docker-stop")
+        echo -e "${BLUE}🛑 Stopping Docker environment...${NC}"
+        pnpm run docker:stop
+        ;;
+    "test")
+        echo -e "${BLUE}🧪 Running tests...${NC}"
+        pnpm test
+        ;;
+    "lint")
+        echo -e "${BLUE}📝 Checking code quality...${NC}"
+        pnpm run lint
+        ;;
+    "validate")
+        echo -e "${BLUE}✅ Running validation...${NC}"
+        pnpm run validate
+        ;;
+    "health")
+        echo -e "${BLUE}🏥 Quick health check...${NC}"
+        pnpm run health
+        ;;
+    "build")
+        echo -e "${BLUE}🏗️  Building for production...${NC}"
+        pnpm run build
+        ;;
+    "clean")
+        echo -e "${BLUE}🧹 Cleaning build artifacts...${NC}"
+        pnpm run clean
+        ;;
+    "reset")
+        echo -e "${YELLOW}🔄 Resetting project...${NC}"
+        pnpm run reset
+        ;;
+    "format")
+        echo -e "${BLUE}✨ Formatting code...${NC}"
+        pnpm run format
+        ;;
+    "version")
+        print_version
+        ;;
+    "status")
+        print_status
+        ;;
+    "help"|"-h"|"--help")
+        print_usage
+        ;;
+    *)
+        echo -e "${RED}❌ Unknown command: $1${NC}"
+        echo ""
+        print_usage
+        exit 1
+        ;;
+esac
