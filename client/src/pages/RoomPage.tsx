@@ -50,6 +50,11 @@ export const RoomPage: React.FC = () => {
   } = useRoom();
   const { isConnected, send } = useWebSocket();
 
+  // Calculate current story - moved before conditional return
+  const currentStory = room?.currentStoryId
+    ? room.stories.find((story) => story.id === room.currentStoryId)
+    : null;
+
   useEffect(() => {
     // If user is already in a room (e.g., host who created room), don't attempt to join again
     if (room && currentPlayer) {
@@ -62,6 +67,17 @@ export const RoomPage: React.FC = () => {
     }
     // If no nickname or not connected yet, the component will show the appropriate UI
   }, [roomId, nickname, isConnected, room, currentPlayer, joinRoom]);
+
+  // Handle modal opening when votes are revealed - moved before conditional return
+  useEffect(() => {
+    if (currentStory?.status === 'revealed' && Object.keys(currentStory.votes || {}).length > 0) {
+      const timeoutId = setTimeout(() => {
+        setIsStatsModalOpen(true);
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [currentStory?.status, currentStory?.id]);
 
   const handleLeaveRoom = () => {
     leaveRoom();
@@ -91,6 +107,14 @@ export const RoomPage: React.FC = () => {
   const handleSuggestionClick = (suggestion: string) => {
     setNicknameInput(suggestion);
     clearJoinError();
+  };
+
+  // Handle finalizing story points
+  const handleFinalize = (storyId: string, finalPoint: string) => {
+    send({
+      type: 'STORY_SET_FINAL_POINT',
+      payload: { storyId, point: finalPoint }
+    });
   };
 
   // Show nickname input form if not connected to room yet
@@ -194,29 +218,6 @@ export const RoomPage: React.FC = () => {
       </div>
     );
   }
-
-  const currentStory = room.currentStoryId
-    ? room.stories.find((story) => story.id === room.currentStoryId)
-    : null;
-
-  // Handle modal opening when votes are revealed
-  useEffect(() => {
-    if (currentStory?.status === 'revealed' && Object.keys(currentStory.votes || {}).length > 0) {
-      const timeoutId = setTimeout(() => {
-        setIsStatsModalOpen(true);
-      }, 100);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [currentStory?.status, currentStory?.id]);
-
-  // Handle finalizing story points
-  const handleFinalize = (storyId: string, finalPoint: string) => {
-    send({
-      type: 'STORY_SET_FINAL_POINT',
-      payload: { storyId, point: finalPoint }
-    });
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
