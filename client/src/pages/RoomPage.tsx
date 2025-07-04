@@ -5,6 +5,7 @@ import { HostActions } from "@/components/HostActions";
 import { ResponsivePlayerLayout } from "@/components/ResponsivePlayerLayout";
 import { ResponsiveVotingInterface } from "@/components/ResponsiveVotingInterface";
 import { SyncButton } from "@/components/SyncButton";
+import { VotingResultsModal } from "@/components/VotingResultsModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +33,7 @@ export const RoomPage: React.FC = () => {
   const nickname = searchParams.get("nickname");
   const [nicknameInput, setNicknameInput] = useState(nickname || "");
   const [isJoining, setIsJoining] = useState(false);
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   // Modal states moved to HostActions component
 
   const {
@@ -197,6 +199,25 @@ export const RoomPage: React.FC = () => {
     ? room.stories.find((story) => story.id === room.currentStoryId)
     : null;
 
+  // Handle modal opening when votes are revealed
+  useEffect(() => {
+    if (currentStory?.status === 'revealed' && Object.keys(currentStory.votes || {}).length > 0) {
+      const timeoutId = setTimeout(() => {
+        setIsStatsModalOpen(true);
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [currentStory?.status, currentStory?.id]);
+
+  // Handle finalizing story points
+  const handleFinalize = (storyId: string, finalPoint: string) => {
+    send({
+      type: 'STORY_SET_FINAL_POINT',
+      payload: { storyId, point: finalPoint }
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <SidebarProvider>
@@ -253,6 +274,8 @@ export const RoomPage: React.FC = () => {
                     players={room.players}
                     currentStory={currentStory ?? null}
                     currentPlayerId={currentPlayer?.id || ""}
+                    isStatsModalOpen={isStatsModalOpen}
+                    onOpenStatsModal={() => setIsStatsModalOpen(true)}
                   />
                 </div>
 
@@ -326,6 +349,8 @@ export const RoomPage: React.FC = () => {
                   players={room.players}
                   currentStory={currentStory ?? null}
                   currentPlayerId={currentPlayer?.id || ""}
+                  isStatsModalOpen={isStatsModalOpen}
+                  onOpenStatsModal={() => setIsStatsModalOpen(true)}
                 />
 
                 {/* Voting Interface - Full Width */}
@@ -337,6 +362,19 @@ export const RoomPage: React.FC = () => {
           </div>
         </div>
       </SidebarProvider>
+      
+      {/* Shared Voting Results Modal */}
+      {currentStory && (
+        <VotingResultsModal
+          isOpen={isStatsModalOpen}
+          onClose={() => setIsStatsModalOpen(false)}
+          votes={currentStory.votes || {}}
+          totalVotes={Object.keys(currentStory.votes || {}).length}
+          isHost={isHost}
+          storyId={currentStory.id}
+          onFinalize={handleFinalize}
+        />
+      )}
     </div>
   );
 };
