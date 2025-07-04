@@ -625,4 +625,25 @@ export class RoomManager {
       backlogSettings: room.backlogSettings
     };
   }
+
+  // Debug methods for room inspection
+  getAllRooms(): Map<string, ServerRoom> {
+    return this.rooms;
+  }
+
+  getSocketUserMap(): SocketUserMap {
+    return this.socketUserMap;
+  }
+
+  getRoomCount(): number {
+    return this.rooms.size;
+  }
+
+  getTotalPlayerCount(): number {
+    let total = 0;
+    this.rooms.forEach(room => {
+      total += room.players.length;
+    });
+    return total;
+  }
 }
