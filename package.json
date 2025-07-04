@@ -24,7 +24,6 @@
     "setup": "./scripts/setup-env.sh",
     "quickstart": "pnpm run setup:env && pnpm install && pnpm run dev",
     "quickstart:docker": "pnpm run setup:env && pnpm run docker:start",
-    "install": "pnpm install --frozen-lockfile",
     "start": "pnpm run dev",
     "postinstall": "echo '✅ Dependencies installed successfully! Run: pnpm start'",
     "validate": "./scripts/validate.sh",
