@@ -56,12 +56,27 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
   };
 
   const renderCircularTable = () => {
-    const containerWidth = 600;
-    const containerHeight = 500; // Increased height for vertical growth
+    // Responsive container dimensions
+    const isMobile = window.innerWidth < 768;
+    const isTablet = window.innerWidth < 1024;
+    
+    const containerWidth = isMobile ? 400 : isTablet ? 600 : 800;
+    const containerHeight = isMobile ? 400 : isTablet ? 500 : 600;
     const centerX = containerWidth / 2;
     const centerY = containerHeight / 2;
-    // Increased radius to account for larger center box (300x140)
-    const radius = Math.min(200, Math.max(180, players.length * 15));
+    
+    // Dynamic ellipse radii based on center table size and screen size
+    const centerTableWidth = isMobile ? 240 : isTablet ? 280 : 320;
+    const centerTableHeight = isMobile ? 120 : isTablet ? 140 : 160;
+    
+    // Add padding around the center table for player cards
+    const baseHorizontalRadius = (centerTableWidth / 2) + (isMobile ? 80 : isTablet ? 100 : 120);
+    const baseVerticalRadius = (centerTableHeight / 2) + (isMobile ? 60 : isTablet ? 80 : 100);
+    
+    // Increase radius based on player count to prevent overlap
+    const playerSpacing = Math.max(10, players.length > 6 ? (isMobile ? 10 : 15) : (isMobile ? 15 : 20));
+    const radiusX = Math.max(baseHorizontalRadius, baseHorizontalRadius + (players.length * playerSpacing * 0.7));
+    const radiusY = Math.max(baseVerticalRadius, baseVerticalRadius + (players.length * playerSpacing * 0.5));
 
     return (
       <div 
@@ -73,20 +88,26 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <div className="relative">
             {currentStory ? (
-              <div className="relative" style={{ width: '300px', height: '140px' }}>
+              <div 
+                className="relative"
+                style={{ 
+                  width: isMobile ? '240px' : isTablet ? '280px' : '320px', 
+                  height: isMobile ? '120px' : isTablet ? '140px' : '160px' 
+                }}
+              >
                 <VoteProgressRing
                   players={players}
                   currentStory={currentStory}
-                  width={300}
-                  height={140}
-                  strokeWidth={4}
+                  width={isMobile ? 240 : isTablet ? 280 : 320}
+                  height={isMobile ? 120 : isTablet ? 140 : 160}
+                  strokeWidth={isMobile ? 4 : 6}
                 />
                 <div 
-                  className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm absolute z-10 flex flex-col justify-center items-center text-center"
+                  className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border absolute z-10 flex flex-col justify-center items-center text-center"
                   style={{ 
-                    width: '280px', 
-                    height: '120px', 
-                    padding: '16px',
+                    width: isMobile ? '220px' : isTablet ? '260px' : '300px', 
+                    height: isMobile ? '100px' : isTablet ? '120px' : '140px', 
+                    padding: isMobile ? '12px' : isTablet ? '16px' : '20px',
                     top: '50%',
                     left: '50%',
                     transform: 'translate(-50%, -50%)'
@@ -120,10 +141,15 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
               </div>
             ) : (
               <div 
-                className="bg-white/95 backdrop-blur-sm rounded-lg shadow-sm border flex items-center justify-center text-center"
-                style={{ width: '280px', height: '120px' }}
+                className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border flex items-center justify-center text-center"
+                style={{ 
+                  width: isMobile ? '220px' : isTablet ? '260px' : '300px', 
+                  height: isMobile ? '100px' : isTablet ? '120px' : '140px' 
+                }}
               >
-                <p className="text-sm text-gray-600">Ready to start voting</p>
+                <p className={`${isMobile ? 'text-sm' : 'text-base'} text-gray-600`}>
+                  Ready to start voting
+                </p>
               </div>
             )}
           </div>
@@ -133,19 +159,40 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
         {players.map((player, index) => {
           const voteStatus = getPlayerVoteStatus(player);
           
-          // Calculate position around circle
+          // Calculate position around ellipse - start from top and distribute evenly
           const angle = (index / players.length) * 2 * Math.PI - Math.PI / 2; // Start from top
-          const x = centerX + radius * Math.cos(angle);
-          const y = centerY + radius * Math.sin(angle);
+          const x = centerX + radiusX * Math.cos(angle);
+          const y = centerY + radiusY * Math.sin(angle);
+          
+          // Calculate distance from center to ensure no overlap with center table
+          const distanceFromCenterX = Math.abs(x - centerX);
+          const distanceFromCenterY = Math.abs(y - centerY);
+          
+          // Minimum distance based on center table size plus buffer
+          const minDistanceX = (centerTableWidth / 2) + 50; // 50px buffer
+          const minDistanceY = (centerTableHeight / 2) + 40; // 40px buffer
+          
+          let adjustedX = x;
+          let adjustedY = y;
+          
+          // Adjust position if too close to center table
+          if (distanceFromCenterX < minDistanceX || distanceFromCenterY < minDistanceY) {
+            const scaleX = distanceFromCenterX < minDistanceX ? minDistanceX / distanceFromCenterX : 1;
+            const scaleY = distanceFromCenterY < minDistanceY ? minDistanceY / distanceFromCenterY : 1;
+            const scale = Math.max(scaleX, scaleY);
+            
+            adjustedX = centerX + (x - centerX) * scale;
+            adjustedY = centerY + (y - centerY) * scale;
+          }
           
           return (
             <div
               key={player.id}
               data-testid={`player-card-${player.id}`}
-              className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 z-20"
               style={{
-                left: `${x}px`,
-                top: `${y}px`,
+                left: `${adjustedX}px`,
+                top: `${adjustedY}px`,
               }}
             >
               <PlayerCard
@@ -170,7 +217,7 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
         className="w-full flex-1 flex flex-col"
         aria-label={`${players.length} players in room`}
       >
-        <div className="bg-white rounded-lg p-6 flex-1 flex items-center justify-center">
+        <div className="bg-white rounded-lg p-2 sm:p-4 lg:p-6 flex-1 flex items-center justify-center overflow-hidden">
           {renderCircularTable()}
         </div>
       </div>
