@@ -1,52 +1,154 @@
 {
-    "name": "Claude Code Sandbox",
-    "build": {
-      "dockerfile": "Dockerfile",
-      "args": {
-        "TZ": "${localEnv:TZ:America/Los_Angeles}"
-      }
+  "name": "Planning Poker - Full Stack Development",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".",
+    "args": {
+      "TZ": "${localEnv:TZ:Asia/Seoul}"
+    }
+  },
+  "runArgs": [
+    "--cap-add=NET_ADMIN",
+    "--cap-add=NET_RAW"
+  ],
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": "true"
     },
-    "runArgs": [
-      "--cap-add=NET_ADMIN",
-      "--cap-add=NET_RAW"
-    ],
-    "customizations": {
-      "vscode": {
-        "extensions": [
-          "dbaeumer.vscode-eslint",
-          "esbenp.prettier-vscode",
-          "eamodio.gitlens"
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "ms-playwright.playwright",
+        "ms-vscode.vscode-jest",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "ms-vscode.vscode-docker",
+        "ms-vscode-remote.remote-containers",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "mongodb.mongodb-vscode",
+        "PKief.material-icon-theme",
+        "vitest.explorer",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "ms-vscode.vscode-nginx",
+        "ms-vscode.vscode-npm-script"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "typescript.preferences.importModuleSpecifier": "relative",
+        "eslint.workingDirectories": ["client", "server", "shared"],
+        "playwright.reuseBrowser": true,
+        "playwright.showTrace": true,
+        "files.exclude": {
+          "**/node_modules": true,
+          "**/dist": true,
+          "**/.git": true,
+          "**/.DS_Store": true,
+          "**/Thumbs.db": true,
+          "**/.vscode": false
+        },
+        "search.exclude": {
+          "**/node_modules": true,
+          "**/dist": true,
+          "**/.git": true,
+          "**/pnpm-lock.yaml": true
+        },
+        "typescript.preferences.includePackageJsonAutoImports": "on",
+        "typescript.suggest.autoImports": true,
+        "javascript.suggest.autoImports": true,
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": false,
+        "prettier.tabWidth": 2,
+        "prettier.useTabs": false,
+        "emmet.includeLanguages": {
+          "typescript": "html",
+          "typescriptreact": "html"
+        },
+        "tailwindCSS.experimental.classRegex": [
+          "tw`([^`]*)",
+          "tw=\"([^\"]*)",
+          "tw={\"([^\"}]*)",
+          "tw\\.\\w+`([^`]*)",
+          "tw\\(.*?\\)`([^`]*)",
+          ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+          ["classnames\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+          ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+          ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
         ],
-        "settings": {
-          "editor.formatOnSave": true,
-          "editor.defaultFormatter": "esbenp.prettier-vscode",
-          "editor.codeActionsOnSave": {
-            "source.fixAll.eslint": "explicit"
+        "tailwindCSS.includeLanguages": {
+          "typescript": "typescript",
+          "typescriptreact": "typescriptreact"
+        },
+        "tailwindCSS.classAttributes": ["class", "className", "tw"],
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "bash",
+            "icon": "terminal-bash"
           },
-          "terminal.integrated.defaultProfile.linux": "zsh",
-          "terminal.integrated.profiles.linux": {
-            "bash": {
-              "path": "bash",
-              "icon": "terminal-bash"
-            },
-            "zsh": {
-              "path": "zsh"
-            }
+          "zsh": {
+            "path": "zsh"
           }
         }
       }
+    }
+  },
+  "forwardPorts": [3000, 3001, 27017, 3100, 80, 443],
+  "portsAttributes": {
+    "3000": {
+      "label": "Client (React)",
+      "onAutoForward": "notify"
     },
-    "remoteUser": "node",
-    "mounts": [
-      "source=claude-code-bashhistory,target=/commandhistory,type=volume",
-      "source=claude-code-config,target=/home/node/.claude,type=volume"
-    ],
-    "remoteEnv": {
-      "NODE_OPTIONS": "--max-old-space-size=4096",
-      "CLAUDE_CONFIG_DIR": "/home/node/.claude",
-      "POWERLEVEL9K_DISABLE_GITSTATUS": "true"
+    "3001": {
+      "label": "Server (Node.js)",
+      "onAutoForward": "notify"
     },
-    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
-    "workspaceFolder": "/workspace",
-    "postCreateCommand": "sudo /usr/local/bin/init-firewall.sh"
-  }
+    "27017": {
+      "label": "MongoDB",
+      "onAutoForward": "silent"
+    },
+    "3100": {
+      "label": "MongoDB UI (Mongoku)",
+      "onAutoForward": "silent"
+    },
+    "80": {
+      "label": "Nginx HTTP",
+      "onAutoForward": "notify"
+    },
+    "443": {
+      "label": "Nginx HTTPS",
+      "onAutoForward": "silent"
+    }
+  },
+  "postCreateCommand": ["pnpm install", "sudo /usr/local/bin/init-firewall.sh"],
+  "postStartCommand": "pnpm run setup:env",
+  "remoteUser": "node",
+  "mounts": [
+    "source=claude-code-bashhistory,target=/commandhistory,type=volume",
+    "source=claude-code-config,target=/home/node/.claude,type=volume",
+    "source=planning-poker-node-modules,target=/workspace/node_modules,type=volume"
+  ],
+  "remoteEnv": {
+    "NODE_OPTIONS": "--max-old-space-size=4096",
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude",
+    "POWERLEVEL9K_DISABLE_GITSTATUS": "true",
+    "SHELL": "/bin/zsh",
+    "TERM": "xterm-256color"
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
+  "workspaceFolder": "/workspace"
+}

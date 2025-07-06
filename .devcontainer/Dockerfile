@@ -1,10 +1,11 @@
-FROM node:20
+FROM node:20-bookworm-slim
 
 ARG TZ
 ENV TZ="$TZ"
 
 # Install basic development tools and iptables/ipset
-RUN apt update && apt install -y less \
+RUN apt update && apt install -y --no-install-recommends \
+  less \
   git \
   procps \
   sudo \
@@ -19,7 +20,14 @@ RUN apt update && apt install -y less \
   iproute2 \
   dnsutils \
   aggregate \
-  jq
+  jq \
+  curl \
+  wget \
+  ca-certificates \
+  build-essential \
+  python3 \
+  python3-pip \
+  && rm -rf /var/lib/apt/lists/*
 
 # Ensure default node user has access to /usr/local/share
 RUN mkdir -p /usr/local/share/npm-global && \
@@ -53,6 +61,11 @@ USER node
 # Install global packages
 ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global
 ENV PATH=$PATH:/usr/local/share/npm-global/bin
+ENV PNPM_HOME=/usr/local/share/pnpm
+ENV PATH=$PATH:$PNPM_HOME
+
+# Install pnpm
+RUN npm install -g pnpm@8.15.0
 
 # Set the default shell to zsh rather than sh
 ENV SHELL=/bin/zsh
@@ -66,8 +79,13 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -a "export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
   -x
 
-# Install Claude
-RUN npm install -g @anthropic-ai/claude-code
+# Install Claude and other development tools
+RUN npm install -g @anthropic-ai/claude-code \
+  && pnpm install -g playwright@latest \
+  && pnpm install -g @playwright/test \
+  && pnpm install -g typescript@latest \
+  && pnpm install -g tsx@latest \
+  && pnpm install -g vitest@latest
 
 # Copy and set up firewall script
 COPY init-firewall.sh /usr/local/bin/
