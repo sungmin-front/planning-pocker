@@ -1,5 +1,6 @@
 import { BacklogSidebar } from "@/components/BacklogSidebar";
-import { ChatPanel } from "@/components/ChatPanel";
+import { ChatFAB } from "@/components/ChatFAB";
+import { ChatSidebar } from "@/components/ChatSidebar";
 import { CurrentStory } from "@/components/CurrentStory";
 import { ExportButton } from "@/components/ExportButton";
 import { HostActions } from "@/components/HostActions";
@@ -36,6 +37,11 @@ export const RoomPage: React.FC = () => {
   const [isJoining, setIsJoining] = useState(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   // Modal states moved to HostActions component
+  
+  // Chat state
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [lastSeenMessageId, setLastSeenMessageId] = useState<string | null>(null);
 
   const {
     room,
@@ -79,6 +85,41 @@ export const RoomPage: React.FC = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [currentStory?.status, currentStory?.id]);
+
+  // Track unread messages
+  useEffect(() => {
+    if (!room?.chatMessages) return;
+
+    const chatMessages = room.chatMessages;
+    if (chatMessages.length === 0) return;
+
+    const latestMessage = chatMessages[chatMessages.length - 1];
+    
+    if (isChatOpen) {
+      // Chat is open, mark all messages as read
+      setUnreadCount(0);
+      setLastSeenMessageId(latestMessage.id);
+    } else {
+      // Chat is closed, count unread messages
+      if (lastSeenMessageId) {
+        const lastSeenIndex = chatMessages.findIndex(msg => msg.id === lastSeenMessageId);
+        if (lastSeenIndex >= 0) {
+          const newUnreadCount = chatMessages.length - lastSeenIndex - 1;
+          setUnreadCount(Math.max(0, newUnreadCount));
+        } else {
+          // If we can't find the last seen message, all messages are unread
+          setUnreadCount(chatMessages.length);
+        }
+      } else {
+        // No last seen message, all messages are unread
+        setUnreadCount(chatMessages.length);
+      }
+    }
+  }, [room?.chatMessages, isChatOpen, lastSeenMessageId]);
+
+  const handleChatToggle = () => {
+    setIsChatOpen(!isChatOpen);
+  };
 
   const handleLeaveRoom = () => {
     leaveRoom();
@@ -286,10 +327,6 @@ export const RoomPage: React.FC = () => {
                   {/* Voting Interface - Full Width */}
                   <ResponsiveVotingInterface />
 
-                  {/* Chat Panel */}
-                  <div className="max-w-md">
-                    <ChatPanel />
-                  </div>
 
                   {/* Other Components - Grid Layout removed as finalize is now in modal */}
                 </div>
@@ -363,10 +400,6 @@ export const RoomPage: React.FC = () => {
                 {/* Voting Interface - Full Width */}
                 <ResponsiveVotingInterface />
 
-                {/* Chat Panel */}
-                <div className="max-w-full">
-                  <ChatPanel />
-                </div>
 
                 {/* Other Components removed as finalize is now in modal */}
               </div>
@@ -374,6 +407,12 @@ export const RoomPage: React.FC = () => {
           </div>
         </div>
       </SidebarProvider>
+      
+      {/* Chat FAB */}
+      <ChatFAB onClick={handleChatToggle} unreadCount={unreadCount} />
+      
+      {/* Chat Sidebar */}
+      <ChatSidebar isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       
       {/* Shared Voting Results Modal */}
       {currentStory && (

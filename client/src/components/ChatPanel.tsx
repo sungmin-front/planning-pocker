@@ -33,10 +33,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
   const chatMessages = room?.chatMessages || [];
   const typingUsers = room?.typingUsers || [];
 
-  // Request chat history when component mounts
+  console.log({chatMessages})
+
+  // Request chat history when component mounts and room changes
   useEffect(() => {
-    requestChatHistory();
-  }, [requestChatHistory]);
+    if (room) {
+      requestChatHistory();
+    }
+  }, [room?.id]); // Only re-run when room ID changes
 
   // Save panel state to localStorage whenever it changes
   useEffect(() => {
@@ -217,31 +221,50 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
       <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
         <CardContent className="flex flex-col flex-1 p-4 pt-0">
           {/* Messages Container */}
-          <div className="flex-1 overflow-y-auto mb-4 space-y-3 min-h-[200px] max-h-[400px] border rounded-md p-3 bg-gray-50">
+          <div className="flex-1 overflow-y-auto mb-4 min-h-[200px] max-h-[400px] border rounded-md p-3 bg-gray-50">
             {chatMessages.length === 0 ? (
               <div className="text-center text-gray-500 py-8">
                 <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p>No messages yet. Start the conversation!</p>
               </div>
             ) : (
-              chatMessages.map((msg: ChatMessage) => (
-                <div key={msg.id} className="flex flex-col space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-900">
-                      {msg.sender}
-                      {msg.sender === getCurrentPlayerName() && (
-                        <span className="text-xs text-gray-500 ml-1">(You)</span>
-                      )}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {formatTimestamp(msg.timestamp)}
-                    </span>
+              chatMessages.map((msg: ChatMessage, index: number) => {
+                const isOwnMessage = msg.playerNickname === getCurrentPlayerName();
+                const prevMsg = index > 0 ? chatMessages[index - 1] : null;
+                
+                // Check if this message should be grouped with the previous one
+                const shouldGroup = prevMsg && 
+                  prevMsg.playerNickname === msg.playerNickname &&
+                  formatTimestamp(prevMsg.timestamp) === formatTimestamp(msg.timestamp);
+                
+                return (
+                  <div key={msg.id} className={`flex flex-col ${shouldGroup ? 'mt-1' : 'mt-4'} ${isOwnMessage ? 'items-start' : 'items-end'}`}>
+                    {!shouldGroup && (
+                      <div className={`flex items-center gap-2 mb-1 ${isOwnMessage ? 'flex-row' : 'flex-row-reverse'}`}>
+                        <span className="text-sm font-medium text-gray-900">
+                          {msg.playerNickname}
+                          {isOwnMessage && (
+                            <span className="text-xs text-gray-500 ml-1">(You)</span>
+                          )}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {formatTimestamp(msg.timestamp)}
+                        </span>
+                      </div>
+                    )}
+                    <div className={`text-sm max-w-[70%] p-3 rounded-lg ${shouldGroup ? 'mt-1' : ''} ${
+                      isOwnMessage 
+                        ? 'bg-blue-100 text-blue-900 border border-blue-200' 
+                        : 'bg-gray-100 text-gray-900 border border-gray-200'
+                    }`}>
+                      <FormattedMessage 
+                        content={msg.message} 
+                        className="leading-relaxed" 
+                      />
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-700 bg-white p-2 rounded border">
-                    <FormattedMessage content={msg.content} />
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
             <div ref={messagesEndRef} />
           </div>
