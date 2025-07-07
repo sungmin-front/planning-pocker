@@ -45,3 +45,9 @@ cursor-rules/
 .DS_Store
 
 dist/
+
+# Environment variables
+
+# Task files
+# tasks.json
+# tasks/ 

@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
-import { WebSocketMessage, VoteValue } from '@planning-poker/shared';
+import { WebSocketMessage, VoteValue, ChatMessage } from '@planning-poker/shared';
 import { generateRoomId, releaseRoomId } from './utils';
 import { RoomManager } from './roomManager';
 import express from 'express';
@@ -778,6 +778,136 @@ wss.on('connection', function connection(ws) {
           ws.send(JSON.stringify({
             type: 'backlog:settings:response',
             payload: result
+          }));
+          break;
+        }
+
+        case 'CHAT_MESSAGE': {
+          const { message: chatText } = message.payload;
+          console.log(`Chat message received from ${socketId}: ${chatText}`);
+          
+          // Validate message length
+          if (!chatText || typeof chatText !== 'string') {
+            ws.send(JSON.stringify({
+              type: 'chat:message:response',
+              payload: { success: false, error: 'Invalid message content' }
+            }));
+            break;
+          }
+
+          if (chatText.length > 1000) {
+            ws.send(JSON.stringify({
+              type: 'chat:message:response',
+              payload: { success: false, error: 'Message too long (max 1000 characters)' }
+            }));
+            break;
+          }
+
+          const roomId = roomManager.getUserRoom(socketId);
+          if (!roomId) {
+            ws.send(JSON.stringify({
+              type: 'chat:message:response',
+              payload: { success: false, error: 'Not in a room' }
+            }));
+            break;
+          }
+
+          const room = roomManager.getRoom(roomId);
+          if (!room) {
+            ws.send(JSON.stringify({
+              type: 'chat:message:response',
+              payload: { success: false, error: 'Room not found' }
+            }));
+            break;
+          }
+
+          const player = room.players.find(p => p.socketId === socketId);
+          if (!player) {
+            ws.send(JSON.stringify({
+              type: 'chat:message:response',
+              payload: { success: false, error: 'Player not in room' }
+            }));
+            break;
+          }
+
+          // Create chat message
+          const chatMessage: ChatMessage = {
+            id: uuidv4(),
+            playerId: player.id,
+            playerNickname: player.nickname,
+            message: chatText,
+            timestamp: new Date(),
+            roomId: room.id
+          };
+
+          // Add to room's chat messages
+          if (!room.chatMessages) {
+            room.chatMessages = [];
+          }
+          room.chatMessages.push(chatMessage);
+
+          console.log(`Broadcasting chat message to room ${roomId}`);
+
+          // Broadcast chat message to all clients in room
+          let broadcastCount = 0;
+          wss.clients.forEach(client => {
+            const clientSocketId = getSocketId(client);
+            if (roomManager.getUserRoom(clientSocketId) === roomId) {
+              client.send(JSON.stringify({
+                type: 'chat:messageReceived',
+                payload: chatMessage
+              }));
+              broadcastCount++;
+            }
+          });
+
+          console.log(`Broadcast chat message to ${broadcastCount} clients`);
+
+          // Send success response to sender
+          ws.send(JSON.stringify({
+            type: 'chat:message:response',
+            payload: { success: true, chatMessage }
+          }));
+          break;
+        }
+
+        case 'CHAT_HISTORY_REQUEST': {
+          console.log(`Chat history requested by ${socketId}`);
+          
+          const roomId = roomManager.getUserRoom(socketId);
+          if (!roomId) {
+            ws.send(JSON.stringify({
+              type: 'chat:history:response',
+              payload: { success: false, error: 'Not in a room' }
+            }));
+            break;
+          }
+
+          const room = roomManager.getRoom(roomId);
+          if (!room) {
+            ws.send(JSON.stringify({
+              type: 'chat:history:response',
+              payload: { success: false, error: 'Room not found' }
+            }));
+            break;
+          }
+
+          const player = room.players.find(p => p.socketId === socketId);
+          if (!player) {
+            ws.send(JSON.stringify({
+              type: 'chat:history:response',
+              payload: { success: false, error: 'Player not in room' }
+            }));
+            break;
+          }
+
+          // Return chat history
+          const chatMessages = room.chatMessages || [];
+          console.log(`Sending ${chatMessages.length} chat messages to ${socketId}`);
+
+          ws.send(JSON.stringify({
+            type: 'chat:history:response',
+            payload: { success: true, chatMessages }
           }));
           break;
         }

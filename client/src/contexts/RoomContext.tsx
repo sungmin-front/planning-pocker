@@ -459,6 +459,49 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             });
           }
           break;
+
+        case 'chat:messageReceived':
+          console.log('Received chat message:', message.payload);
+          if (message.payload && room) {
+            const chatMessage = message.payload;
+            // Add the new chat message to the room's chat messages
+            const updatedRoom = {
+              ...room,
+              chatMessages: [...(room.chatMessages || []), chatMessage]
+            };
+            setRoom(updatedRoom);
+          }
+          break;
+
+        case 'chat:message:response':
+          console.log('Received chat message response:', message.payload);
+          if (message.payload && !message.payload.success) {
+            toast({
+              title: "Failed to Send Message",
+              description: message.payload.error || "Failed to send chat message",
+              variant: "destructive",
+            });
+          }
+          break;
+
+        case 'chat:history:response':
+          console.log('Received chat history response:', message.payload);
+          if (message.payload && message.payload.success && room) {
+            const { chatMessages } = message.payload;
+            // Update room with chat history
+            const updatedRoom = {
+              ...room,
+              chatMessages: chatMessages || []
+            };
+            setRoom(updatedRoom);
+          } else if (message.payload && !message.payload.success) {
+            toast({
+              title: "Failed to Load Chat History",
+              description: message.payload.error || "Failed to load chat history",
+              variant: "destructive",
+            });
+          }
+          break;
           
         default:
           // Handle unknown message types gracefully
@@ -598,6 +641,61 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     setNicknameSuggestions([]);
   };
 
+  const sendChatMessage = (message: string) => {
+    if (!room || !currentPlayer) {
+      toast({
+        title: "Cannot Send Message",
+        description: "You must be in a room to send messages",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!message.trim()) {
+      toast({
+        title: "Cannot Send Empty Message",
+        description: "Please enter a message to send",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (message.length > 1000) {
+      toast({
+        title: "Message Too Long",
+        description: "Messages must be 1000 characters or less",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    send({
+      type: 'CHAT_MESSAGE',
+      payload: { 
+        message: message.trim(),
+        playerId: currentPlayer.id,
+        playerNickname: currentPlayer.nickname,
+        roomId: room.id
+      }
+    });
+  };
+
+  const requestChatHistory = () => {
+    if (!room) {
+      toast({
+        title: "Cannot Load Chat History",
+        description: "You must be in a room to load chat history",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    send({
+      type: 'CHAT_HISTORY_REQUEST',
+      payload: { roomId: room.id }
+    });
+  };
+
   const value: RoomContextType = {
     room,
     currentPlayer,
@@ -616,6 +714,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     transferHost,
     syncRoom,
     clearJoinError,
+    sendChatMessage,
+    requestChatHistory,
   };
 
   return (
