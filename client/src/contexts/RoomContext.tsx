@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useReducer } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RoomContextType, Room, Player, VoteValue } from '@/types';
 import { useWebSocket } from './WebSocketContext';
@@ -18,7 +18,7 @@ interface RoomProviderProps {
   children: React.ReactNode;
 }
 
-export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
+export const RoomProvider = ({ children }: RoomProviderProps): JSX.Element => {
   const [room, setRoom] = useState<Room | null>(null);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [isHost, setIsHost] = useState(false);
@@ -470,7 +470,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             const messageExists = existingMessages.some(msg => msg.id === chatMessage.id);
             
             if (!messageExists) {
-              // Add the new chat message to the room's chat messages
+              // Simply push the new message to existing messages
               const updatedRoom = {
                 ...room,
                 chatMessages: [...existingMessages, chatMessage]
@@ -494,30 +494,14 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
         case 'chat:history:response':
           console.log('Received chat history response:', message.payload);
           if (message.payload && message.payload.success && room) {
-            const { chatMessages } = message.payload;
-            // Check if this is initial load or if we're missing messages
+            const historyMessages = message.payload.chatMessages || [];
             const existingMessages = room.chatMessages || [];
-            const historyMessages = chatMessages || [];
             
-            // Only merge if we have fewer messages than the history, indicating we need to sync
-            if (existingMessages.length < historyMessages.length) {
-              // Merge existing and history messages, removing duplicates by id
-              const messageMap = new Map();
-              
-              // Add existing messages first
-              existingMessages.forEach(msg => messageMap.set(msg.id, msg));
-              
-              // Add history messages (this will overwrite duplicates with server version)
-              historyMessages.forEach(msg => messageMap.set(msg.id, msg));
-              
-              // Convert back to array and sort by timestamp
-              const mergedMessages = Array.from(messageMap.values()).sort(
-                (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-              );
-              
+            // Only update if we don't have messages or have fewer messages than history
+            if (existingMessages.length === 0 || existingMessages.length < historyMessages.length) {
               const updatedRoom = {
                 ...room,
-                chatMessages: mergedMessages
+                chatMessages: historyMessages
               };
               setRoom(updatedRoom);
             }
