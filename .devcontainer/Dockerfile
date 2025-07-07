@@ -94,4 +94,5 @@ RUN chmod +x /usr/local/bin/init-firewall.sh && \
   echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
   echo "node ALL=(root) NOPASSWD: /usr/bin/chown" >> /etc/sudoers.d/node-firewall && \
   chmod 0440 /etc/sudoers.d/node-firewall
+RUN git config --global --add push.autoSetupRemote true
 USER node

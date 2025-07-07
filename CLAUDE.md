@@ -27,9 +27,17 @@ The application uses a custom WebSocket manager (`client/src/socket.ts`) that ha
 - Type-safe message passing using shared types
 - Connection state management through React Context
 
+**Message Types**: All WebSocket communication uses typed messages defined in `shared/src/types.ts` including:
+- Room operations (create, join, leave, sync)
+- Voting system (vote, reveal, restart, finalize)
+- Chat system (send messages, request history)
+- Host management (transfer, delegate, kick players)
+- Jira integration and backlog settings
+
 ### Real-time Features
 - **Room Management**: Users join rooms with unique IDs, host delegation system
 - **Voting System**: Real-time story point estimation with reveal/reset cycles
+- **Chat System**: Real-time messaging within rooms with message history
 - **Jira Integration**: Fetch sprints and issues directly into voting sessions
 - **Export Functionality**: Session results to JSON/CSV/HTML formats
 
@@ -58,6 +66,7 @@ pnpm run docker:stop             # Stop Docker services
 pnpm test                        # All workspaces
 pnpm --filter client test        # Client tests (Vitest)
 pnpm --filter server test        # Server tests (Jest)
+pnpm --filter shared test        # Shared package tests (Vitest)
 
 # E2E tests  
 pnpm --filter e2e test           # Full E2E suite
@@ -67,6 +76,8 @@ pnpm --filter e2e test:voting    # Voting workflow tests
 # Specific test files
 pnpm --filter client test src/__tests__/VotingInterface.test.tsx
 pnpm --filter server test src/__tests__/roomManager.test.ts
+pnpm --filter server test src/__tests__/chatMessage.test.ts
+pnpm --filter client test src/__tests__/ChatMessage.test.tsx
 ```
 
 ### Code Quality
@@ -102,10 +113,12 @@ pnpm run reset                   # Clean + reinstall
 - **State Management**: React Context for global state, useState for local state
 - **API Calls**: Use the established pattern in `client/src/utils/api.ts`
 - **WebSocket**: Always use the singleton instance from `client/src/socket.ts`
+- **Chat System**: Use `sendChatMessage()` and `requestChatHistory()` from RoomContext
 
 ### Testing Patterns
 - **Client**: Vitest with Testing Library, mock WebSocket connections
 - **Server**: Jest with supertest for HTTP endpoints, ws-mock for WebSocket tests
+- **Shared**: Vitest for type validation and utility functions
 - **E2E**: Vitest with real WebSocket connections to test full workflows
 
 ### Environment Setup
@@ -150,6 +163,16 @@ Use workspace protocol for internal dependencies:
 ## Key Files to Understand
 - `client/src/contexts/WebSocketContext.tsx` - WebSocket state management
 - `server/src/roomManager.ts` - Core room and voting logic
-- `shared/src/types.ts` - Type definitions for all communication
-- `client/src/contexts/RoomContext.tsx` - Room state and user management
+- `shared/src/types.ts` - Type definitions for all communication including ChatMessage
+- `client/src/contexts/RoomContext.tsx` - Room state, user management, and chat functionality
+- `server/src/index.ts` - WebSocket message handlers including chat system
 - `server/src/routes/jiraRoutes.ts` - Jira API integration
+
+## Chat System Architecture
+
+The chat system extends the existing WebSocket infrastructure:
+
+**Data Flow**: Client → RoomContext → WebSocket → Server → Broadcast → All Room Clients
+**Message Validation**: 1000 character limit, room membership verification
+**Persistence**: Messages stored in room state during session (not persisted to database)
+**Real-time**: Instant message broadcasting to all room participants
