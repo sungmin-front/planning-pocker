@@ -40,7 +40,8 @@
         "ms-azuretools.vscode-docker",
         "redhat.vscode-yaml",
         "ms-vscode.vscode-nginx",
-        "ms-vscode.vscode-npm-script"
+        "ms-vscode.vscode-npm-script",
+        "anthropic.claude-code"
       ],
       "settings": {
         "editor.formatOnSave": true,
