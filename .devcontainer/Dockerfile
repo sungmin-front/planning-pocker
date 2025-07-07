@@ -1,11 +1,10 @@
-FROM node:20-bookworm-slim
+FROM node:20
 
 ARG TZ
 ENV TZ="$TZ"
 
 # Install basic development tools and iptables/ipset
-RUN apt update && apt install -y --no-install-recommends \
-  less \
+RUN apt update && apt install -y less \
   git \
   procps \
   sudo \
@@ -61,11 +60,6 @@ USER node
 # Install global packages
 ENV NPM_CONFIG_PREFIX=/usr/local/share/npm-global
 ENV PATH=$PATH:/usr/local/share/npm-global/bin
-ENV PNPM_HOME=/usr/local/share/pnpm
-ENV PATH=$PATH:$PNPM_HOME
-
-# Install pnpm
-RUN npm install -g pnpm@8.15.0
 
 # Set the default shell to zsh rather than sh
 ENV SHELL=/bin/zsh
@@ -79,20 +73,16 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
   -a "export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
   -x
 
-# Install Claude and other development tools
+# Install Claude
 RUN npm install -g @anthropic-ai/claude-code \
-  && pnpm install -g playwright@latest \
-  && pnpm install -g @playwright/test \
-  && pnpm install -g typescript@latest \
-  && pnpm install -g tsx@latest \
-  && pnpm install -g vitest@latest
+  && npm install -g task-master-ai \
+  && npm install -g pnpm@latest 
 
 # Copy and set up firewall script
 COPY init-firewall.sh /usr/local/bin/
 USER root
 RUN chmod +x /usr/local/bin/init-firewall.sh && \
   echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
-  echo "node ALL=(root) NOPASSWD: /usr/bin/chown" >> /etc/sudoers.d/node-firewall && \
   chmod 0440 /etc/sudoers.d/node-firewall
 RUN git config --global --add push.autoSetupRemote true
 USER node
