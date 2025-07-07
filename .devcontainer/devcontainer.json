@@ -18,7 +18,8 @@
     },
     "ghcr.io/devcontainers/features/github-cli:1": {
       "version": "latest"
-    }
+    },
+    "ghcr.io/devcontainers/features/git:1": {}
   },
   "customizations": {
     "vscode": {
@@ -141,14 +142,16 @@
   "mounts": [
     "source=claude-code-bashhistory,target=/commandhistory,type=volume",
     "source=claude-code-config,target=/home/node/.claude,type=volume",
-    "source=planning-poker-node-modules,target=/workspace/node_modules,type=volume"
+    "source=planning-poker-node-modules,target=/workspace/node_modules,type=volume",
+    "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached"
   ],
   "remoteEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
     "CLAUDE_CONFIG_DIR": "/home/node/.claude",
     "POWERLEVEL9K_DISABLE_GITSTATUS": "true",
     "SHELL": "/bin/zsh",
-    "TERM": "xterm-256color"
+    "TERM": "xterm-256color",
+    "GIT_EDITOR": "cursor --wait"
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace"
