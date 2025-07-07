@@ -492,7 +492,8 @@ export class RoomManager {
         players: room.players,
         stories: room.stories,
         createdAt: room.createdAt,
-        currentStoryId: room.currentStoryId || null
+        currentStoryId: room.currentStoryId || null,
+        chatMessages: (room as any).chatMessages || []
       },
       currentPlayer: player
     };

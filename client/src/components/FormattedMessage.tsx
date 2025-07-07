@@ -15,7 +15,8 @@ export const FormattedMessage: React.FC<FormattedMessageProps> = ({ content, cla
       dangerouslySetInnerHTML={{ __html: formattedContent }}
       style={{
         wordBreak: 'break-word',
-        overflowWrap: 'break-word'
+        overflowWrap: 'break-word',
+        color: 'inherit'
       }}
     />
   );

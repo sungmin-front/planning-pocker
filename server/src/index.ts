@@ -16,8 +16,10 @@ import RoomSessionService from './services/RoomSessionService';
 // Load environment variables
 dotenv.config();
 
-// Initialize database connection
-Database.connect().catch(console.error);
+// Initialize database connection (optional for development)
+Database.connect().catch(error => {
+  console.warn('⚠️ MongoDB connection failed - running without persistence:', error.message);
+});
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 9000;
 
@@ -129,10 +131,10 @@ app.post('/api/debug/rooms/:roomId/cleanup', (req, res) => {
 });
 
 // Start the combined server
-server.listen(port, () => {
+server.listen(port, '0.0.0.0', () => {
   console.log(`Planning Poker server running on port ${port}`);
   console.log(`WebSocket server listening on port ${port}`);
-  console.log(`REST API available at http://localhost:${port}/api`);
+  console.log(`REST API available at http://0.0.0.0:${port}/api`);
 });
 
 // Helper function to get socket ID

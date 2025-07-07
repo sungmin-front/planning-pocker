@@ -54,11 +54,13 @@
   "portsAttributes": {
     "4000": {
       "label": "Client (React/Vite)",
-      "onAutoForward": "notify"
+      "onAutoForward": "notify",
+      "protocol": "http"
     },
     "9000": {
       "label": "Server (Node.js + WebSocket)",
-      "onAutoForward": "notify"
+      "onAutoForward": "notify",
+      "protocol": "http"
     },
     "27017": {
       "label": "MongoDB",
