@@ -8,6 +8,7 @@ dev-debug.log
 
 # Dependency directories
 node_modules/
+.pnpm-store/
 
 # Environment variables (실제 값이 들어있는 파일들)
 .env
