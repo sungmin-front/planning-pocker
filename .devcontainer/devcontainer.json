@@ -134,7 +134,7 @@
       "onAutoForward": "silent"
     }
   },
-  "postCreateCommand": ["pnpm install", "sudo /usr/local/bin/init-firewall.sh"],
+  "postCreateCommand": "git config --global --add safe.directory /workspace && pnpm install && (sudo /usr/local/bin/init-firewall.sh || echo 'Warning: Firewall setup failed but continuing...')",
   "postStartCommand": "pnpm run setup:env",
   "remoteUser": "node",
   "mounts": [
