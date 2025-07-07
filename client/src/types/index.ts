@@ -35,7 +35,9 @@ export interface RoomContextType {
   // Chat functionality
   sendChatMessage: (message: string) => void;
   requestChatHistory: () => void;
+  startTyping: () => void;
+  stopTyping: () => void;
 }
 
 // Import shared types for re-export
-import type { Room, Player, VoteValue, ChatMessage } from '@planning-poker/shared';
+import type { Room, Player, VoteValue, ChatMessage, TypingIndicator } from '@planning-poker/shared';

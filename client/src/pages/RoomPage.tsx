@@ -1,4 +1,5 @@
 import { BacklogSidebar } from "@/components/BacklogSidebar";
+import { ChatPanel } from "@/components/ChatPanel";
 import { CurrentStory } from "@/components/CurrentStory";
 import { ExportButton } from "@/components/ExportButton";
 import { HostActions } from "@/components/HostActions";
@@ -280,10 +281,15 @@ export const RoomPage: React.FC = () => {
                   />
                 </div>
 
-                {/* Bottom Panel - Cards */}
+                {/* Bottom Panel - Cards and Chat */}
                 <div className="mt-6 space-y-4">
                   {/* Voting Interface - Full Width */}
                   <ResponsiveVotingInterface />
+
+                  {/* Chat Panel */}
+                  <div className="max-w-md">
+                    <ChatPanel />
+                  </div>
 
                   {/* Other Components - Grid Layout removed as finalize is now in modal */}
                 </div>
@@ -356,6 +362,11 @@ export const RoomPage: React.FC = () => {
 
                 {/* Voting Interface - Full Width */}
                 <ResponsiveVotingInterface />
+
+                {/* Chat Panel */}
+                <div className="max-w-full">
+                  <ChatPanel />
+                </div>
 
                 {/* Other Components removed as finalize is now in modal */}
               </div>

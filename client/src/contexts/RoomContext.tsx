@@ -502,6 +502,51 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             });
           }
           break;
+
+        case 'chat:typing:start':
+          console.log('Received typing start:', message.payload);
+          if (message.payload && room) {
+            const { playerId, playerNickname } = message.payload;
+            const typingIndicator = {
+              playerId,
+              playerNickname,
+              roomId: room.id,
+              timestamp: new Date()
+            };
+            
+            // Add or update typing indicator
+            const updatedTypingUsers = [...(room.typingUsers || [])];
+            const existingIndex = updatedTypingUsers.findIndex(t => t.playerId === playerId);
+            
+            if (existingIndex >= 0) {
+              updatedTypingUsers[existingIndex] = typingIndicator;
+            } else {
+              updatedTypingUsers.push(typingIndicator);
+            }
+            
+            const updatedRoom = {
+              ...room,
+              typingUsers: updatedTypingUsers
+            };
+            setRoom(updatedRoom);
+          }
+          break;
+
+        case 'chat:typing:stop':
+          console.log('Received typing stop:', message.payload);
+          if (message.payload && room) {
+            const { playerId } = message.payload;
+            
+            // Remove typing indicator
+            const updatedTypingUsers = (room.typingUsers || []).filter(t => t.playerId !== playerId);
+            
+            const updatedRoom = {
+              ...room,
+              typingUsers: updatedTypingUsers
+            };
+            setRoom(updatedRoom);
+          }
+          break;
           
         default:
           // Handle unknown message types gracefully
@@ -696,6 +741,36 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     });
   };
 
+  const startTyping = () => {
+    if (!room || !currentPlayer) {
+      return;
+    }
+
+    send({
+      type: 'CHAT_TYPING_START',
+      payload: { 
+        playerId: currentPlayer.id,
+        playerNickname: currentPlayer.nickname,
+        roomId: room.id
+      }
+    });
+  };
+
+  const stopTyping = () => {
+    if (!room || !currentPlayer) {
+      return;
+    }
+
+    send({
+      type: 'CHAT_TYPING_STOP',
+      payload: { 
+        playerId: currentPlayer.id,
+        playerNickname: currentPlayer.nickname,
+        roomId: room.id
+      }
+    });
+  };
+
   const value: RoomContextType = {
     room,
     currentPlayer,
@@ -716,6 +791,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     clearJoinError,
     sendChatMessage,
     requestChatHistory,
+    startTyping,
+    stopTyping,
   };
 
   return (
