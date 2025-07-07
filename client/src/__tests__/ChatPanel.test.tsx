@@ -15,15 +15,17 @@ const mockStopTyping = vi.fn();
 const mockChatMessages: ChatMessage[] = [
   {
     id: '1',
-    content: 'Hello everyone!',
-    sender: 'Alice',
+    playerId: 'player-1',
+    playerNickname: 'Alice',
+    message: 'Hello everyone!',
     timestamp: new Date('2023-01-01T10:00:00Z'),
     roomId: 'test-room'
   },
   {
     id: '2',
-    content: 'Ready to start voting?',
-    sender: 'Bob',
+    playerId: 'player-2',
+    playerNickname: 'Bob',
+    message: 'Ready to start voting?',
     timestamp: new Date('2023-01-01T10:01:00Z'),
     roomId: 'test-room'
   }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RoomContextType, Room, Player, VoteValue } from '@/types';
 import { useWebSocket } from './WebSocketContext';
@@ -464,12 +464,19 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           console.log('Received chat message:', message.payload);
           if (message.payload && room) {
             const chatMessage = message.payload;
-            // Add the new chat message to the room's chat messages
-            const updatedRoom = {
-              ...room,
-              chatMessages: [...(room.chatMessages || []), chatMessage]
-            };
-            setRoom(updatedRoom);
+            const existingMessages = room.chatMessages || [];
+            
+            // Check if message already exists to prevent duplicates
+            const messageExists = existingMessages.some(msg => msg.id === chatMessage.id);
+            
+            if (!messageExists) {
+              // Add the new chat message to the room's chat messages
+              const updatedRoom = {
+                ...room,
+                chatMessages: [...existingMessages, chatMessage]
+              };
+              setRoom(updatedRoom);
+            }
           }
           break;
 
@@ -488,12 +495,32 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           console.log('Received chat history response:', message.payload);
           if (message.payload && message.payload.success && room) {
             const { chatMessages } = message.payload;
-            // Update room with chat history
-            const updatedRoom = {
-              ...room,
-              chatMessages: chatMessages || []
-            };
-            setRoom(updatedRoom);
+            // Check if this is initial load or if we're missing messages
+            const existingMessages = room.chatMessages || [];
+            const historyMessages = chatMessages || [];
+            
+            // Only merge if we have fewer messages than the history, indicating we need to sync
+            if (existingMessages.length < historyMessages.length) {
+              // Merge existing and history messages, removing duplicates by id
+              const messageMap = new Map();
+              
+              // Add existing messages first
+              existingMessages.forEach(msg => messageMap.set(msg.id, msg));
+              
+              // Add history messages (this will overwrite duplicates with server version)
+              historyMessages.forEach(msg => messageMap.set(msg.id, msg));
+              
+              // Convert back to array and sort by timestamp
+              const mergedMessages = Array.from(messageMap.values()).sort(
+                (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+              );
+              
+              const updatedRoom = {
+                ...room,
+                chatMessages: mergedMessages
+              };
+              setRoom(updatedRoom);
+            }
           } else if (message.payload && !message.payload.success) {
             toast({
               title: "Failed to Load Chat History",
@@ -686,7 +713,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     setNicknameSuggestions([]);
   };
 
-  const sendChatMessage = (message: string) => {
+  const sendChatMessage = useCallback((message: string) => {
     if (!room || !currentPlayer) {
       toast({
         title: "Cannot Send Message",
@@ -723,9 +750,9 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
         roomId: room.id
       }
     });
-  };
+  }, [room, currentPlayer, send, toast]);
 
-  const requestChatHistory = () => {
+  const requestChatHistory = useCallback(() => {
     if (!room) {
       toast({
         title: "Cannot Load Chat History",
@@ -739,9 +766,9 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
       type: 'CHAT_HISTORY_REQUEST',
       payload: { roomId: room.id }
     });
-  };
+  }, [room, send]);
 
-  const startTyping = () => {
+  const startTyping = useCallback(() => {
     if (!room || !currentPlayer) {
       return;
     }
@@ -754,9 +781,9 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
         roomId: room.id
       }
     });
-  };
+  }, [room, currentPlayer, send]);
 
-  const stopTyping = () => {
+  const stopTyping = useCallback(() => {
     if (!room || !currentPlayer) {
       return;
     }
@@ -769,7 +796,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
         roomId: room.id
       }
     });
-  };
+  }, [room, currentPlayer, send]);
 
   const value: RoomContextType = {
     room,
