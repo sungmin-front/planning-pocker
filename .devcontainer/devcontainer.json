@@ -109,14 +109,14 @@
       }
     }
   },
-  "forwardPorts": [3000, 3001, 27017, 3100, 80, 443],
+  "forwardPorts": [4000, 9000, 27017, 3100, 80, 443],
   "portsAttributes": {
-    "3000": {
-      "label": "Client (React)",
+    "4000": {
+      "label": "Client (React/Vite)",
       "onAutoForward": "notify"
     },
-    "3001": {
-      "label": "Server (Node.js)",
+    "9000": {
+      "label": "Server (Node.js + WebSocket)",
       "onAutoForward": "notify"
     },
     "27017": {

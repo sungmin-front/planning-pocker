@@ -912,6 +912,99 @@ wss.on('connection', function connection(ws) {
           break;
         }
 
+        case 'CHAT_TYPING_START': {
+          const roomId = roomManager.getUserRoom(socketId);
+          if (!roomId) {
+            console.log('User not in a room for typing start');
+            ws.send(JSON.stringify({
+              type: 'error',
+              payload: { error: 'Not in a room' }
+            }));
+            break;
+          }
+
+          const room = roomManager.getRoom(roomId);
+          const player = roomManager.getPlayer(socketId);
+          
+          if (!room || !player) {
+            console.log('Room or player not found for typing start');
+            break;
+          }
+
+          // Initialize typingUsers array if it doesn't exist
+          if (!room.typingUsers) {
+            room.typingUsers = [];
+          }
+
+          // Add or update typing indicator
+          const existingIndex = room.typingUsers.findIndex(t => t.playerId === player.id);
+          const typingIndicator = {
+            playerId: player.id,
+            playerNickname: player.nickname,
+            roomId,
+            timestamp: new Date()
+          };
+
+          if (existingIndex >= 0) {
+            room.typingUsers[existingIndex] = typingIndicator;
+          } else {
+            room.typingUsers.push(typingIndicator);
+          }
+
+          // Broadcast to all room members except sender
+          console.log(`Broadcasting typing start for ${player.nickname} in room ${roomId}`);
+          wss.clients.forEach(client => {
+            const clientSocketId = getSocketId(client);
+            if (roomManager.getUserRoom(clientSocketId) === roomId && clientSocketId !== socketId) {
+              client.send(JSON.stringify({
+                type: 'chat:typing:start',
+                payload: { 
+                  playerId: player.id,
+                  playerNickname: player.nickname
+                }
+              }));
+            }
+          });
+          break;
+        }
+
+        case 'CHAT_TYPING_STOP': {
+          const roomId = roomManager.getUserRoom(socketId);
+          if (!roomId) {
+            console.log('User not in a room for typing stop');
+            break;
+          }
+
+          const room = roomManager.getRoom(roomId);
+          const player = roomManager.getPlayer(socketId);
+          
+          if (!room || !player) {
+            console.log('Room or player not found for typing stop');
+            break;
+          }
+
+          // Remove typing indicator
+          if (room.typingUsers) {
+            room.typingUsers = room.typingUsers.filter(t => t.playerId !== player.id);
+          }
+
+          // Broadcast to all room members except sender
+          console.log(`Broadcasting typing stop for ${player.nickname} in room ${roomId}`);
+          wss.clients.forEach(client => {
+            const clientSocketId = getSocketId(client);
+            if (roomManager.getUserRoom(clientSocketId) === roomId && clientSocketId !== socketId) {
+              client.send(JSON.stringify({
+                type: 'chat:typing:stop',
+                payload: { 
+                  playerId: player.id,
+                  playerNickname: player.nickname
+                }
+              }));
+            }
+          });
+          break;
+        }
+
         default:
           console.log('Unknown message type:', message.type);
       }
@@ -927,6 +1020,34 @@ wss.on('connection', function connection(ws) {
   ws.on('close', function close() {
     console.log(`Client disconnected: ${socketId}`);
     clients.delete(socketId);
+    
+    // Clean up typing indicators before removing player
+    const roomId = roomManager.getUserRoom(socketId);
+    const player = roomManager.getPlayer(socketId);
+    if (roomId && player) {
+      const room = roomManager.getRoom(roomId);
+      if (room && room.typingUsers) {
+        const wasTyping = room.typingUsers.some(t => t.playerId === player.id);
+        room.typingUsers = room.typingUsers.filter(t => t.playerId !== player.id);
+        
+        // Broadcast typing stop if user was typing
+        if (wasTyping) {
+          wss.clients.forEach(client => {
+            const clientSocketId = getSocketId(client);
+            if (roomManager.getUserRoom(clientSocketId) === roomId && clientSocketId !== socketId) {
+              client.send(JSON.stringify({
+                type: 'chat:typing:stop',
+                payload: { 
+                  playerId: player.id,
+                  playerNickname: player.nickname
+                }
+              }));
+            }
+          });
+        }
+      }
+    }
+    
     const result = roomManager.removePlayer(socketId);
     
     // Handle automatic host reassignment on disconnect

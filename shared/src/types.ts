@@ -47,6 +47,13 @@ export interface ChatMessage {
   roomId: string;
 }
 
+export interface TypingIndicator {
+  playerId: string;
+  playerNickname: string;
+  roomId: string;
+  timestamp: Date;
+}
+
 export interface Room {
   id: string;
   name: string;
@@ -56,6 +63,7 @@ export interface Room {
   currentStoryId?: string | null;
   backlogSettings?: BacklogSettings;
   chatMessages?: ChatMessage[];
+  typingUsers?: TypingIndicator[];
 }
 
 export type MessageType = 
@@ -75,7 +83,9 @@ export type MessageType =
   | 'PLAYER_KICK'
   | 'BACKLOG_SETTINGS_UPDATE'
   | 'CHAT_MESSAGE'
-  | 'CHAT_HISTORY_REQUEST';
+  | 'CHAT_HISTORY_REQUEST'
+  | 'CHAT_TYPING_START'
+  | 'CHAT_TYPING_STOP';
 
 export interface WebSocketMessage {
   type: MessageType;
