@@ -2,19 +2,59 @@
   "name": "Planning Poker - Full Stack Development",
   "build": {
     "dockerfile": "Dockerfile",
+<<<<<<< HEAD
+    "context": ".",
+=======
+>>>>>>> origin/main
     "args": {
       "TZ": "${localEnv:TZ:Asia/Seoul}"
     }
   },
+<<<<<<< HEAD
+=======
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {
       "version": "latest"
     }
   },
+>>>>>>> origin/main
   "runArgs": [
     "--cap-add=NET_ADMIN",
     "--cap-add=NET_RAW"
   ],
+<<<<<<< HEAD
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": "true"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "ms-playwright.playwright",
+        "ms-vscode.vscode-jest",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "ms-vscode.vscode-docker",
+        "ms-vscode-remote.remote-containers",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "mongodb.mongodb-vscode",
+        "PKief.material-icon-theme",
+        "vitest.explorer",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "ms-vscode.vscode-nginx",
+        "ms-vscode.vscode-npm-script",
+=======
   "customizations": {
     "vscode": {
       "extensions": [
@@ -22,6 +62,7 @@
         "esbenp.prettier-vscode",
         "eamodio.gitlens",
         "ms-playwright.playwright",
+>>>>>>> origin/main
         "anthropic.claude-code"
       ],
       "settings": {
@@ -31,6 +72,54 @@
           "source.fixAll.eslint": "explicit"
         },
         "typescript.preferences.importModuleSpecifier": "relative",
+<<<<<<< HEAD
+        "eslint.workingDirectories": ["client", "server", "shared"],
+        "playwright.reuseBrowser": true,
+        "playwright.showTrace": true,
+        "files.exclude": {
+          "**/node_modules": true,
+          "**/dist": true,
+          "**/.git": true,
+          "**/.DS_Store": true,
+          "**/Thumbs.db": true,
+          "**/.vscode": false
+        },
+        "search.exclude": {
+          "**/node_modules": true,
+          "**/dist": true,
+          "**/.git": true,
+          "**/pnpm-lock.yaml": true
+        },
+        "typescript.preferences.includePackageJsonAutoImports": "on",
+        "typescript.suggest.autoImports": true,
+        "javascript.suggest.autoImports": true,
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": false,
+        "prettier.tabWidth": 2,
+        "prettier.useTabs": false,
+        "emmet.includeLanguages": {
+          "typescript": "html",
+          "typescriptreact": "html"
+        },
+        "tailwindCSS.experimental.classRegex": [
+          "tw`([^`]*)",
+          "tw=\"([^\"]*)",
+          "tw={\"([^\"}]*)",
+          "tw\\.\\w+`([^`]*)",
+          "tw\\(.*?\\)`([^`]*)",
+          ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+          ["classnames\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+          ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+          ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+        ],
+        "tailwindCSS.includeLanguages": {
+          "typescript": "typescript",
+          "typescriptreact": "typescriptreact"
+        },
+        "tailwindCSS.classAttributes": ["class", "className", "tw"],
+=======
+>>>>>>> origin/main
         "terminal.integrated.defaultProfile.linux": "zsh",
         "terminal.integrated.profiles.linux": {
           "bash": {
@@ -40,16 +129,30 @@
           "zsh": {
             "path": "zsh"
           }
+<<<<<<< HEAD
+=======
         },
         "search.exclude": {
           "**/node_modules": true,
           "**/dist": true,
           "**/.git": true,
           "**/pnpm-lock.yaml": true
+>>>>>>> origin/main
         }
       }
     }
   },
+<<<<<<< HEAD
+  "forwardPorts": [3000, 3001, 27017, 3100, 80, 443],
+  "portsAttributes": {
+    "3000": {
+      "label": "Client (React)",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "Server (Node.js)",
+      "onAutoForward": "notify"
+=======
   "forwardPorts": [4000, 9000, 27017, 3100, 80, 443],
   "portsAttributes": {
     "4000": {
@@ -61,6 +164,7 @@
       "label": "Server (Node.js + WebSocket)",
       "onAutoForward": "notify",
       "protocol": "http"
+>>>>>>> origin/main
     },
     "27017": {
       "label": "MongoDB",
@@ -79,18 +183,38 @@
       "onAutoForward": "silent"
     }
   },
+<<<<<<< HEAD
+  "postCreateCommand": "git config --global --add safe.directory /workspace && pnpm install && (sudo /usr/local/bin/init-firewall.sh || echo 'Warning: Firewall setup failed but continuing...')",
+  "postStartCommand": "pnpm run setup:env",
+  "remoteUser": "node",
+  "mounts": [
+    "source=claude-code-bashhistory,target=/commandhistory,type=volume",
+    "source=claude-code-config,target=/home/node/.claude,type=volume",
+    "source=planning-poker-node-modules,target=/workspace/node_modules,type=volume",
+    "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached"
+=======
   "remoteUser": "node",
   "mounts": [
     "source=claude-code-bashhistory,target=/commandhistory,type=volume",
     "source=claude-code-config,target=/home/node/.claude,type=volume"
+>>>>>>> origin/main
   ],
   "remoteEnv": {
     "NODE_OPTIONS": "--max-old-space-size=4096",
     "CLAUDE_CONFIG_DIR": "/home/node/.claude",
     "POWERLEVEL9K_DISABLE_GITSTATUS": "true",
+<<<<<<< HEAD
+    "SHELL": "/bin/zsh",
+    "TERM": "xterm-256color",
+    "GIT_EDITOR": "cursor --wait"
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
+  "workspaceFolder": "/workspace"
+=======
     "CI": "true"
   },
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace",
   "postCreateCommand": "sudo /usr/local/bin/init-firewall.sh && pnpm install"
+>>>>>>> origin/main
 }

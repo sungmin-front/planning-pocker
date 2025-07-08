@@ -1,6 +1,9 @@
 // Re-export shared types
 export * from '@planning-poker/shared';
 
+// Import the SocketEventHandler type
+import type { SocketEventHandler } from '@/socket';
+
 // Client-specific types
 export interface WebSocketContextType {
   socket: WebSocket | null;
@@ -10,8 +13,9 @@ export interface WebSocketContextType {
   sendMessage: (message: any) => void;
   // Additional methods expected by tests
   send: (message: any) => void;
-  on: (event: string, handler: Function) => void;
-  off: (event: string, handler: Function) => void;
+  on: (event: string, handler: SocketEventHandler) => void;
+  off: (event: string, handler: SocketEventHandler) => void;
+  getSocketId: () => string | null;
 }
 
 export interface RoomContextType {
@@ -20,8 +24,10 @@ export interface RoomContextType {
   isHost: boolean;
   joinError: string | null;
   nicknameSuggestions: string[];
+  isRejoining: boolean;
   createRoom: (nickname: string) => Promise<string | null>;
-  joinRoom: (roomId: string, nickname: string) => Promise<boolean>;
+  joinRoom: (roomId: string, nickname: string) => Promise<void>;
+  rejoinRoom: (roomId: string, nickname: string) => Promise<void>;
   leaveRoom: () => void;
   createStory: (title: string, description?: string) => void;
   vote: (storyId: string, vote: VoteValue) => void;
@@ -40,4 +46,4 @@ export interface RoomContextType {
 }
 
 // Import shared types for re-export
-import type { Room, Player, VoteValue, ChatMessage, TypingIndicator } from '@planning-poker/shared';
+import type { Room, Player, VoteValue } from '@planning-poker/shared';

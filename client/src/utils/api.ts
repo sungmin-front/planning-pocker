@@ -1,7 +1,7 @@
 // Get API base URL, use relative path if not provided (production with proxy)
 export const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
-  if (envUrl) return envUrl;
+  if (envUrl) return `${envUrl}/api`;
   
   // For production with proxy, use relative path
   if (import.meta.env.PROD) return '/api';

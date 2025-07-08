@@ -4,7 +4,7 @@
   "description": "Planning Poker WebSocket server",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev": "../start-dev.sh",
     "dev:fg": "nodemon --exec ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",

@@ -75,14 +75,21 @@ const defaultUseRoom = {
   sendChatMessage: vi.fn(),
   requestChatHistory: vi.fn(),
   startTyping: vi.fn(),
-  stopTyping: vi.fn()
+  stopTyping: vi.fn(),
+  rejoinRoom: vi.fn(),
+  isRejoining: false
 };
 
 const defaultUseWebSocket = {
+  socket: null,
   isConnected: true,
   connect: vi.fn(),
   disconnect: vi.fn(),
-  send: vi.fn()
+  send: vi.fn(),
+  sendMessage: vi.fn(),
+  on: vi.fn(),
+  off: vi.fn(),
+  getSocketId: vi.fn()
 };
 
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (

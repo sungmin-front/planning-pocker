@@ -23,39 +23,68 @@ import {
 import { useRoom } from "@/contexts/RoomContext";
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import { PanelLeftOpen } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import LanguageToggle from "@/components/LanguageToggle";
+import { useSessionPersistence } from "@/hooks/useSessionPersistence";
 
 export const RoomPage: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  
+  // Session persistence hook
+  const { session, saveSession, clearSession, hasValidSession } = useSessionPersistence();
 
   const nickname = searchParams.get("nickname");
   const [nicknameInput, setNicknameInput] = useState(nickname || "");
   const [isJoining, setIsJoining] = useState(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
-  // Modal states moved to HostActions component
-  
+  const [isAutoRejoining, setIsAutoRejoining] = useState(false);
+  const hasAttemptedRejoin = useRef(false);
+
   // Chat state
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastSeenMessageId, setLastSeenMessageId] = useState<string | null>(null);
 
+  // Get hooks first before using them in useEffect
   const {
     room,
     currentPlayer,
     isHost,
     joinRoom,
+    rejoinRoom,
     leaveRoom,
-    vote,
-    syncRoom,
     joinError,
     nicknameSuggestions,
     clearJoinError,
+    isRejoining,
   } = useRoom();
-  const { isConnected, send } = useWebSocket();
+  const { isConnected, send, getSocketId } = useWebSocket();
+
+  // Auto-restore session on page load
+  useEffect(() => {
+    if (!roomId) return;
+
+    // Reset rejoin attempt flag when roomId changes OR when we get a fresh connection
+    hasAttemptedRejoin.current = false;
+
+    // Check if we have a valid session for this room
+    if (session && hasValidSession(roomId)) {
+      // Auto-populate nickname from session
+      if (session.nickname !== nicknameInput) {
+        setNicknameInput(session.nickname);
+      }
+    }
+  }, [roomId, session, hasValidSession, nicknameInput]);
+
+  // Reset rejoin attempt flag when connection is established
+  useEffect(() => {
+    if (isConnected) {
+      hasAttemptedRejoin.current = false;
+    }
+  }, [isConnected]);
 
   // Calculate current story - moved before conditional return
   const currentStory = room?.currentStoryId
@@ -63,12 +92,44 @@ export const RoomPage: React.FC = () => {
     : null;
 
   useEffect(() => {
+    // Reset auto-rejoining if not connected
+    if (!isConnected && isAutoRejoining) {
+      setIsAutoRejoining(false);
+    }
+
     // If user is already in a room (e.g., host who created room), don't attempt to join again
     if (room && currentPlayer) {
       return;
     }
 
-    // Only attempt to join if connected
+    // Auto-rejoin if we have a valid session for this room (and not already rejoining)
+    if (isConnected && roomId && session && hasValidSession(roomId) && !isAutoRejoining && !hasAttemptedRejoin.current && !isRejoining) {
+      setIsAutoRejoining(true);
+      hasAttemptedRejoin.current = true;
+      
+      // Add a small delay to ensure WebSocket connection is fully ready
+      setTimeout(() => {
+        rejoinRoom(roomId, session.nickname)
+          .then(() => {
+            // Success handled by room state updates
+          })
+          .catch((error) => {
+            setIsAutoRejoining(false);
+            
+            // Only clear the attempt flag if it's a permanent failure (room not found)
+            if (error.message.includes('Room not found') || error.message.includes('not found')) {
+              clearSession();
+              navigate('/');
+            } else {
+              // For temporary failures, allow retry on next page refresh
+              hasAttemptedRejoin.current = false;
+            }
+          });
+      }, 100); // 100ms delay to ensure connection stability
+      return;
+    }
+
+    // Only attempt to join if connected and nickname provided
     if (isConnected && roomId && nickname) {
       joinRoom(roomId, nickname);
     }
@@ -85,6 +146,14 @@ export const RoomPage: React.FC = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [currentStory?.status, currentStory?.id]);
+
+  // Reset auto-rejoining state when successfully joined room
+  useEffect(() => {
+    if (room && currentPlayer && isAutoRejoining) {
+      setIsAutoRejoining(false);
+      // Don't reset hasAttemptedRejoin here to prevent re-attempts
+    }
+  }, [room, currentPlayer, isAutoRejoining]);
 
   // Track unread messages
   useEffect(() => {
@@ -122,15 +191,12 @@ export const RoomPage: React.FC = () => {
   };
 
   const handleLeaveRoom = () => {
+    // Clear session when explicitly leaving room
+    clearSession();
     leaveRoom();
     navigate("/");
   };
 
-  const handleVote = (value: string) => {
-    if (room?.currentStoryId) {
-      vote(room.currentStoryId, value as any);
-    }
-  };
 
   const handleJoinWithNickname = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -139,6 +205,9 @@ export const RoomPage: React.FC = () => {
     setIsJoining(true);
     try {
       await joinRoom(roomId, nicknameInput.trim());
+      // Save session after successful join
+      const currentSocketId = getSocketId();
+      saveSession(roomId, nicknameInput.trim(), currentSocketId || undefined);
     } catch (error) {
       console.error("Failed to join room:", error);
     } finally {
@@ -158,6 +227,18 @@ export const RoomPage: React.FC = () => {
       payload: { storyId, point: finalPoint }
     });
   };
+
+  // Show loading screen during auto-rejoin
+  if (isAutoRejoining) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Reconnecting to room...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show nickname input form if not connected to room yet
   if (!room || !currentPlayer) {
@@ -316,7 +397,6 @@ export const RoomPage: React.FC = () => {
                   <ResponsivePlayerLayout
                     players={room.players}
                     currentStory={currentStory ?? null}
-                    currentPlayerId={currentPlayer?.id || ""}
                     isStatsModalOpen={isStatsModalOpen}
                     onOpenStatsModal={() => setIsStatsModalOpen(true)}
                   />
@@ -326,8 +406,6 @@ export const RoomPage: React.FC = () => {
                 <div className="mt-6 space-y-4">
                   {/* Voting Interface - Full Width */}
                   <ResponsiveVotingInterface />
-
-
                   {/* Other Components - Grid Layout removed as finalize is now in modal */}
                 </div>
               </div>
@@ -392,15 +470,12 @@ export const RoomPage: React.FC = () => {
                 <ResponsivePlayerLayout
                   players={room.players}
                   currentStory={currentStory ?? null}
-                  currentPlayerId={currentPlayer?.id || ""}
                   isStatsModalOpen={isStatsModalOpen}
                   onOpenStatsModal={() => setIsStatsModalOpen(true)}
                 />
 
                 {/* Voting Interface - Full Width */}
                 <ResponsiveVotingInterface />
-
-
                 {/* Other Components removed as finalize is now in modal */}
               </div>
             </SidebarInset>

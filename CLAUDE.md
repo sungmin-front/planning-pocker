@@ -16,7 +16,6 @@ Planning Poker is a real-time Scrum estimation tool with Jira integration. It us
 - **e2e/**: Vitest-based end-to-end tests with WebSocket testing
 
 ### Key Technologies
-
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Radix UI, React Router, i18next
 - **Backend**: Node.js, Express, WebSocket (ws), MongoDB with Mongoose, Axios for Jira API
 - **Testing**: Vitest (client + e2e), Jest (server), Playwright for browser automation
@@ -25,7 +24,6 @@ Planning Poker is a real-time Scrum estimation tool with Jira integration. It us
 ### WebSocket Communication
 
 The application uses a custom WebSocket manager (`client/src/socket.ts`) that handles:
-
 - Auto-reconnection with exponential backoff
 - Room-based message routing
 - Type-safe message passing using shared types
@@ -39,7 +37,10 @@ The application uses a custom WebSocket manager (`client/src/socket.ts`) that ha
 - Jira integration and backlog settings
 
 ### Real-time Features
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
 - **Room Management**: Users join rooms with unique IDs, host delegation system
 - **Voting System**: Real-time story point estimation with reveal/reset cycles
 - **Chat System**: Real-time messaging within rooms with message history
@@ -49,14 +50,21 @@ The application uses a custom WebSocket manager (`client/src/socket.ts`) that ha
 ## Essential Commands
 
 ### Development Workflow
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
 ```bash
 # Quick start (recommended)
 pnpm run quickstart              # Setup + install + start dev servers
 
 # Individual development
 pnpm run dev                     # Start both client and server
+<<<<<<< HEAD
+pnpm run dev:client              # Client only (port 4000)  
+=======
 pnpm run dev:client              # Client only (port 4000)
+>>>>>>> origin/main
 pnpm run dev:server              # Server only (port 9000)
 pnpm run dev:shared              # Watch shared types
 
@@ -67,7 +75,10 @@ pnpm run docker:stop             # Stop Docker services
 ```
 
 ### Testing
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
 ```bash
 # Unit tests
 pnpm test                        # All workspaces
@@ -75,7 +86,11 @@ pnpm --filter client test        # Client tests (Vitest)
 pnpm --filter server test        # Server tests (Jest)
 pnpm --filter shared test        # Shared package tests (Vitest)
 
+<<<<<<< HEAD
+# E2E tests  
+=======
 # E2E tests
+>>>>>>> origin/main
 pnpm --filter e2e test           # Full E2E suite
 pnpm --filter e2e test:room      # Room management tests
 pnpm --filter e2e test:voting    # Voting workflow tests
@@ -88,7 +103,10 @@ pnpm --filter client test src/__tests__/ChatMessage.test.tsx
 ```
 
 ### Code Quality
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
 ```bash
 pnpm run lint                    # ESLint all workspaces
 pnpm run format                  # Prettier formatting
@@ -97,7 +115,10 @@ pnpm run check                   # TypeScript checking
 ```
 
 ### Build and Deploy
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
 ```bash
 pnpm run build                   # Build all packages
 pnpm run clean                   # Clean build artifacts
@@ -107,8 +128,11 @@ pnpm run reset                   # Clean + reinstall
 ## TDD Workflow Requirements
 
 **Always follow this exact sequence for any feature or bug fix:**
+<<<<<<< HEAD
+=======
 
 0. if I ask featrue or issues are not in taskmaster-ai's task list. create task first.
+>>>>>>> origin/main
 1. Write test first (unit/integration/e2e as appropriate)
 2. Run test to confirm it fails
 3. Write minimal code to make test pass
@@ -120,7 +144,10 @@ pnpm run reset                   # Clean + reinstall
 ## Development Guidelines
 
 ### Code Organization
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
 - **Components**: Use Radix UI primitives with Tailwind styling
 - **State Management**: React Context for global state, useState for local state
 - **API Calls**: Use the established pattern in `client/src/utils/api.ts`
@@ -128,45 +155,66 @@ pnpm run reset                   # Clean + reinstall
 - **Chat System**: Use `sendChatMessage()` and `requestChatHistory()` from RoomContext
 
 ### Testing Patterns
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
 - **Client**: Vitest with Testing Library, mock WebSocket connections
 - **Server**: Jest with supertest for HTTP endpoints, ws-mock for WebSocket tests
 - **Shared**: Vitest for type validation and utility functions
 - **E2E**: Vitest with real WebSocket connections to test full workflows
 
 ### Environment Setup
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
 - Use `pnpm run setup:env` to generate environment files
 - Client connects to server via WebSocket (configurable URL)
 - Server connects to MongoDB and optional Jira API
 - Nginx handles reverse proxy in Docker environment
 
 ### Jira Integration
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
 - Configured via environment variables (BASE_URL, EMAIL, API_TOKEN)
 - Fetches sprints and issues through `/api/jira` endpoints
 - Issue metadata (title, priority, description) displayed in UI
 - Click-through links to original Jira issues
 
 ### Debugging Server
+<<<<<<< HEAD
+When debugging server issues, run server in background mode using the dev script which handles logging and process management.
+
+### Playwright Browser Testing
+=======
 
 When debugging server issues, run server in background mode using the dev script which handles logging and process management.
 
 ### Playwright Browser Testing
 
+>>>>>>> origin/main
 - Tab indices start from 1, not 0
 - Use browser automation for testing complete user workflows
 - Test room creation, joining, voting cycles, and host delegation
 
 ### Commit Requirements
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
 - All tests must pass before committing
 - Include regression tests for bug fixes
 - Use conventional commit messages
 - Commit changes after completing each task
 
 ## Port Configuration
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
 - **Client (dev)**: 4000
 - **Server (dev)**: 9000
 - **MongoDB**: 27017
@@ -174,15 +222,22 @@ When debugging server issues, run server in background mode using the dev script
 - **Nginx (production)**: 80/443
 
 ## Workspace Dependencies
+<<<<<<< HEAD
+Use workspace protocol for internal dependencies:
+=======
 
 Use workspace protocol for internal dependencies:
 
+>>>>>>> origin/main
 ```json
 "@planning-poker/shared": "workspace:*"
 ```
 
 ## Key Files to Understand
+<<<<<<< HEAD
+=======
 
+>>>>>>> origin/main
 - `client/src/contexts/WebSocketContext.tsx` - WebSocket state management
 - `server/src/roomManager.ts` - Core room and voting logic
 - `shared/src/types.ts` - Type definitions for all communication including ChatMessage
@@ -197,4 +252,8 @@ The chat system extends the existing WebSocket infrastructure:
 **Data Flow**: Client → RoomContext → WebSocket → Server → Broadcast → All Room Clients
 **Message Validation**: 1000 character limit, room membership verification
 **Persistence**: Messages stored in room state during session (not persisted to database)
+<<<<<<< HEAD
 **Real-time**: Instant message broadcasting to all room participants
+=======
+**Real-time**: Instant message broadcasting to all room participants
+>>>>>>> origin/main

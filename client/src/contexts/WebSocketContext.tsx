@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { WebSocketContextType } from '@/types';
-import { getWebSocketInstance } from '@/socket';
+import { getWebSocketInstance, SocketEventHandler } from '@/socket';
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
@@ -38,6 +38,14 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
       setIsConnected(true);
     };
 
+    const handleMessage = (data: any) => {
+      // Listen for socket ID from server
+      if (data.type === 'SOCKET_ID') {
+        socketInstance.setSocketId(data.payload.socketId);
+        console.log('Socket ID received:', data.payload.socketId);
+      }
+    };
+
     const handleDisconnected = () => {
       console.log('WebSocket disconnected');
       setIsConnected(false);
@@ -50,6 +58,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
     socketInstance.on('connected', handleConnected);
     socketInstance.on('disconnected', handleDisconnected);
     socketInstance.on('error', handleError);
+    socketInstance.on('message', handleMessage);
 
     // Auto-connect on component mount
     socketInstance.connect().catch((error) => {
@@ -60,6 +69,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
       socketInstance.off('connected', handleConnected);
       socketInstance.off('disconnected', handleDisconnected);
       socketInstance.off('error', handleError);
+      socketInstance.off('message', handleMessage);
     };
   }, []);
 
@@ -94,8 +104,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
     sendMessage,
     // Add methods expected by tests
     send: sendMessage,
-    on: (event: string, handler: Function) => socketInstance.on(event, handler),
-    off: (event: string, handler: Function) => socketInstance.off(event, handler),
+    on: (event: string, handler: SocketEventHandler) => socketInstance.on(event, handler),
+    off: (event: string, handler: SocketEventHandler) => socketInstance.off(event, handler),
+    getSocketId: () => socketInstance.getSocketId(),
   };
 
   return (

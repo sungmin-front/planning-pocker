@@ -53,7 +53,6 @@ export interface TypingIndicator {
   roomId: string;
   timestamp: Date;
 }
-
 export interface Room {
   id: string;
   name: string;
@@ -69,6 +68,7 @@ export interface Room {
 export type MessageType = 
   | 'ROOM_CREATE'
   | 'JOIN_ROOM' 
+  | 'REJOIN_ROOM'
   | 'LEAVE_ROOM' 
   | 'STORY_VOTE'
   | 'STORY_CREATE'
@@ -82,6 +82,7 @@ export type MessageType =
   | 'HOST_DELEGATE'
   | 'PLAYER_KICK'
   | 'BACKLOG_SETTINGS_UPDATE'
+  | 'SOCKET_ID'
   | 'CHAT_MESSAGE'
   | 'CHAT_HISTORY_REQUEST'
   | 'CHAT_TYPING_START'
