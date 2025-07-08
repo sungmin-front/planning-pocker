@@ -45,3 +45,6 @@ cursor-rules/
 .DS_Store
 
 dist/
+
+# TypeScript build cache
+*.tsbuildinfo
