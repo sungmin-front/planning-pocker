@@ -23,11 +23,15 @@ export const VoteProgressRing: React.FC<VoteProgressRingProps> = ({
   }
 
   // Calculate vote progress
-  const totalPlayers = players.length;
-  const votedPlayers = players.filter(player => 
-    player.id in currentStory.votes
-  ).length;
-  const progress = (votedPlayers / totalPlayers) * 100;
+  const votedPlayers = Object.keys(currentStory.votes).length;
+  
+  // For revealed votes, use the actual number of voters as the total
+  // to maintain correct completion percentage regardless of current player count
+  const totalPlayers = currentStory.status === 'revealed' 
+    ? votedPlayers // Use vote count as total when votes are revealed
+    : players.length; // Use current player count during active voting
+  
+  const progress = totalPlayers > 0 ? (votedPlayers / totalPlayers) * 100 : 0;
 
   // Progress color based on completion
   const getProgressColor = () => {

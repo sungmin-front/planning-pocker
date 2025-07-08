@@ -128,7 +128,13 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
                     </div>
                   ) : (
                     <div className="text-xs text-gray-500">
-                      {players.filter(p => p.id in currentStory.votes).length}/{players.length} voted
+                      {(() => {
+                        const votedCount = Object.keys(currentStory.votes).length;
+                        const totalCount = currentStory.status === 'revealed' 
+                          ? votedCount // Use vote count as total when votes are revealed
+                          : players.length; // Use current player count during active voting
+                        return `${votedCount}/${totalCount} voted`;
+                      })()}
                     </div>
                   )}
                 </div>
