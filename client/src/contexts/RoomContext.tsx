@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RoomContextType, Room, Player, VoteValue } from '@/types';
 import { useWebSocket } from './WebSocketContext';
@@ -474,10 +474,10 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
 
     on('message', handleMessage);
     return () => off('message', handleMessage);
-  }, [on, off, toast, room, navigate]);
+  }, [on, off, toast, room, navigate, saveSession]);
 
   // Define joinRoom function first
-  const joinRoom = async (roomId: string, nickname: string) => {
+  const joinRoom = useCallback(async (roomId: string, nickname: string) => {
     if (!isConnected) {
       toast({
         title: "Connection Error",
@@ -533,7 +533,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
       setJoinError(errorMessage);
       throw error;
     }
-  };
+  }, [isConnected, toast, send, on, off, setJoinError, setNicknameSuggestions]);
 
   const createRoom = async (nickname: string): Promise<string | null> => {
     if (!isConnected) {
@@ -575,7 +575,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
         });
       }
     }
-  }, [isConnected, session, room, currentPlayer, hasValidSession, clearSession]);
+  }, [isConnected, session, room, currentPlayer, hasValidSession, clearSession, joinRoom]);
 
   const leaveRoom = () => {
     if (room) {

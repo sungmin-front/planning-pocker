@@ -107,7 +107,7 @@ export const RoomPage: React.FC = () => {
       joinRoom(roomId, nickname);
     }
     // If no nickname or not connected yet, the component will show the appropriate UI
-  }, [roomId, nickname, isConnected, room, currentPlayer, joinRoom, session, hasValidSession]);
+  }, [roomId, nickname, isConnected, room, currentPlayer, joinRoom]);
 
   // Handle modal opening when votes are revealed - moved before conditional return
   useEffect(() => {
