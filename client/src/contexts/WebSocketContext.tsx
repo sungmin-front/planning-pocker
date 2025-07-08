@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { WebSocketContextType } from '@/types';
-import { getWebSocketInstance } from '@/socket';
+import { getWebSocketInstance, SocketEventHandler } from '@/socket';
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
@@ -38,7 +38,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
       setIsConnected(true);
     };
 
-<<<<<<< HEAD
     const handleMessage = (data: any) => {
       // Listen for socket ID from server
       if (data.type === 'SOCKET_ID') {
@@ -47,8 +46,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
       }
     };
 
-=======
->>>>>>> origin/main
     const handleDisconnected = () => {
       console.log('WebSocket disconnected');
       setIsConnected(false);
@@ -61,10 +58,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
     socketInstance.on('connected', handleConnected);
     socketInstance.on('disconnected', handleDisconnected);
     socketInstance.on('error', handleError);
-<<<<<<< HEAD
     socketInstance.on('message', handleMessage);
-=======
->>>>>>> origin/main
 
     // Auto-connect on component mount
     socketInstance.connect().catch((error) => {
@@ -75,10 +69,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
       socketInstance.off('connected', handleConnected);
       socketInstance.off('disconnected', handleDisconnected);
       socketInstance.off('error', handleError);
-<<<<<<< HEAD
       socketInstance.off('message', handleMessage);
-=======
->>>>>>> origin/main
     };
   }, []);
 
@@ -113,12 +104,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
     sendMessage,
     // Add methods expected by tests
     send: sendMessage,
-    on: (event: string, handler: Function) => socketInstance.on(event, handler),
-    off: (event: string, handler: Function) => socketInstance.off(event, handler),
-<<<<<<< HEAD
+    on: (event: string, handler: SocketEventHandler) => socketInstance.on(event, handler),
+    off: (event: string, handler: SocketEventHandler) => socketInstance.off(event, handler),
     getSocketId: () => socketInstance.getSocketId(),
-=======
->>>>>>> origin/main
   };
 
   return (

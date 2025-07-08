@@ -1,9 +1,6 @@
 import { BacklogSidebar } from "@/components/BacklogSidebar";
-<<<<<<< HEAD
-=======
 import { ChatFAB } from "@/components/ChatFAB";
 import { ChatSidebar } from "@/components/ChatSidebar";
->>>>>>> origin/main
 import { CurrentStory } from "@/components/CurrentStory";
 import { ExportButton } from "@/components/ExportButton";
 import { HostActions } from "@/components/HostActions";
@@ -26,7 +23,6 @@ import {
 import { useRoom } from "@/contexts/RoomContext";
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import { PanelLeftOpen } from "lucide-react";
-<<<<<<< HEAD
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import LanguageToggle from "@/components/LanguageToggle";
@@ -34,56 +30,36 @@ import { useSessionPersistence } from "@/hooks/useSessionPersistence";
 
 export const RoomPage: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
   // Session persistence hook
   const { session, saveSession, clearSession, hasValidSession } = useSessionPersistence();
-=======
-import React, { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import LanguageToggle from "@/components/LanguageToggle";
-
-export const RoomPage: React.FC = () => {
-  const { roomId } = useParams<{ roomId: string }>();
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
->>>>>>> origin/main
 
   const nickname = searchParams.get("nickname");
   const [nicknameInput, setNicknameInput] = useState(nickname || "");
   const [isJoining, setIsJoining] = useState(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
-<<<<<<< HEAD
   const [isAutoRejoining, setIsAutoRejoining] = useState(false);
   const hasAttemptedRejoin = useRef(false);
 
-  // Get hooks first before using them in useEffect
-=======
-  // Modal states moved to HostActions component
-  
   // Chat state
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastSeenMessageId, setLastSeenMessageId] = useState<string | null>(null);
 
->>>>>>> origin/main
+  // Get hooks first before using them in useEffect
   const {
     room,
     currentPlayer,
     isHost,
     joinRoom,
-<<<<<<< HEAD
     rejoinRoom,
-=======
->>>>>>> origin/main
     leaveRoom,
     vote,
-    syncRoom,
     joinError,
     nicknameSuggestions,
     clearJoinError,
-<<<<<<< HEAD
     isRejoining,
   } = useRoom();
   const { isConnected, send, getSocketId } = useWebSocket();
@@ -110,11 +86,6 @@ export const RoomPage: React.FC = () => {
       hasAttemptedRejoin.current = false;
     }
   }, [isConnected]);
-  // Modal states moved to HostActions component
-=======
-  } = useRoom();
-  const { isConnected, send } = useWebSocket();
->>>>>>> origin/main
 
   // Calculate current story - moved before conditional return
   const currentStory = room?.currentStoryId
@@ -122,21 +93,16 @@ export const RoomPage: React.FC = () => {
     : null;
 
   useEffect(() => {
-<<<<<<< HEAD
-
     // Reset auto-rejoining if not connected
     if (!isConnected && isAutoRejoining) {
       setIsAutoRejoining(false);
     }
 
-=======
->>>>>>> origin/main
     // If user is already in a room (e.g., host who created room), don't attempt to join again
     if (room && currentPlayer) {
       return;
     }
 
-<<<<<<< HEAD
     // Auto-rejoin if we have a valid session for this room (and not already rejoining)
     if (isConnected && roomId && session && hasValidSession(roomId) && !isAutoRejoining && !hasAttemptedRejoin.current && !isRejoining) {
       setIsAutoRejoining(true);
@@ -165,9 +131,6 @@ export const RoomPage: React.FC = () => {
     }
 
     // Only attempt to join if connected and nickname provided
-=======
-    // Only attempt to join if connected
->>>>>>> origin/main
     if (isConnected && roomId && nickname) {
       joinRoom(roomId, nickname);
     }
@@ -185,7 +148,6 @@ export const RoomPage: React.FC = () => {
     }
   }, [currentStory?.status, currentStory?.id]);
 
-<<<<<<< HEAD
   // Reset auto-rejoining state when successfully joined room
   useEffect(() => {
     if (room && currentPlayer && isAutoRejoining) {
@@ -194,10 +156,6 @@ export const RoomPage: React.FC = () => {
     }
   }, [room, currentPlayer, isAutoRejoining]);
 
-  const handleLeaveRoom = () => {
-    // Clear session when explicitly leaving room
-    clearSession();
-=======
   // Track unread messages
   useEffect(() => {
     if (!room?.chatMessages) return;
@@ -234,16 +192,12 @@ export const RoomPage: React.FC = () => {
   };
 
   const handleLeaveRoom = () => {
->>>>>>> origin/main
+    // Clear session when explicitly leaving room
+    clearSession();
     leaveRoom();
     navigate("/");
   };
 
-  const handleVote = (value: string) => {
-    if (room?.currentStoryId) {
-      vote(room.currentStoryId, value as any);
-    }
-  };
 
   const handleJoinWithNickname = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -252,12 +206,9 @@ export const RoomPage: React.FC = () => {
     setIsJoining(true);
     try {
       await joinRoom(roomId, nicknameInput.trim());
-<<<<<<< HEAD
       // Save session after successful join
       const currentSocketId = getSocketId();
       saveSession(roomId, nicknameInput.trim(), currentSocketId || undefined);
-=======
->>>>>>> origin/main
     } catch (error) {
       console.error("Failed to join room:", error);
     } finally {
@@ -278,7 +229,6 @@ export const RoomPage: React.FC = () => {
     });
   };
 
-<<<<<<< HEAD
   // Show loading screen during auto-rejoin
   if (isAutoRejoining) {
     return (
@@ -291,8 +241,6 @@ export const RoomPage: React.FC = () => {
     );
   }
 
-=======
->>>>>>> origin/main
   // Show nickname input form if not connected to room yet
   if (!room || !currentPlayer) {
     return (
@@ -456,19 +404,10 @@ export const RoomPage: React.FC = () => {
                   />
                 </div>
 
-<<<<<<< HEAD
-                {/* Bottom Panel - Cards */}
-=======
                 {/* Bottom Panel - Cards and Chat */}
->>>>>>> origin/main
                 <div className="mt-6 space-y-4">
                   {/* Voting Interface - Full Width */}
                   <ResponsiveVotingInterface />
-
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/main
                   {/* Other Components - Grid Layout removed as finalize is now in modal */}
                 </div>
               </div>
@@ -540,11 +479,6 @@ export const RoomPage: React.FC = () => {
 
                 {/* Voting Interface - Full Width */}
                 <ResponsiveVotingInterface />
-
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/main
                 {/* Other Components removed as finalize is now in modal */}
               </div>
             </SidebarInset>
@@ -552,15 +486,12 @@ export const RoomPage: React.FC = () => {
         </div>
       </SidebarProvider>
       
-<<<<<<< HEAD
-=======
       {/* Chat FAB */}
       <ChatFAB onClick={handleChatToggle} unreadCount={unreadCount} />
       
       {/* Chat Sidebar */}
       <ChatSidebar isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       
->>>>>>> origin/main
       {/* Shared Voting Results Modal */}
       {currentStory && (
         <VotingResultsModal

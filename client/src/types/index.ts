@@ -1,6 +1,9 @@
 // Re-export shared types
 export * from '@planning-poker/shared';
 
+// Import the SocketEventHandler type
+import type { SocketEventHandler } from '@/socket';
+
 // Client-specific types
 export interface WebSocketContextType {
   socket: WebSocket | null;
@@ -10,8 +13,8 @@ export interface WebSocketContextType {
   sendMessage: (message: any) => void;
   // Additional methods expected by tests
   send: (message: any) => void;
-  on: (event: string, handler: Function) => void;
-  off: (event: string, handler: Function) => void;
+  on: (event: string, handler: SocketEventHandler) => void;
+  off: (event: string, handler: SocketEventHandler) => void;
   getSocketId: () => string | null;
 }
 
