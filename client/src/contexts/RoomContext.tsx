@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { RoomContextType, Room, Player, VoteValue } from '@/types';
 import { useWebSocket } from './WebSocketContext';
 import { useToast } from '@/hooks/use-toast';
+import { useSessionPersistence } from '@/hooks/useSessionPersistence';
 
 const RoomContext = createContext<RoomContextType | null>(null);
 
@@ -28,6 +29,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const { send, on, off, isConnected } = useWebSocket();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { session, hasValidSession, clearSession } = useSessionPersistence();
 
   // Listen for WebSocket messages
   useEffect(() => {
@@ -470,6 +472,65 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     return () => off('message', handleMessage);
   }, [on, off, toast, room, navigate]);
 
+  // Define joinRoom function first
+  const joinRoom = async (roomId: string, nickname: string) => {
+    if (!isConnected) {
+      toast({
+        title: "Connection Error",
+        description: "Please connect to the server first",
+        variant: "destructive",
+      });
+      return Promise.reject(new Error("Not connected"));
+    }
+
+    try {
+      setJoinError(null);
+      setNicknameSuggestions([]);
+      
+      const promise = new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Join room timeout'));
+        }, 10000); // 10 second timeout
+
+        const handleJoinResponse = (message: any) => {
+          clearTimeout(timeout);
+          off('message', handleJoinResponse);
+          
+          if (message.type === 'JOIN_ROOM') {
+            if (message.payload.success) {
+              resolve();
+            } else {
+              reject(new Error(message.payload.error || 'Failed to join room'));
+            }
+          } else if (message.type === 'room:joined') {
+            resolve();
+          } else if (message.type === 'error' && message.payload?.context === 'joinRoom') {
+            reject(new Error(message.payload.message || 'Failed to join room'));
+          } else if (message.type === 'nickname:conflict') {
+            setJoinError(message.payload.message);
+            if (message.payload.suggestions) {
+              setNicknameSuggestions(message.payload.suggestions);
+            }
+            reject(new Error(message.payload.message));
+          }
+        };
+
+        on('message', handleJoinResponse);
+      });
+
+      send({
+        type: 'JOIN_ROOM',
+        payload: { roomId, nickname }
+      });
+
+      await promise;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setJoinError(errorMessage);
+      throw error;
+    }
+  };
+
   const createRoom = async (nickname: string): Promise<string | null> => {
     if (!isConnected) {
       toast({
@@ -489,24 +550,28 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     return "pending";
   };
 
-  const joinRoom = async (roomId: string, nickname: string): Promise<boolean> => {
-    if (!isConnected) {
-      toast({
-        title: "Connection Error",
-        description: "Please connect to the server first",
-        variant: "destructive",
-      });
-      return false;
+  // Handle WebSocket reconnection with session recovery
+  useEffect(() => {
+    if (isConnected && session && !room && !currentPlayer) {
+      // Only auto-rejoin if we have a valid session but no current room state
+      const currentPath = window.location.pathname;
+      const roomIdFromPath = currentPath.split('/')[1]; // Extract room ID from path
+      
+      if (roomIdFromPath && hasValidSession(roomIdFromPath)) {
+        console.log('Auto-rejoining room after reconnection:', { 
+          roomId: roomIdFromPath, 
+          nickname: session.nickname 
+        });
+        
+        // Attempt to rejoin the room
+        joinRoom(roomIdFromPath, session.nickname).catch((error) => {
+          console.error('Failed to auto-rejoin room after reconnection:', error);
+          // Clear invalid session if rejoin fails
+          clearSession();
+        });
+      }
     }
-
-    send({
-      type: 'JOIN_ROOM',
-      payload: { roomId, nickname }
-    });
-
-    // In a real implementation, you'd wait for a response
-    return true;
-  };
+  }, [isConnected, session, room, currentPlayer, hasValidSession, clearSession]);
 
   const leaveRoom = () => {
     if (room) {

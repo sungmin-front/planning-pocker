@@ -24,16 +24,38 @@ import { PanelLeftOpen } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import LanguageToggle from "@/components/LanguageToggle";
+import { useSessionPersistence } from "@/hooks/useSessionPersistence";
 
 export const RoomPage: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  
+  // Session persistence hook
+  const { session, saveSession, clearSession, hasValidSession } = useSessionPersistence();
 
   const nickname = searchParams.get("nickname");
   const [nicknameInput, setNicknameInput] = useState(nickname || "");
   const [isJoining, setIsJoining] = useState(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+
+  // Auto-restore session on page load
+  useEffect(() => {
+    if (!roomId) return;
+
+    // Check if we have a valid session for this room
+    if (session && hasValidSession(roomId)) {
+      // Auto-populate nickname if not in URL
+      if (!nickname && session.nickname !== nicknameInput) {
+        setNicknameInput(session.nickname);
+        
+        // Update URL to include nickname for better UX
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.set('nickname', session.nickname);
+        setSearchParams(newSearchParams, { replace: true });
+      }
+    }
+  }, [roomId, session, hasValidSession, nickname, nicknameInput, searchParams, setSearchParams]);
   // Modal states moved to HostActions component
 
   const {
@@ -61,12 +83,19 @@ export const RoomPage: React.FC = () => {
       return;
     }
 
-    // Only attempt to join if connected
+    // Auto-rejoin if we have a valid session for this room
+    if (isConnected && roomId && session && hasValidSession(roomId) && !nickname) {
+      console.log('Auto-rejoining room from session:', { roomId, nickname: session.nickname });
+      joinRoom(roomId, session.nickname);
+      return;
+    }
+
+    // Only attempt to join if connected and nickname provided
     if (isConnected && roomId && nickname) {
       joinRoom(roomId, nickname);
     }
     // If no nickname or not connected yet, the component will show the appropriate UI
-  }, [roomId, nickname, isConnected, room, currentPlayer, joinRoom]);
+  }, [roomId, nickname, isConnected, room, currentPlayer, joinRoom, session, hasValidSession]);
 
   // Handle modal opening when votes are revealed - moved before conditional return
   useEffect(() => {
@@ -80,6 +109,8 @@ export const RoomPage: React.FC = () => {
   }, [currentStory?.status, currentStory?.id]);
 
   const handleLeaveRoom = () => {
+    // Clear session when explicitly leaving room
+    clearSession();
     leaveRoom();
     navigate("/");
   };
@@ -97,6 +128,8 @@ export const RoomPage: React.FC = () => {
     setIsJoining(true);
     try {
       await joinRoom(roomId, nicknameInput.trim());
+      // Save session after successful join
+      saveSession(roomId, nicknameInput.trim());
     } catch (error) {
       console.error("Failed to join room:", error);
     } finally {
