@@ -48,3 +48,26 @@ dist/
 
 # TypeScript build cache
 *.tsbuildinfo
+
+# Build artifacts and compiled output
+dist/
+build/
+*.d.ts.map
+
+# Log files
+*.log
+logs/
+server.log
+client.log
+dev.log
+
+# Cache directories and files
+.cache/
+*.cache
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
