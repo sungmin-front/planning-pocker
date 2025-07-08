@@ -12,6 +12,7 @@ export interface WebSocketContextType {
   send: (message: any) => void;
   on: (event: string, handler: Function) => void;
   off: (event: string, handler: Function) => void;
+  getSocketId: () => string | null;
 }
 
 export interface RoomContextType {

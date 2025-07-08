@@ -4,6 +4,7 @@ export interface RoomSession {
   roomId: string;
   nickname: string;
   timestamp: number;
+  socketId?: string; // Previous socket connection ID for session cleanup
 }
 
 const SESSION_KEY = 'planning-poker-session';
@@ -57,12 +58,13 @@ export const useSessionPersistence = () => {
   }, []);
 
   // Save session to localStorage
-  const saveSession = useCallback((roomId: string, nickname: string) => {
+  const saveSession = useCallback((roomId: string, nickname: string, socketId?: string) => {
     try {
       const newSession: RoomSession = {
         roomId,
         nickname,
         timestamp: Date.now(),
+        socketId,
       };
       
       localStorage.setItem(SESSION_KEY, JSON.stringify(newSession));

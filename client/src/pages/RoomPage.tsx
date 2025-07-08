@@ -45,17 +45,12 @@ export const RoomPage: React.FC = () => {
 
     // Check if we have a valid session for this room
     if (session && hasValidSession(roomId)) {
-      // Auto-populate nickname if not in URL
-      if (!nickname && session.nickname !== nicknameInput) {
+      // Auto-populate nickname from session
+      if (session.nickname !== nicknameInput) {
         setNicknameInput(session.nickname);
-        
-        // Update URL to include nickname for better UX
-        const newSearchParams = new URLSearchParams(searchParams);
-        newSearchParams.set('nickname', session.nickname);
-        setSearchParams(newSearchParams, { replace: true });
       }
     }
-  }, [roomId, session, hasValidSession, nickname, nicknameInput, searchParams, setSearchParams]);
+  }, [roomId, session, hasValidSession, nicknameInput]);
   // Modal states moved to HostActions component
 
   const {
@@ -71,7 +66,7 @@ export const RoomPage: React.FC = () => {
     nicknameSuggestions,
     clearJoinError,
   } = useRoom();
-  const { isConnected, send } = useWebSocket();
+  const { isConnected, send, getSocketId } = useWebSocket();
 
   // Calculate current story - moved before conditional return
   const currentStory = room?.currentStoryId
@@ -143,7 +138,8 @@ export const RoomPage: React.FC = () => {
     try {
       await joinRoom(roomId, nicknameInput.trim());
       // Save session after successful join
-      saveSession(roomId, nicknameInput.trim());
+      const currentSocketId = getSocketId();
+      saveSession(roomId, nicknameInput.trim(), currentSocketId || undefined);
     } catch (error) {
       console.error("Failed to join room:", error);
     } finally {

@@ -26,7 +26,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const [joinError, setJoinError] = useState<string | null>(null);
   const [nicknameSuggestions, setNicknameSuggestions] = useState<string[]>([]);
   
-  const { send, on, off, isConnected } = useWebSocket();
+  const { send, on, off, isConnected, getSocketId } = useWebSocket();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { session, hasValidSession, clearSession, saveSession } = useSessionPersistence();
@@ -47,7 +47,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             setCurrentPlayer(message.payload.player);
             setIsHost(message.payload.player.isHost);
             // Save session after successful room creation
-            saveSession(message.payload.room.id, message.payload.player.nickname);
+            const currentSocketId = getSocketId();
+            saveSession(message.payload.room.id, message.payload.player.nickname, currentSocketId || undefined);
           }
           // Navigate to the created room
           navigate(`/${message.payload.room.id}`);
@@ -62,7 +63,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             setCurrentPlayer(message.payload.player);
             setIsHost(message.payload.player.isHost);
             // Save session after successful room join
-            saveSession(message.payload.room.id, message.payload.player.nickname);
+            const currentSocketId = getSocketId();
+            saveSession(message.payload.room.id, message.payload.player.nickname, currentSocketId || undefined);
           }
           
           toast({
@@ -552,7 +554,11 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
       
       send({
         type: 'REJOIN_ROOM',
-        payload: { roomId, nickname }
+        payload: { 
+          roomId, 
+          nickname,
+          previousSocketId: session?.socketId // Include previous socket ID for cleanup
+        }
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
