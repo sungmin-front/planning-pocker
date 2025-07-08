@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RoomContextType, Room, Player, VoteValue } from '@/types';
 import { useWebSocket } from './WebSocketContext';
@@ -27,10 +27,34 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const [nicknameSuggestions, setNicknameSuggestions] = useState<string[]>([]);
   const [isRejoining, setIsRejoining] = useState(false);
   
+  // useRef to maintain latest room state for event handlers
+  const roomRef = useRef<Room | null>(null);
+  
   const { send, on, off, isConnected, getSocketId } = useWebSocket();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { session, hasValidSession, clearSession, saveSession } = useSessionPersistence();
+
+  // Keep roomRef in sync with room state
+  useEffect(() => {
+    roomRef.current = room;
+  }, [room]);
+
+  // Handle WebSocket reconnection - rejoin room if we were in one
+  useEffect(() => {
+    if (isConnected && room && currentPlayer) {
+      // WebSocket reconnected and we have room info - rejoin automatically
+      console.log('WebSocket reconnected, attempting to rejoin room:', room.id);
+      send({
+        type: 'JOIN_ROOM',
+        payload: { 
+          roomId: room.id, 
+          nickname: currentPlayer.nickname,
+          isSpectator: currentPlayer.isSpectator || false
+        }
+      });
+    }
+  }, [isConnected, room?.id, currentPlayer?.nickname, send]);
 
   // Listen for WebSocket messages
   useEffect(() => {
@@ -53,10 +77,24 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           }
           // Navigate to the created room
           navigate(`/${message.payload.room.id}`);
+          
+          // Automatically request chat history when creating a room
+          setTimeout(() => {
+            send({
+              type: 'CHAT_HISTORY_REQUEST',
+              payload: { roomId: message.payload.room.id }
+            });
+          }, 100);
           break;
           
         case 'room:joined':
-          setRoom(message.payload.room);
+          // Preserve existing chat messages when joining room
+          const existingChatMessages = room?.chatMessages || [];
+          const newRoom = {
+            ...message.payload.room,
+            chatMessages: message.payload.room.chatMessages || existingChatMessages
+          };
+          setRoom(newRoom);
           setJoinError(null);
           setNicknameSuggestions([]);
           // The server should tell us which player we are
@@ -75,6 +113,14 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           
           // Navigate to the joined room
           navigate(`/${message.payload.room.id}`);
+          
+          // Automatically request chat history when joining a room
+          setTimeout(() => {
+            send({
+              type: 'CHAT_HISTORY_REQUEST',
+              payload: { roomId: message.payload.room.id }
+            });
+          }, 100);
           break;
 
         case 'room:joinError':
@@ -94,8 +140,13 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           
         case 'room:playerJoined':
           // Update room state when a new player joins
-          if (message.payload.room) {
-            setRoom(message.payload.room);
+          if (message.payload.room && room) {
+            // Preserve existing chat messages when updating room
+            const updatedRoom = {
+              ...message.payload.room,
+              chatMessages: message.payload.room.chatMessages || room.chatMessages || []
+            };
+            setRoom(updatedRoom);
           }
           
           // Show notification that someone joined
@@ -108,7 +159,14 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           break;
           
         case 'ROOM_SYNC':
-          setRoom(message.payload.room);
+          // Preserve existing chat messages when syncing room
+          if (message.payload.room && room) {
+            const syncedRoom = {
+              ...message.payload.room,
+              chatMessages: message.payload.room.chatMessages || room.chatMessages || []
+            };
+            setRoom(syncedRoom);
+          }
           break;
           
         case 'LEAVE_ROOM':
@@ -118,7 +176,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           break;
           
         case 'room:hostChanged':
-          const { newHostId, newHostNickname, oldHostId, oldHostNickname, reason } = message.payload;
+          const { newHostId, newHostNickname, oldHostId, reason } = message.payload;
           
           // Update room state to reflect host changes
           if (room) {
@@ -140,10 +198,12 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           
           // Update isHost state if current player is involved
           setCurrentPlayer(currentPlayerState => {
-            if (currentPlayerState?.id === newHostId) {
+            if (!currentPlayerState) return currentPlayerState;
+            
+            if (currentPlayerState.id === newHostId) {
               setIsHost(true);
               return { ...currentPlayerState, isHost: true };
-            } else if (currentPlayerState?.id === oldHostId) {
+            } else if (currentPlayerState.id === oldHostId) {
               setIsHost(false);
               return { ...currentPlayerState, isHost: false };
             }
@@ -169,7 +229,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
               stories: message.payload.roomState.stories || [],
               players: message.payload.roomState.players || [],
               createdAt: room ? room.createdAt : new Date(),
-              currentStoryId: message.payload.roomState.currentStoryId
+              currentStoryId: message.payload.roomState.currentStoryId,
+              chatMessages: room?.chatMessages || []
             };
             console.log('Updated room:', updatedRoom);
             setRoom(updatedRoom);
@@ -195,7 +256,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
               name: message.payload.roomState.name || room.name,
               stories: message.payload.roomState.stories || room.stories,
               players: message.payload.roomState.players || room.players,
-              currentStoryId: message.payload.roomState.currentStoryId
+              currentStoryId: message.payload.roomState.currentStoryId,
+              chatMessages: room.chatMessages || []
             };
             setRoom(updatedRoom);
             toast({
@@ -219,9 +281,10 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
               players: message.payload.players || room.players,
               stories: message.payload.stories || room.stories,
               currentStoryId: message.payload.currentStoryId,
-              backlogSettings: message.payload.backlogSettings || room.backlogSettings
+              backlogSettings: message.payload.backlogSettings || room.backlogSettings,
+              chatMessages: message.payload.chatMessages || room.chatMessages || []
             };
-            console.log('Updated room with vote data:', updatedRoom);
+            console.log(`[CHAT] room:updated preserving chatMessages: ${room.chatMessages?.length || 0} -> ${updatedRoom.chatMessages.length}`);
             setRoom(updatedRoom);
           } else {
             console.log('room:updated message not processed - room ID mismatch or missing data');
@@ -468,6 +531,147 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             });
           }
           break;
+
+        case 'chat:messageReceived':
+          console.log('Received chat message:', message.payload);
+          if (message.payload) {
+            const chatMessage = message.payload;
+            
+            setRoom(prevRoom => {
+              if (!prevRoom) return prevRoom;
+              
+              const existingMessages = prevRoom.chatMessages || [];
+              
+              // Check if message already exists to prevent duplicates
+              const messageExists = existingMessages.some(msg => msg.id === chatMessage.id);
+              
+              if (!messageExists) {
+                // Simply push the new message to existing messages
+                const updatedRoom = {
+                  ...prevRoom,
+                  chatMessages: [...existingMessages, chatMessage]
+                };
+                console.log(`[CHAT] Adding message, count: ${existingMessages.length} -> ${updatedRoom.chatMessages.length}`);
+                return updatedRoom;
+              }
+              
+              return prevRoom;
+            });
+          }
+          break;
+
+        case 'chat:message:response':
+          console.log('Received chat message response:', message.payload);
+          if (message.payload && !message.payload.success) {
+            toast({
+              title: "Failed to Send Message",
+              description: message.payload.error || "Failed to send chat message",
+              variant: "destructive",
+            });
+          }
+          break;
+
+        case 'chat:history:response':
+          console.log('Received chat history response:', message.payload);
+          if (message.payload && message.payload.success && room) {
+            const historyMessages = message.payload.chatMessages || [];
+            const existingMessages = room.chatMessages || [];
+            
+            // Always update with history messages, but merge intelligently
+            // If we have no messages or fewer messages than history, use history
+            if (existingMessages.length === 0 || historyMessages.length > existingMessages.length) {
+              const updatedRoom = {
+                ...room,
+                chatMessages: historyMessages
+              };
+              setRoom(updatedRoom);
+              console.log(`[CHAT] Updated room with ${historyMessages.length} history messages`);
+            }
+          } else if (message.payload && !message.payload.success) {
+            toast({
+              title: "Failed to Load Chat History",
+              description: message.payload.error || "Failed to load chat history",
+              variant: "destructive",
+            });
+          }
+          break;
+
+        case 'chat:typing:start':
+          console.log('Received typing start:', message.payload);
+          if (message.payload) {
+            const { playerId, playerNickname } = message.payload;
+            
+            setRoom(prevRoom => {
+              if (!prevRoom) return prevRoom;
+              
+              const typingIndicator = {
+                playerId,
+                playerNickname,
+                roomId: prevRoom.id,
+                timestamp: new Date()
+              };
+              
+              // Add or update typing indicator
+              const updatedTypingUsers = [...(prevRoom.typingUsers || [])];
+              const existingIndex = updatedTypingUsers.findIndex(t => t.playerId === playerId);
+              
+              if (existingIndex >= 0) {
+                updatedTypingUsers[existingIndex] = typingIndicator;
+              } else {
+                updatedTypingUsers.push(typingIndicator);
+              }
+              
+              const updatedRoom = {
+                ...prevRoom,
+                typingUsers: updatedTypingUsers,
+                chatMessages: prevRoom.chatMessages || []
+              };
+              console.log(`[CHAT] typing:start preserving chatMessages: ${prevRoom.chatMessages?.length || 0} messages`);
+              return updatedRoom;
+            });
+          }
+          break;
+
+        case 'chat:typing:stop':
+          console.log('Received typing stop:', message.payload);
+          if (message.payload) {
+            const { playerId } = message.payload;
+            
+            setRoom(prevRoom => {
+              if (!prevRoom) return prevRoom;
+              
+              // Remove typing indicator
+              const updatedTypingUsers = (prevRoom.typingUsers || []).filter(t => t.playerId !== playerId);
+              
+              const updatedRoom = {
+                ...prevRoom,
+                typingUsers: updatedTypingUsers,
+                chatMessages: prevRoom.chatMessages || []
+              };
+              console.log(`[CHAT] typing:stop preserving chatMessages: ${prevRoom.chatMessages?.length || 0} messages`);
+              return updatedRoom;
+            });
+          }
+          break;
+
+        case 'room:state':
+          console.log('Received room:state message:', message.payload);
+          if (message.payload && message.payload.room) {
+            // Preserve existing chat messages and merge with incoming data
+            const incomingRoom = message.payload.room;
+            const existingChatMessages = room?.chatMessages || [];
+            const incomingChatMessages = incomingRoom.chatMessages || [];
+            
+            // Use incoming chat messages if they exist, otherwise preserve existing
+            const mergedChatMessages = incomingChatMessages.length > 0 ? incomingChatMessages : existingChatMessages;
+            
+            const updatedRoom = {
+              ...incomingRoom,
+              chatMessages: mergedChatMessages
+            };
+            setRoom(updatedRoom);
+          }
+          break;
           
         default:
           // Handle unknown message types gracefully
@@ -477,7 +681,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
 
     on('message', handleMessage);
     return () => off('message', handleMessage);
-  }, [on, off, toast, room, navigate, saveSession]);
+  }, [on, off, toast, room, navigate, saveSession, getSocketId]);
 
   // Define joinRoom function first
   const joinRoom = useCallback(async (roomId: string, nickname: string) => {
@@ -745,6 +949,91 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     setNicknameSuggestions([]);
   };
 
+  const sendChatMessage = useCallback((message: string) => {
+    if (!room || !currentPlayer) {
+      toast({
+        title: "Cannot Send Message",
+        description: "You must be in a room to send messages",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!message.trim()) {
+      toast({
+        title: "Cannot Send Empty Message",
+        description: "Please enter a message to send",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (message.length > 1000) {
+      toast({
+        title: "Message Too Long",
+        description: "Messages must be 1000 characters or less",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    send({
+      type: 'CHAT_MESSAGE',
+      payload: { 
+        message: message.trim(),
+        playerId: currentPlayer.id,
+        playerNickname: currentPlayer.nickname,
+        roomId: room.id
+      }
+    });
+  }, [room, currentPlayer, send, toast]);
+
+  const requestChatHistory = useCallback(() => {
+    if (!room) {
+      toast({
+        title: "Cannot Load Chat History",
+        description: "You must be in a room to load chat history",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    send({
+      type: 'CHAT_HISTORY_REQUEST',
+      payload: { roomId: room.id }
+    });
+  }, [room, send]);
+
+  const startTyping = useCallback(() => {
+    if (!room || !currentPlayer) {
+      return;
+    }
+
+    send({
+      type: 'CHAT_TYPING_START',
+      payload: { 
+        playerId: currentPlayer.id,
+        playerNickname: currentPlayer.nickname,
+        roomId: room.id
+      }
+    });
+  }, [room, currentPlayer, send]);
+
+  const stopTyping = useCallback(() => {
+    if (!room || !currentPlayer) {
+      return;
+    }
+
+    send({
+      type: 'CHAT_TYPING_STOP',
+      payload: { 
+        playerId: currentPlayer.id,
+        playerNickname: currentPlayer.nickname,
+        roomId: room.id
+      }
+    });
+  }, [room, currentPlayer, send]);
+
   const value: RoomContextType = {
     room,
     currentPlayer,
@@ -765,6 +1054,10 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     transferHost,
     syncRoom,
     clearJoinError,
+    sendChatMessage,
+    requestChatHistory,
+    startTyping,
+    stopTyping,
   };
 
   return (

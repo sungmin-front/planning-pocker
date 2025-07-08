@@ -70,7 +70,16 @@ const defaultUseRoom = {
   revealVotes: vi.fn(),
   restartVoting: vi.fn(),
   setFinalPoint: vi.fn(),
+<<<<<<< HEAD
   transferHost: vi.fn()
+=======
+  skipStory: vi.fn(),
+  transferHost: vi.fn(),
+  sendChatMessage: vi.fn(),
+  requestChatHistory: vi.fn(),
+  startTyping: vi.fn(),
+  stopTyping: vi.fn()
+>>>>>>> origin/main
 };
 
 const defaultUseWebSocket = {

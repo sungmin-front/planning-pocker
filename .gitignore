@@ -46,6 +46,7 @@ cursor-rules/
 
 dist/
 
+<<<<<<< HEAD
 # TypeScript build cache
 *.tsbuildinfo
 
@@ -71,3 +72,10 @@ Thumbs.db
 *.swp
 *.swo
 *~
+=======
+# Environment variables
+
+# Task files
+# tasks.json
+# tasks/ 
+>>>>>>> origin/main

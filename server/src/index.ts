@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { v4 as uuidv4 } from 'uuid';
-import { WebSocketMessage, VoteValue } from '@planning-poker/shared';
+import { WebSocketMessage, VoteValue, ChatMessage } from '@planning-poker/shared';
 import { generateRoomId, releaseRoomId } from './utils';
 import { RoomManager } from './roomManager';
 import express from 'express';
@@ -16,8 +16,10 @@ import RoomSessionService from './services/RoomSessionService';
 // Load environment variables
 dotenv.config();
 
-// Initialize database connection
-Database.connect().catch(console.error);
+// Initialize database connection (optional for development)
+Database.connect().catch(error => {
+  console.warn('⚠️ MongoDB connection failed - running without persistence:', error.message);
+});
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 9000;
 
@@ -129,10 +131,10 @@ app.post('/api/debug/rooms/:roomId/cleanup', (req, res) => {
 });
 
 // Start the combined server
-server.listen(port, () => {
+server.listen(port, '0.0.0.0', () => {
   console.log(`Planning Poker server running on port ${port}`);
   console.log(`WebSocket server listening on port ${port}`);
-  console.log(`REST API available at http://localhost:${port}/api`);
+  console.log(`REST API available at http://0.0.0.0:${port}/api`);
 });
 
 // Helper function to get socket ID
@@ -802,13 +804,16 @@ wss.on('connection', function connection(ws) {
           // Try to join/rejoin the room
           const result = roomManager.joinRoom(roomId, nickname, socketId);
           
-          if (result.success && result.room && result.player) {
+          if (result.success && result.room) {
+            // Find the player that was just added
+            const player = result.room.players.find(p => p.socketId === socketId);
+            
             // Send confirmation to the rejoining player
             ws.send(JSON.stringify({
               type: 'room:joined',
               payload: {
                 room: result.room,
-                player: result.player
+                player: player
               }
             }));
             
@@ -820,7 +825,7 @@ wss.on('connection', function connection(ws) {
                   type: 'room:playerJoined',
                   payload: {
                     room: result.room,
-                    player: result.player
+                    player: player
                   }
                 }));
               }
@@ -833,6 +838,229 @@ wss.on('connection', function connection(ws) {
               }
             }));
           }
+          break;
+        }
+
+        case 'CHAT_MESSAGE': {
+          const { message: chatText } = message.payload;
+          console.log(`Chat message received from ${socketId}: ${chatText}`);
+          
+          // Validate message length
+          if (!chatText || typeof chatText !== 'string') {
+            ws.send(JSON.stringify({
+              type: 'chat:message:response',
+              payload: { success: false, error: 'Invalid message content' }
+            }));
+            break;
+          }
+
+          if (chatText.length > 1000) {
+            ws.send(JSON.stringify({
+              type: 'chat:message:response',
+              payload: { success: false, error: 'Message too long (max 1000 characters)' }
+            }));
+            break;
+          }
+
+          const roomId = roomManager.getUserRoom(socketId);
+          if (!roomId) {
+            ws.send(JSON.stringify({
+              type: 'chat:message:response',
+              payload: { success: false, error: 'Not in a room' }
+            }));
+            break;
+          }
+
+          const room = roomManager.getRoom(roomId);
+          if (!room) {
+            ws.send(JSON.stringify({
+              type: 'chat:message:response',
+              payload: { success: false, error: 'Room not found' }
+            }));
+            break;
+          }
+
+          const player = room.players.find(p => p.socketId === socketId);
+          if (!player) {
+            ws.send(JSON.stringify({
+              type: 'chat:message:response',
+              payload: { success: false, error: 'Player not in room' }
+            }));
+            break;
+          }
+
+          // Create chat message
+          const chatMessage: ChatMessage = {
+            id: uuidv4(),
+            playerId: player.id,
+            playerNickname: player.nickname,
+            message: chatText,
+            timestamp: new Date(),
+            roomId: room.id
+          };
+
+          // Add to room's chat messages
+          if (!room.chatMessages) {
+            room.chatMessages = [];
+          }
+          room.chatMessages.push(chatMessage);
+
+          console.log(`Broadcasting chat message to room ${roomId}`);
+
+          // Broadcast chat message to all clients in room
+          let broadcastCount = 0;
+          wss.clients.forEach(client => {
+            const clientSocketId = getSocketId(client);
+            if (roomManager.getUserRoom(clientSocketId) === roomId) {
+              client.send(JSON.stringify({
+                type: 'chat:messageReceived',
+                payload: chatMessage
+              }));
+              broadcastCount++;
+            }
+          });
+
+          console.log(`Broadcast chat message to ${broadcastCount} clients`);
+
+          // Send success response to sender
+          ws.send(JSON.stringify({
+            type: 'chat:message:response',
+            payload: { success: true, chatMessage }
+          }));
+          break;
+        }
+
+        case 'CHAT_HISTORY_REQUEST': {
+          console.log(`Chat history requested by ${socketId}`);
+          
+          const roomId = roomManager.getUserRoom(socketId);
+          if (!roomId) {
+            ws.send(JSON.stringify({
+              type: 'chat:history:response',
+              payload: { success: false, error: 'Not in a room' }
+            }));
+            break;
+          }
+
+          const room = roomManager.getRoom(roomId);
+          if (!room) {
+            ws.send(JSON.stringify({
+              type: 'chat:history:response',
+              payload: { success: false, error: 'Room not found' }
+            }));
+            break;
+          }
+
+          const player = room.players.find(p => p.socketId === socketId);
+          if (!player) {
+            ws.send(JSON.stringify({
+              type: 'chat:history:response',
+              payload: { success: false, error: 'Player not in room' }
+            }));
+            break;
+          }
+
+          // Return chat history
+          const chatMessages = room.chatMessages || [];
+          console.log(`Sending ${chatMessages.length} chat messages to ${socketId}`);
+
+          ws.send(JSON.stringify({
+            type: 'chat:history:response',
+            payload: { success: true, chatMessages }
+          }));
+          break;
+        }
+
+        case 'CHAT_TYPING_START': {
+          const roomId = roomManager.getUserRoom(socketId);
+          if (!roomId) {
+            console.log('User not in a room for typing start');
+            ws.send(JSON.stringify({
+              type: 'error',
+              payload: { error: 'Not in a room' }
+            }));
+            break;
+          }
+
+          const room = roomManager.getRoom(roomId);
+          const player = roomManager.getPlayer(socketId);
+          
+          if (!room || !player) {
+            console.log('Room or player not found for typing start');
+            break;
+          }
+
+          // Initialize typingUsers array if it doesn't exist
+          if (!room.typingUsers) {
+            room.typingUsers = [];
+          }
+
+          // Add or update typing indicator
+          const existingIndex = room.typingUsers.findIndex(t => t.playerId === player.id);
+          const typingIndicator = {
+            playerId: player.id,
+            playerNickname: player.nickname,
+            roomId,
+            timestamp: new Date()
+          };
+
+          if (existingIndex >= 0) {
+            room.typingUsers[existingIndex] = typingIndicator;
+          } else {
+            room.typingUsers.push(typingIndicator);
+          }
+
+          // Broadcast to all room members except sender
+          console.log(`Broadcasting typing start for ${player.nickname} in room ${roomId}`);
+          wss.clients.forEach(client => {
+            const clientSocketId = getSocketId(client);
+            if (roomManager.getUserRoom(clientSocketId) === roomId && clientSocketId !== socketId) {
+              client.send(JSON.stringify({
+                type: 'chat:typing:start',
+                payload: { 
+                  playerId: player.id,
+                  playerNickname: player.nickname
+                }
+              }));
+            }
+          });
+          break;
+        }
+
+        case 'CHAT_TYPING_STOP': {
+          const roomId = roomManager.getUserRoom(socketId);
+          if (!roomId) {
+            console.log('User not in a room for typing stop');
+            break;
+          }
+
+          const room = roomManager.getRoom(roomId);
+          const player = roomManager.getPlayer(socketId);
+          
+          if (!room || !player) {
+            console.log('Room or player not found for typing stop');
+            break;
+          }
+
+          // Remove typing indicator
+          if (room.typingUsers) {
+            room.typingUsers = room.typingUsers.filter(t => t.playerId !== player.id);
+          }
+
+          // Broadcast to all room members except sender
+          console.log(`Broadcasting typing stop for ${player.nickname} in room ${roomId}`);
+          wss.clients.forEach(client => {
+            const clientSocketId = getSocketId(client);
+            if (roomManager.getUserRoom(clientSocketId) === roomId && clientSocketId !== socketId) {
+              client.send(JSON.stringify({
+                type: 'chat:typing:stop',
+                payload: { 
+                  playerId: player.id,
+                  playerNickname: player.nickname
+                }
+              }));
+            }
+          });
           break;
         }
 
@@ -851,6 +1079,34 @@ wss.on('connection', function connection(ws) {
   ws.on('close', function close() {
     console.log(`Client disconnected: ${socketId}`);
     clients.delete(socketId);
+    
+    // Clean up typing indicators before removing player
+    const roomId = roomManager.getUserRoom(socketId);
+    const player = roomManager.getPlayer(socketId);
+    if (roomId && player) {
+      const room = roomManager.getRoom(roomId);
+      if (room && (room as any).typingUsers) {
+        const wasTyping = (room as any).typingUsers.some((t: any) => t.playerId === player.id);
+        (room as any).typingUsers = (room as any).typingUsers.filter((t: any) => t.playerId !== player.id);
+        
+        // Broadcast typing stop if user was typing
+        if (wasTyping) {
+          wss.clients.forEach(client => {
+            const clientSocketId = getSocketId(client);
+            if (roomManager.getUserRoom(clientSocketId) === roomId && clientSocketId !== socketId) {
+              client.send(JSON.stringify({
+                type: 'chat:typing:stop',
+                payload: { 
+                  playerId: player.id,
+                  playerNickname: player.nickname
+                }
+              }));
+            }
+          });
+        }
+      }
+    }
+    
     const result = roomManager.removePlayer(socketId);
     
     // Handle automatic host reassignment on disconnect

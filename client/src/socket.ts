@@ -16,7 +16,10 @@ export class WebSocketSingleton {
   private isConnecting: boolean = false;
   private eventHandlers: Map<string, SocketEventHandler[]> = new Map();
   private reconnectTimer: NodeJS.Timeout | null = null;
+<<<<<<< HEAD
   private socketId: string | null = null;
+=======
+>>>>>>> origin/main
 
   private constructor() {}
 
@@ -166,6 +169,7 @@ export class WebSocketSingleton {
     return this.socket?.readyState || null;
   }
 
+<<<<<<< HEAD
   public getSocketId(): string | null {
     return this.socketId;
   }
@@ -178,6 +182,11 @@ export class WebSocketSingleton {
     this.disconnect();
     this.eventHandlers.clear();
     this.socketId = null;
+=======
+  public destroy(): void {
+    this.disconnect();
+    this.eventHandlers.clear();
+>>>>>>> origin/main
     WebSocketSingleton.instance = null;
   }
 }

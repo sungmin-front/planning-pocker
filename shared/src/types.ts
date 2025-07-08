@@ -38,6 +38,21 @@ export interface Story {
   jiraMetadata?: JiraMetadata;
 }
 
+export interface ChatMessage {
+  id: string;
+  playerId: string;
+  playerNickname: string;
+  message: string;
+  timestamp: Date;
+  roomId: string;
+}
+
+export interface TypingIndicator {
+  playerId: string;
+  playerNickname: string;
+  roomId: string;
+  timestamp: Date;
+}
 export interface Room {
   id: string;
   name: string;
@@ -46,6 +61,8 @@ export interface Room {
   createdAt: Date;
   currentStoryId?: string | null;
   backlogSettings?: BacklogSettings;
+  chatMessages?: ChatMessage[];
+  typingUsers?: TypingIndicator[];
 }
 
 export type MessageType = 
@@ -65,9 +82,45 @@ export type MessageType =
   | 'HOST_DELEGATE'
   | 'PLAYER_KICK'
   | 'BACKLOG_SETTINGS_UPDATE'
-  | 'SOCKET_ID';
+  | 'SOCKET_ID'
+  | 'CHAT_MESSAGE'
+  | 'CHAT_HISTORY_REQUEST'
+  | 'CHAT_TYPING_START'
+  | 'CHAT_TYPING_STOP';
 
 export interface WebSocketMessage {
   type: MessageType;
   payload: any;
+}
+
+// Validation function for ChatMessage
+export function isValidChatMessage(obj: any): obj is ChatMessage {
+  if (!obj || typeof obj !== 'object') {
+    return false;
+  }
+
+  const { id, playerId, playerNickname, message, timestamp, roomId } = obj;
+
+  // Check all required fields are present and have correct types
+  if (
+    typeof id !== 'string' || 
+    typeof playerId !== 'string' || 
+    typeof playerNickname !== 'string' || 
+    typeof message !== 'string' || 
+    typeof roomId !== 'string'
+  ) {
+    return false;
+  }
+
+  // Check timestamp is a Date object
+  if (!(timestamp instanceof Date)) {
+    return false;
+  }
+
+  // Check message length (max 1000 characters)
+  if (message.length > 1000) {
+    return false;
+  }
+
+  return true;
 }

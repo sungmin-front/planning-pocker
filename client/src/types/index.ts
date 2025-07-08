@@ -35,7 +35,12 @@ export interface RoomContextType {
   transferHost: (toNickname: string) => void;
   syncRoom: () => void;
   clearJoinError: () => void;
+  // Chat functionality
+  sendChatMessage: (message: string) => void;
+  requestChatHistory: () => void;
+  startTyping: () => void;
+  stopTyping: () => void;
 }
 
 // Import shared types for re-export
-import type { Room, Player, VoteValue } from '@planning-poker/shared';
+import type { Room, Player, VoteValue, ChatMessage, TypingIndicator } from '@planning-poker/shared';

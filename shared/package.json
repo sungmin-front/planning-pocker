@@ -9,10 +9,12 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "lint": "eslint src --ext .ts",
-    "test": "echo \"No tests yet\""
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^3.2.4"
   },
   "files": [
     "dist"
