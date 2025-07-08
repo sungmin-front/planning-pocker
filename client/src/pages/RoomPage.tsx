@@ -38,6 +38,7 @@ export const RoomPage: React.FC = () => {
   const [nicknameInput, setNicknameInput] = useState(nickname || "");
   const [isJoining, setIsJoining] = useState(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+  const [isAutoRejoining, setIsAutoRejoining] = useState(false);
 
   // Auto-restore session on page load
   useEffect(() => {
@@ -85,6 +86,11 @@ export const RoomPage: React.FC = () => {
       hasValidSession: validSession 
     });
 
+    // Reset auto-rejoining if not connected
+    if (!isConnected && isAutoRejoining) {
+      setIsAutoRejoining(false);
+    }
+
     // If user is already in a room (e.g., host who created room), don't attempt to join again
     if (room && currentPlayer) {
       console.log('Already in room, skipping auto-rejoin');
@@ -94,8 +100,14 @@ export const RoomPage: React.FC = () => {
     // Auto-rejoin if we have a valid session for this room
     if (isConnected && roomId && session && hasValidSession(roomId)) {
       console.log('Auto-rejoining room from session:', { roomId, nickname: session.nickname });
+      setIsAutoRejoining(true);
       // Use rejoin instead of join to handle existing connections
-      rejoinRoom(roomId, session.nickname);
+      rejoinRoom(roomId, session.nickname).catch((error) => {
+        console.error('Auto-rejoin failed:', error);
+        setIsAutoRejoining(false);
+        // Clear invalid session if auto-rejoin fails
+        clearSession();
+      });
       return;
     }
 
@@ -116,6 +128,13 @@ export const RoomPage: React.FC = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [currentStory?.status, currentStory?.id]);
+
+  // Reset auto-rejoining state when successfully joined room
+  useEffect(() => {
+    if (room && currentPlayer && isAutoRejoining) {
+      setIsAutoRejoining(false);
+    }
+  }, [room, currentPlayer, isAutoRejoining]);
 
   const handleLeaveRoom = () => {
     // Clear session when explicitly leaving room
@@ -159,6 +178,18 @@ export const RoomPage: React.FC = () => {
       payload: { storyId, point: finalPoint }
     });
   };
+
+  // Show loading screen during auto-rejoin
+  if (isAutoRejoining) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Reconnecting to room...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show nickname input form if not connected to room yet
   if (!room || !currentPlayer) {
