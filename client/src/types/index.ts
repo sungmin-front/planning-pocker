@@ -22,6 +22,7 @@ export interface RoomContextType {
   nicknameSuggestions: string[];
   createRoom: (nickname: string) => Promise<string | null>;
   joinRoom: (roomId: string, nickname: string) => Promise<boolean>;
+  rejoinRoom: (roomId: string, nickname: string) => Promise<void>;
   leaveRoom: () => void;
   createStory: (title: string, description?: string) => void;
   vote: (storyId: string, vote: VoteValue) => void;

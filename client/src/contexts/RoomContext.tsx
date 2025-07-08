@@ -535,6 +535,32 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     }
   }, [isConnected, toast, send, on, off, setJoinError, setNicknameSuggestions]);
 
+  // Rejoin room for session restoration (bypasses nickname conflicts)
+  const rejoinRoom = useCallback(async (roomId: string, nickname: string) => {
+    if (!isConnected) {
+      toast({
+        title: "Connection Error",
+        description: "Please connect to the server first",
+        variant: "destructive",
+      });
+      return Promise.reject(new Error("Not connected"));
+    }
+
+    try {
+      setJoinError(null);
+      setNicknameSuggestions([]);
+      
+      send({
+        type: 'REJOIN_ROOM',
+        payload: { roomId, nickname }
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setJoinError(errorMessage);
+      throw error;
+    }
+  }, [isConnected, toast, send, setJoinError, setNicknameSuggestions]);
+
   const createRoom = async (nickname: string): Promise<string | null> => {
     if (!isConnected) {
       toast({
@@ -567,15 +593,15 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           nickname: session.nickname 
         });
         
-        // Attempt to rejoin the room
-        joinRoom(roomIdFromPath, session.nickname).catch((error) => {
+        // Attempt to rejoin the room using rejoin to avoid nickname conflicts
+        rejoinRoom(roomIdFromPath, session.nickname).catch((error) => {
           console.error('Failed to auto-rejoin room after reconnection:', error);
           // Clear invalid session if rejoin fails
           clearSession();
         });
       }
     }
-  }, [isConnected, session, room, currentPlayer, hasValidSession, clearSession, joinRoom]);
+  }, [isConnected, session, room, currentPlayer, hasValidSession, clearSession, rejoinRoom]);
 
   const leaveRoom = () => {
     if (room) {
@@ -675,6 +701,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     nicknameSuggestions,
     createRoom,
     joinRoom,
+    rejoinRoom,
     leaveRoom,
     createStory,
     vote,

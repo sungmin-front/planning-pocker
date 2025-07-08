@@ -63,6 +63,7 @@ export const RoomPage: React.FC = () => {
     currentPlayer,
     isHost,
     joinRoom,
+    rejoinRoom,
     leaveRoom,
     vote,
     syncRoom,
@@ -98,7 +99,8 @@ export const RoomPage: React.FC = () => {
     // Auto-rejoin if we have a valid session for this room
     if (isConnected && roomId && session && hasValidSession(roomId)) {
       console.log('Auto-rejoining room from session:', { roomId, nickname: session.nickname });
-      joinRoom(roomId, session.nickname);
+      // Use rejoin instead of join to handle existing connections
+      rejoinRoom(roomId, session.nickname);
       return;
     }
 
@@ -107,7 +109,7 @@ export const RoomPage: React.FC = () => {
       joinRoom(roomId, nickname);
     }
     // If no nickname or not connected yet, the component will show the appropriate UI
-  }, [roomId, nickname, isConnected, room, currentPlayer, joinRoom]);
+  }, [roomId, nickname, isConnected, room, currentPlayer, joinRoom, rejoinRoom]);
 
   // Handle modal opening when votes are revealed - moved before conditional return
   useEffect(() => {
