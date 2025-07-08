@@ -43,7 +43,7 @@ export class RoomManager {
     return room;
   }
 
-  joinRoom(roomId: string, nickname: string, socketId: string, isSpectator?: boolean): { success: boolean; room?: ServerRoom; error?: string; suggestions?: string[] } {
+  joinRoom(roomId: string, nickname: string, socketId: string, isSpectator?: boolean): { success: boolean; room?: ServerRoom; player?: Player; error?: string; suggestions?: string[] } {
     // Trim and validate nickname
     const trimmedNickname = nickname.trim();
     if (!trimmedNickname) {
@@ -86,7 +86,7 @@ export class RoomManager {
       playerId: player.id
     };
 
-    return { success: true, room };
+    return { success: true, room, player };
   }
 
   private generateNicknameSuggestions(originalNickname: string, room: ServerRoom): string[] {

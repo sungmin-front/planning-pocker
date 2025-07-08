@@ -145,6 +145,12 @@ wss.on('connection', function connection(ws) {
   clients.set(socketId, ws);
   console.log(`New client connected: ${socketId}`);
   
+  // Send socket ID to client for session management
+  ws.send(JSON.stringify({
+    type: 'SOCKET_ID',
+    payload: { socketId }
+  }));
+  
   ws.on('error', console.error);
 
   ws.on('message', function message(data) {
@@ -779,6 +785,54 @@ wss.on('connection', function connection(ws) {
             type: 'backlog:settings:response',
             payload: result
           }));
+          break;
+        }
+
+        case 'REJOIN_ROOM': {
+          const { roomId, nickname, previousSocketId } = message.payload;
+          
+          // If we have a previous socket ID, clean up that connection first
+          if (previousSocketId) {
+            const oldPlayer = roomManager.getPlayer(previousSocketId);
+            if (oldPlayer) {
+              roomManager.removePlayer(previousSocketId);
+            }
+          }
+          
+          // Try to join/rejoin the room
+          const result = roomManager.joinRoom(roomId, nickname, socketId);
+          
+          if (result.success && result.room && result.player) {
+            // Send confirmation to the rejoining player
+            ws.send(JSON.stringify({
+              type: 'room:joined',
+              payload: {
+                room: result.room,
+                player: result.player
+              }
+            }));
+            
+            // Broadcast player joined to other room members
+            wss.clients.forEach(client => {
+              const clientSocketId = getSocketId(client);
+              if (clientSocketId !== socketId && roomManager.getUserRoom(clientSocketId) === roomId) {
+                client.send(JSON.stringify({
+                  type: 'room:playerJoined',
+                  payload: {
+                    room: result.room,
+                    player: result.player
+                  }
+                }));
+              }
+            });
+          } else {
+            ws.send(JSON.stringify({
+              type: 'room:joinError',
+              payload: {
+                error: result.error || 'Failed to rejoin room'
+              }
+            }));
+          }
           break;
         }
 

@@ -25,6 +25,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const [isHost, setIsHost] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
   const [nicknameSuggestions, setNicknameSuggestions] = useState<string[]>([]);
+  const [isRejoining, setIsRejoining] = useState(false);
   
   const { send, on, off, isConnected, getSocketId } = useWebSocket();
   const { toast } = useToast();
@@ -539,7 +540,21 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
 
   // Rejoin room for session restoration (bypasses nickname conflicts)
   const rejoinRoom = useCallback(async (roomId: string, nickname: string) => {
+    // CRITICAL: Check if already rejoining to prevent double calls
+    if (isRejoining) {
+      return Promise.reject(new Error("Already rejoining"));
+    }
+    
+    setIsRejoining(true);
+    
+    // Wait a bit if connection is still establishing
+    for (let i = 0; i < 50; i++) { // Wait up to 5 seconds
+      if (isConnected) break;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
     if (!isConnected) {
+      setIsRejoining(false);
       toast({
         title: "Connection Error",
         description: "Please connect to the server first",
@@ -552,6 +567,34 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
       setJoinError(null);
       setNicknameSuggestions([]);
       
+      // Add a small delay before sending to ensure WebSocket is ready
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      const promise = new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          setIsRejoining(false);
+          reject(new Error('Rejoin room timeout'));
+        }, 15000); // Increased timeout to 15 seconds
+
+        const handleRejoinResponse = (message: any) => {
+          clearTimeout(timeout);
+          off('message', handleRejoinResponse);
+          
+          if (message.type === 'room:joined' || message.type === 'room:created') {
+            setIsRejoining(false);
+            resolve();
+          } else if (message.type === 'room:joinError') {
+            setIsRejoining(false);
+            reject(new Error(message.payload.error || 'Failed to rejoin room'));
+          } else if (message.type === 'error' && message.payload?.context === 'rejoinRoom') {
+            setIsRejoining(false);
+            reject(new Error(message.payload.message || 'Failed to rejoin room'));
+          }
+        };
+
+        on('message', handleRejoinResponse);
+      });
+      
       send({
         type: 'REJOIN_ROOM',
         payload: { 
@@ -560,12 +603,15 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           previousSocketId: session?.socketId // Include previous socket ID for cleanup
         }
       });
+
+      await promise;
     } catch (error) {
+      setIsRejoining(false); // Ensure state is reset on any error
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       setJoinError(errorMessage);
       throw error;
     }
-  }, [isConnected, toast, send, setJoinError, setNicknameSuggestions]);
+  }, [isConnected, toast, send, setJoinError, setNicknameSuggestions, on, off, getSocketId, session?.socketId, isRejoining]);
 
   const createRoom = async (nickname: string): Promise<string | null> => {
     if (!isConnected) {
@@ -705,6 +751,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     isHost,
     joinError,
     nicknameSuggestions,
+    isRejoining,
     createRoom,
     joinRoom,
     rejoinRoom,

@@ -51,6 +51,7 @@ export interface Room {
 export type MessageType = 
   | 'ROOM_CREATE'
   | 'JOIN_ROOM' 
+  | 'REJOIN_ROOM'
   | 'LEAVE_ROOM' 
   | 'STORY_VOTE'
   | 'STORY_CREATE'
@@ -63,7 +64,8 @@ export type MessageType =
   | 'ROOM_SYNC'
   | 'HOST_DELEGATE'
   | 'PLAYER_KICK'
-  | 'BACKLOG_SETTINGS_UPDATE';
+  | 'BACKLOG_SETTINGS_UPDATE'
+  | 'SOCKET_ID';
 
 export interface WebSocketMessage {
   type: MessageType;

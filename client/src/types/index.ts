@@ -21,8 +21,9 @@ export interface RoomContextType {
   isHost: boolean;
   joinError: string | null;
   nicknameSuggestions: string[];
+  isRejoining: boolean;
   createRoom: (nickname: string) => Promise<string | null>;
-  joinRoom: (roomId: string, nickname: string) => Promise<boolean>;
+  joinRoom: (roomId: string, nickname: string) => Promise<void>;
   rejoinRoom: (roomId: string, nickname: string) => Promise<void>;
   leaveRoom: () => void;
   createStory: (title: string, description?: string) => void;

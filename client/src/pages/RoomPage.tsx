@@ -21,7 +21,7 @@ import {
 import { useRoom } from "@/contexts/RoomContext";
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import { PanelLeftOpen } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import LanguageToggle from "@/components/LanguageToggle";
 import { useSessionPersistence } from "@/hooks/useSessionPersistence";
@@ -39,21 +39,9 @@ export const RoomPage: React.FC = () => {
   const [isJoining, setIsJoining] = useState(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [isAutoRejoining, setIsAutoRejoining] = useState(false);
+  const hasAttemptedRejoin = useRef(false);
 
-  // Auto-restore session on page load
-  useEffect(() => {
-    if (!roomId) return;
-
-    // Check if we have a valid session for this room
-    if (session && hasValidSession(roomId)) {
-      // Auto-populate nickname from session
-      if (session.nickname !== nicknameInput) {
-        setNicknameInput(session.nickname);
-      }
-    }
-  }, [roomId, session, hasValidSession, nicknameInput]);
-  // Modal states moved to HostActions component
-
+  // Get hooks first before using them in useEffect
   const {
     room,
     currentPlayer,
@@ -66,8 +54,33 @@ export const RoomPage: React.FC = () => {
     joinError,
     nicknameSuggestions,
     clearJoinError,
+    isRejoining,
   } = useRoom();
   const { isConnected, send, getSocketId } = useWebSocket();
+
+  // Auto-restore session on page load
+  useEffect(() => {
+    if (!roomId) return;
+
+    // Reset rejoin attempt flag when roomId changes OR when we get a fresh connection
+    hasAttemptedRejoin.current = false;
+
+    // Check if we have a valid session for this room
+    if (session && hasValidSession(roomId)) {
+      // Auto-populate nickname from session
+      if (session.nickname !== nicknameInput) {
+        setNicknameInput(session.nickname);
+      }
+    }
+  }, [roomId, session, hasValidSession, nicknameInput]);
+
+  // Reset rejoin attempt flag when connection is established
+  useEffect(() => {
+    if (isConnected) {
+      hasAttemptedRejoin.current = false;
+    }
+  }, [isConnected]);
+  // Modal states moved to HostActions component
 
   // Calculate current story - moved before conditional return
   const currentStory = room?.currentStoryId
@@ -75,16 +88,6 @@ export const RoomPage: React.FC = () => {
     : null;
 
   useEffect(() => {
-    const validSession = session ? hasValidSession(roomId) : false;
-    console.log('RoomPage useEffect:', { 
-      room: !!room, 
-      currentPlayer: !!currentPlayer, 
-      isConnected, 
-      roomId, 
-      session: !!session, 
-      sessionData: session,
-      hasValidSession: validSession 
-    });
 
     // Reset auto-rejoining if not connected
     if (!isConnected && isAutoRejoining) {
@@ -93,21 +96,33 @@ export const RoomPage: React.FC = () => {
 
     // If user is already in a room (e.g., host who created room), don't attempt to join again
     if (room && currentPlayer) {
-      console.log('Already in room, skipping auto-rejoin');
       return;
     }
 
-    // Auto-rejoin if we have a valid session for this room
-    if (isConnected && roomId && session && hasValidSession(roomId)) {
-      console.log('Auto-rejoining room from session:', { roomId, nickname: session.nickname });
+    // Auto-rejoin if we have a valid session for this room (and not already rejoining)
+    if (isConnected && roomId && session && hasValidSession(roomId) && !isAutoRejoining && !hasAttemptedRejoin.current && !isRejoining) {
       setIsAutoRejoining(true);
-      // Use rejoin instead of join to handle existing connections
-      rejoinRoom(roomId, session.nickname).catch((error) => {
-        console.error('Auto-rejoin failed:', error);
-        setIsAutoRejoining(false);
-        // Clear invalid session if auto-rejoin fails
-        clearSession();
-      });
+      hasAttemptedRejoin.current = true;
+      
+      // Add a small delay to ensure WebSocket connection is fully ready
+      setTimeout(() => {
+        rejoinRoom(roomId, session.nickname)
+          .then(() => {
+            // Success handled by room state updates
+          })
+          .catch((error) => {
+            setIsAutoRejoining(false);
+            
+            // Only clear the attempt flag if it's a permanent failure (room not found)
+            if (error.message.includes('Room not found') || error.message.includes('not found')) {
+              clearSession();
+              navigate('/');
+            } else {
+              // For temporary failures, allow retry on next page refresh
+              hasAttemptedRejoin.current = false;
+            }
+          });
+      }, 100); // 100ms delay to ensure connection stability
       return;
     }
 
@@ -116,7 +131,7 @@ export const RoomPage: React.FC = () => {
       joinRoom(roomId, nickname);
     }
     // If no nickname or not connected yet, the component will show the appropriate UI
-  }, [roomId, nickname, isConnected, room, currentPlayer, joinRoom, rejoinRoom]);
+  }, [roomId, nickname, isConnected, room, currentPlayer, joinRoom]);
 
   // Handle modal opening when votes are revealed - moved before conditional return
   useEffect(() => {
@@ -133,6 +148,7 @@ export const RoomPage: React.FC = () => {
   useEffect(() => {
     if (room && currentPlayer && isAutoRejoining) {
       setIsAutoRejoining(false);
+      // Don't reset hasAttemptedRejoin here to prevent re-attempts
     }
   }, [room, currentPlayer, isAutoRejoining]);
 
