@@ -78,13 +78,25 @@ export const RoomPage: React.FC = () => {
     : null;
 
   useEffect(() => {
+    const validSession = session ? hasValidSession(roomId) : false;
+    console.log('RoomPage useEffect:', { 
+      room: !!room, 
+      currentPlayer: !!currentPlayer, 
+      isConnected, 
+      roomId, 
+      session: !!session, 
+      sessionData: session,
+      hasValidSession: validSession 
+    });
+
     // If user is already in a room (e.g., host who created room), don't attempt to join again
     if (room && currentPlayer) {
+      console.log('Already in room, skipping auto-rejoin');
       return;
     }
 
     // Auto-rejoin if we have a valid session for this room
-    if (isConnected && roomId && session && hasValidSession(roomId) && !nickname) {
+    if (isConnected && roomId && session && hasValidSession(roomId)) {
       console.log('Auto-rejoining room from session:', { roomId, nickname: session.nickname });
       joinRoom(roomId, session.nickname);
       return;

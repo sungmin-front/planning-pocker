@@ -29,7 +29,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const { send, on, off, isConnected } = useWebSocket();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { session, hasValidSession, clearSession } = useSessionPersistence();
+  const { session, hasValidSession, clearSession, saveSession } = useSessionPersistence();
 
   // Listen for WebSocket messages
   useEffect(() => {
@@ -46,6 +46,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           if (message.payload.player) {
             setCurrentPlayer(message.payload.player);
             setIsHost(message.payload.player.isHost);
+            // Save session after successful room creation
+            saveSession(message.payload.room.id, message.payload.player.nickname);
           }
           // Navigate to the created room
           navigate(`/${message.payload.room.id}`);
@@ -59,6 +61,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           if (message.payload.player) {
             setCurrentPlayer(message.payload.player);
             setIsHost(message.payload.player.isHost);
+            // Save session after successful room join
+            saveSession(message.payload.room.id, message.payload.player.nickname);
           }
           
           toast({
