@@ -56,7 +56,6 @@ export const RoomPage: React.FC = () => {
     joinRoom,
     rejoinRoom,
     leaveRoom,
-    vote,
     joinError,
     nicknameSuggestions,
     clearJoinError,
@@ -398,7 +397,6 @@ export const RoomPage: React.FC = () => {
                   <ResponsivePlayerLayout
                     players={room.players}
                     currentStory={currentStory ?? null}
-                    currentPlayerId={currentPlayer?.id || ""}
                     isStatsModalOpen={isStatsModalOpen}
                     onOpenStatsModal={() => setIsStatsModalOpen(true)}
                   />
@@ -472,7 +470,6 @@ export const RoomPage: React.FC = () => {
                 <ResponsivePlayerLayout
                   players={room.players}
                   currentStory={currentStory ?? null}
-                  currentPlayerId={currentPlayer?.id || ""}
                   isStatsModalOpen={isStatsModalOpen}
                   onOpenStatsModal={() => setIsStatsModalOpen(true)}
                 />

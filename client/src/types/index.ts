@@ -46,4 +46,4 @@ export interface RoomContextType {
 }
 
 // Import shared types for re-export
-import type { Room, Player, VoteValue, ChatMessage, TypingIndicator } from '@planning-poker/shared';
+import type { Room, Player, VoteValue } from '@planning-poker/shared';
