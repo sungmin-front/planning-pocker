@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, Circle, Clock, X } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { BacklogTracker, BacklogProgress } from '@/utils/BacklogTracker';
 import type { Story } from '@planning-poker/shared';
 
@@ -36,68 +36,97 @@ export const BacklogProgressDisplay: React.FC<BacklogProgressProps> = ({
     return 'outline';
   };
 
-  if (showDetailed) {
+  const getTooltipContent = () => {
+    const breakdown = progress.breakdown;
+    const inProgress = breakdown.voting + breakdown.revealed;
+    
     return (
-      <div className={`space-y-2 ${className}`}>
-        {/* Main progress display */}
-        <div className="flex items-center gap-2">
-          <Badge variant={getProgressBadgeVariant(progress.percentage)} className="text-xs">
-            {progress.displayText}
-          </Badge>
-          <span className="text-xs text-muted-foreground">
-            ({Math.round(progress.percentage)}%)
-          </span>
-        </div>
-
-        {/* Progress bar */}
-        {showProgressBar && (
-          <Progress 
-            value={progress.percentage} 
-            className="h-2"
-          />
-        )}
-
-        {/* Detailed breakdown */}
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <CheckCircle className="h-3 w-3 text-green-500" />
-            <span>{progress.breakdown.closed} closed</span>
+      <div className="space-y-1">
+        <div className="font-medium">상태별 이슈 개수</div>
+        <div className="space-y-0.5 text-sm">
+          <div className="flex items-center justify-between gap-4">
+            <span>✅ 완료됨 (closed)</span>
+            <span>{breakdown.closed}개</span>
           </div>
-          <div className="flex items-center gap-1">
-            <X className="h-3 w-3 text-gray-500" />
-            <span>{progress.breakdown.skipped} skipped</span>
+          <div className="flex items-center justify-between gap-4">
+            <span>❌ 건너뜀 (skipped)</span>
+            <span>{breakdown.skipped}개</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Clock className="h-3 w-3 text-blue-500" />
-            <span>{progress.inProgress} in progress</span>
+          <div className="flex items-center justify-between gap-4">
+            <span>⏰ 진행 중 (voting/revealed)</span>
+            <span>{inProgress}개</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Circle className="h-3 w-3 text-muted-foreground" />
-            <span>{progress.pending} pending</span>
+          <div className="border-t pt-1 mt-1">
+            <div className="flex items-center justify-between gap-4 font-medium">
+              <span>📊 전체</span>
+              <span>{progress.totalItems}개</span>
+            </div>
           </div>
         </div>
       </div>
+    );
+  };
+
+  if (showDetailed) {
+    return (
+      <TooltipProvider>
+        <div className={`space-y-2 ${className}`}>
+          {/* Main progress display */}
+          <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant={getProgressBadgeVariant(progress.percentage)} className="text-xs cursor-help">
+                  {progress.displayText}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                {getTooltipContent()}
+              </TooltipContent>
+            </Tooltip>
+            <span className="text-xs text-muted-foreground">
+              ({Math.round(progress.percentage)}%)
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          {showProgressBar && (
+            <Progress 
+              value={progress.percentage} 
+              className="h-2"
+            />
+          )}
+        </div>
+      </TooltipProvider>
     );
   }
 
   // Simple compact display
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <Badge variant={getProgressBadgeVariant(progress.percentage)} className="text-xs">
-        {progress.displayText}
-      </Badge>
-      {showProgressBar && (
-        <div className="flex-1 max-w-[100px]">
-          <Progress 
-            value={progress.percentage} 
-            className="h-2"
-          />
-        </div>
-      )}
-      <span className="text-xs text-muted-foreground">
-        ({Math.round(progress.percentage)}%)
-      </span>
-    </div>
+    <TooltipProvider>
+      <div className={`flex items-center gap-2 ${className}`}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant={getProgressBadgeVariant(progress.percentage)} className="text-xs cursor-help">
+              {progress.displayText}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            {getTooltipContent()}
+          </TooltipContent>
+        </Tooltip>
+        {showProgressBar && (
+          <div className="flex-1 max-w-[100px]">
+            <Progress 
+              value={progress.percentage} 
+              className="h-2"
+            />
+          </div>
+        )}
+        <span className="text-xs text-muted-foreground">
+          ({Math.round(progress.percentage)}%)
+        </span>
+      </div>
+    </TooltipProvider>
   );
 };
 

@@ -304,16 +304,6 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
           <CardTitle className="text-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
               Backlog
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs">
-                  {sortedAndFilteredStories.length}/{stories.length}
-                </Badge>
-                <BacklogProgressDisplay 
-                  stories={stories}
-                  showProgressBar={false}
-                  className="border-l pl-2"
-                />
-              </div>
             </div>
             {isHost && (
               <div className="flex gap-1">
@@ -370,6 +360,13 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
               </SelectContent>
             </Select>
           </div>
+          
+          {/* Filter status display */}
+          {filterOption !== 'all' && (
+            <div className="text-xs text-muted-foreground mt-2">
+              필터됨: {sortedAndFilteredStories.length}개 표시중
+            </div>
+          )}
           
           {!isHost && (
             <div className="text-xs text-gray-500 mt-2 text-center">
