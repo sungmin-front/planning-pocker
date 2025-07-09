@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRoom } from '@/contexts/RoomContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/shadcn/button';
 import { cn } from '@/lib/utils';
 
 const VOTE_OPTIONS = ['1', '2', '3', '5', '8', '13', '21', '?', '☕'];

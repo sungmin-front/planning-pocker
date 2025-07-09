@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@/components/ui/shadcn/select';
 
 export const HostDelegation: React.FC = () => {
   const { room, currentPlayer, isHost, transferHost } = useRoom();

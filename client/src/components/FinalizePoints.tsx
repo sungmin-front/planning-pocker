@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/shadcn/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/shadcn/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/shadcn/select';
 import { useRoom } from '@/contexts/RoomContext';
 
 // Default Fibonacci sequence vote options

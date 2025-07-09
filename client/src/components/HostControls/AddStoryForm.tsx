@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/shadcn/button';
+import { Input } from '@/components/ui/shadcn/input';
+import { Textarea } from '@/components/ui/shadcn/textarea';
+import { Label } from '@/components/ui/shadcn/label';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { useToast } from '@/hooks/use-toast';
 

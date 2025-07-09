@@ -1,7 +1,7 @@
 import React from 'react';
 import { PlayerCard } from '@/components/PlayerCard';
 import { VoteProgressRing } from '@/components/VoteProgressRing';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/shadcn/button';
 import { BarChart3 } from 'lucide-react';
 import { Player, Story } from '@/types';
 

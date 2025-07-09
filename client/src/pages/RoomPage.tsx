@@ -8,18 +8,18 @@ import { ResponsivePlayerLayout } from "@/components/ResponsivePlayerLayout";
 import { ResponsiveVotingInterface } from "@/components/ResponsiveVotingInterface";
 import { SyncButton } from "@/components/SyncButton";
 import { VotingResultsModal } from "@/components/VotingResultsModal";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/shadcn/badge";
+import { Button } from "@/components/ui/shadcn/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/shadcn/card";
+import { Input } from "@/components/ui/shadcn/input";
+import { Label } from "@/components/ui/shadcn/label";
 import {
   Sidebar,
   SidebarContent,
   SidebarInset,
   SidebarProvider,
   SidebarTrigger
-} from "@/components/ui/sidebar";
+} from "@/components/ui/shadcn/sidebar";
 import { useRoom } from "@/contexts/RoomContext";
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import { PanelLeftOpen } from "lucide-react";

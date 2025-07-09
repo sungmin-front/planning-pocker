@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/shadcn/button';
+import { Badge } from '@/components/ui/shadcn/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/shadcn/tooltip';
 import { Eye, RotateCcw, SkipForward, Play, ChevronRight } from 'lucide-react';
 
 interface VotingControlsProps {

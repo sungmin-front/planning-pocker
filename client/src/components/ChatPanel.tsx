@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRoom } from '@/contexts/RoomContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/shadcn/button';
+import { Input } from '@/components/ui/shadcn/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/shadcn/card';
+import { Badge } from '@/components/ui/shadcn/badge';
 import { MessageCircle, Send, X, Minus, ChevronUp, ChevronDown } from 'lucide-react';
 import { ChatMessage, TypingIndicator } from '@planning-poker/shared';
 import { FormattedMessage } from '@/components/FormattedMessage';

@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { WebSocketProvider } from '@/contexts/WebSocketContext';
 import { RoomProvider } from '@/contexts/RoomContext';
 import { LayoutProvider } from '@/contexts/LayoutContext';
-import { Toaster } from '@/components/ui/toaster';
+import { Toaster } from '@/components/ui/shadcn/toaster';
 import { HomePage } from '@/pages/HomePage';
 import { RoomPage } from '@/pages/RoomPage';
 

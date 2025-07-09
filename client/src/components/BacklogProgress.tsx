@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipPortal, TooltipArrow } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/shadcn/badge';
+import { Progress } from '@/components/ui/shadcn/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipPortal, TooltipArrow } from '@/components/ui/shadcn/tooltip';
 import { BacklogTracker, BacklogProgress } from '@/utils/BacklogTracker';
 import type { Story } from '@planning-poker/shared';
 

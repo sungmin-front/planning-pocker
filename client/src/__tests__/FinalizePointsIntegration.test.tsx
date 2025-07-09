@@ -4,7 +4,7 @@ import { RoomPage } from '@/pages/RoomPage';
 import { RoomContextProvider } from '@/contexts/RoomContext';
 import { WebSocketContextProvider } from '@/contexts/WebSocketContext';
 import { LayoutContextProvider } from '@/contexts/LayoutContext';
-import { Toaster } from '@/components/ui/toaster';
+import { Toaster } from '@/components/ui/shadcn/toaster';
 
 import { vi } from 'vitest';
 

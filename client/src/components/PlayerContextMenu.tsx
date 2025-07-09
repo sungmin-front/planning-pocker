@@ -8,8 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+} from '@/components/ui/shadcn/dropdown-menu';
+import { Button } from '@/components/ui/shadcn/button';
 import { Crown, UserX } from 'lucide-react';
 
 interface PlayerContextMenuProps {

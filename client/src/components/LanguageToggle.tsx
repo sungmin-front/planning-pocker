@@ -6,8 +6,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+} from '@/components/ui/shadcn/dropdown-menu';
+import { Button } from '@/components/ui/shadcn/button';
 
 const LanguageToggle: React.FC = () => {
   const { i18n } = useTranslation();

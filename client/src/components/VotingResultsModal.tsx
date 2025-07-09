@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/shadcn/card';
+import { Badge } from '@/components/ui/shadcn/badge';
+import { Button } from '@/components/ui/shadcn/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/shadcn/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/shadcn/dialog';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { BarChart3, TrendingUp, TrendingDown, Target, Check } from 'lucide-react';
 
 interface VoteDistribution {
@@ -13,12 +13,6 @@ interface VoteDistribution {
   percentage: number;
 }
 
-interface VotingStats {
-  highest: number;
-  lowest: number;
-  average: number;
-  numericVotesOnly: number[];
-}
 
 interface VotingResultsModalProps {
   isOpen: boolean;
@@ -222,7 +216,7 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
             </div>
           )}
 
-          {/* Line Chart */}
+          {/* Bar Chart */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Vote Distribution</CardTitle>
@@ -230,7 +224,7 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
             <CardContent className="pt-2">
               <div className="h-32">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                  <BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis 
                       dataKey="name" 
@@ -255,15 +249,12 @@ export const VotingResultsModal: React.FC<VotingResultsModalProps> = ({
                       ]}
                       labelFormatter={(label) => `Option: ${label}`}
                     />
-                    <Line 
-                      type="monotone" 
+                    <Bar 
                       dataKey="votes" 
-                      stroke="#3b82f6" 
-                      strokeWidth={2}
-                      dot={{ fill: '#3b82f6', strokeWidth: 1, r: 2 }}
-                      activeDot={{ r: 3, stroke: '#3b82f6', strokeWidth: 1 }}
+                      fill="#3b82f6"
+                      radius={[2, 2, 0, 0]}
                     />
-                  </LineChart>
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>

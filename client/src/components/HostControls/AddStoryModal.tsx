@@ -4,7 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/ui/shadcn/dialog';
 import { AddStoryForm } from './AddStoryForm';
 
 interface AddStoryModalProps {

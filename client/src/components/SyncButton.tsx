@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/shadcn/button';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 
 export const SyncButton: React.FC = () => {
