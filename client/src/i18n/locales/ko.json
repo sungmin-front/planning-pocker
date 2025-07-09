@@ -39,15 +39,15 @@
     "tryTheseSuggestions": "이런 닉네임은 어떠세요:"
   },
   "room": {
-    "roomId": "룸 ID",
-    "enterRoomId": "룸 ID를 입력하세요",
-    "createNewRoom": "새 룸 만들기",
+    "roomId": "세션 ID",
+    "enterRoomId": "세션 ID를 입력하세요",
+    "createNewRoom": "새 세션 만들기",
     "creating": "생성 중...",
-    "joinRoom": "룸 참가",
+    "joinRoom": "세션 참가",
     "joining": "참가 중...",
-    "orJoinExistingRoom": "또는 기존 룸에 참가",
-    "roomNotFound": "룸을 찾을 수 없습니다",
-    "roomFull": "룸이 가득 찼습니다"
+    "orJoinExistingRoom": "또는 기존 세션에 참가",
+    "roomNotFound": "세션을 찾을 수 없습니다",
+    "roomFull": "세션이 가득 찼습니다"
   },
   "voting": {
     "castYourVote": "투표하세요",
