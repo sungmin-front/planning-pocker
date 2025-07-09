@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipPortal } from '@/components/ui/tooltip';
 import { BacklogTracker, BacklogProgress } from '@/utils/BacklogTracker';
 import type { Story } from '@planning-poker/shared';
 
@@ -79,9 +79,11 @@ export const BacklogProgressDisplay: React.FC<BacklogProgressProps> = ({
                   {progress.displayText}
                 </Badge>
               </TooltipTrigger>
-              <TooltipContent>
-                {getTooltipContent()}
-              </TooltipContent>
+              <TooltipPortal>
+                <TooltipContent>
+                  {getTooltipContent()}
+                </TooltipContent>
+              </TooltipPortal>
             </Tooltip>
             <span className="text-xs text-muted-foreground">
               ({Math.round(progress.percentage)}%)
@@ -110,9 +112,11 @@ export const BacklogProgressDisplay: React.FC<BacklogProgressProps> = ({
               {progress.displayText}
             </Badge>
           </TooltipTrigger>
-          <TooltipContent>
-            {getTooltipContent()}
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent>
+              {getTooltipContent()}
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
         {showProgressBar && (
           <div className="flex-1 max-w-[100px]">
