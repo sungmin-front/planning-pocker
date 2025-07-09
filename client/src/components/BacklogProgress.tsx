@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipPortal } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipPortal, TooltipArrow } from '@/components/ui/tooltip';
 import { BacklogTracker, BacklogProgress } from '@/utils/BacklogTracker';
 import type { Story } from '@planning-poker/shared';
 
@@ -23,12 +23,6 @@ export const BacklogProgressDisplay: React.FC<BacklogProgressProps> = ({
     return tracker.getDetailedStats();
   }, [stories]);
 
-  const getProgressColor = (percentage: number) => {
-    if (percentage >= 100) return 'bg-green-500';
-    if (percentage >= 75) return 'bg-blue-500';
-    if (percentage >= 50) return 'bg-yellow-500';
-    return 'bg-gray-500';
-  };
 
   const getProgressBadgeVariant = (percentage: number) => {
     if (percentage >= 100) return 'default';
@@ -41,25 +35,52 @@ export const BacklogProgressDisplay: React.FC<BacklogProgressProps> = ({
     const inProgress = breakdown.voting + breakdown.revealed;
     
     return (
-      <div className="space-y-1">
-        <div className="font-medium">상태별 이슈 개수</div>
-        <div className="space-y-0.5 text-sm">
-          <div className="flex items-center justify-between gap-4">
-            <span>✅ 완료됨 (closed)</span>
-            <span>{breakdown.closed}개</span>
+      <div className="space-y-2 max-w-[180px] p-1.5">
+        <div className="text-center">
+          <div className="text-xs font-medium text-white mb-1">상태별 이슈 개수</div>
+          <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
+        </div>
+        
+        <div className="space-y-1 text-xs">
+          <div className="flex items-center justify-between gap-2 p-1.5 rounded bg-gray-800/50 hover:bg-gray-800/70 transition-colors">
+            <div className="flex items-center gap-1.5">
+              <span className="text-green-400 text-xs">✅</span>
+              <span className="text-white">완료됨</span>
+            </div>
+            <span className="font-mono text-green-400 font-medium text-xs">
+              {breakdown.closed}개
+            </span>
           </div>
-          <div className="flex items-center justify-between gap-4">
-            <span>❌ 건너뜀 (skipped)</span>
-            <span>{breakdown.skipped}개</span>
+          
+          <div className="flex items-center justify-between gap-2 p-1.5 rounded bg-gray-800/50 hover:bg-gray-800/70 transition-colors">
+            <div className="flex items-center gap-1.5">
+              <span className="text-red-400 text-xs">❌</span>
+              <span className="text-white">건너뜀</span>
+            </div>
+            <span className="font-mono text-red-400 font-medium text-xs">
+              {breakdown.skipped}개
+            </span>
           </div>
-          <div className="flex items-center justify-between gap-4">
-            <span>⏰ 진행 중 (voting/revealed)</span>
-            <span>{inProgress}개</span>
+          
+          <div className="flex items-center justify-between gap-2 p-1.5 rounded bg-gray-800/50 hover:bg-gray-800/70 transition-colors">
+            <div className="flex items-center gap-1.5">
+              <span className="text-yellow-400 text-xs">⏰</span>
+              <span className="text-white">진행 중</span>
+            </div>
+            <span className="font-mono text-yellow-400 font-medium text-xs">
+              {inProgress}개
+            </span>
           </div>
-          <div className="border-t pt-1 mt-1">
-            <div className="flex items-center justify-between gap-4 font-medium">
-              <span>📊 전체</span>
-              <span>{progress.totalItems}개</span>
+          
+          <div className="mt-2 pt-1.5 border-t border-gray-600">
+            <div className="flex items-center justify-between gap-2 p-1.5 rounded bg-gray-700/50">
+              <div className="flex items-center gap-1.5">
+                <span className="text-blue-400 text-xs">📊</span>
+                <span className="text-white font-medium">전체</span>
+              </div>
+              <span className="font-mono text-blue-400 font-semibold text-xs">
+                {progress.totalItems}개
+              </span>
             </div>
           </div>
         </div>
@@ -69,7 +90,7 @@ export const BacklogProgressDisplay: React.FC<BacklogProgressProps> = ({
 
   if (showDetailed) {
     return (
-      <TooltipProvider>
+      <TooltipProvider delayDuration={300}>
         <div className={`space-y-2 ${className}`}>
           {/* Main progress display */}
           <div className="flex items-center gap-2">
@@ -80,7 +101,12 @@ export const BacklogProgressDisplay: React.FC<BacklogProgressProps> = ({
                 </Badge>
               </TooltipTrigger>
               <TooltipPortal>
-                <TooltipContent>
+                <TooltipContent 
+                  side="right" 
+                  align="center" 
+                  sideOffset={4}
+                >
+                  <TooltipArrow />
                   {getTooltipContent()}
                 </TooltipContent>
               </TooltipPortal>
@@ -104,7 +130,7 @@ export const BacklogProgressDisplay: React.FC<BacklogProgressProps> = ({
 
   // Simple compact display
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={300}>
       <div className={`flex items-center gap-2 ${className}`}>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -113,7 +139,12 @@ export const BacklogProgressDisplay: React.FC<BacklogProgressProps> = ({
             </Badge>
           </TooltipTrigger>
           <TooltipPortal>
-            <TooltipContent>
+            <TooltipContent 
+              side="right" 
+              align="center" 
+              sideOffset={4}
+            >
+              <TooltipArrow />
               {getTooltipContent()}
             </TooltipContent>
           </TooltipPortal>
