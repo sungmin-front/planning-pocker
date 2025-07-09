@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ContextMenu } from '@/components/ui/context-menu';
 import { AddStoryModal } from '@/components/HostControls/AddStoryModal';
 import { JiraIntegrationModal } from '@/components/HostControls/JiraIntegrationModal';
+import { BacklogProgressDisplay } from '@/components/BacklogProgress';
 import { Plus, ChevronsUp, ChevronUp, Menu, ChevronDown, ChevronsDown, ArrowUpDown, Filter } from 'lucide-react';
 
 import type { SortOption, FilterOption } from '@planning-poker/shared';
@@ -303,9 +304,16 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
           <CardTitle className="text-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
               Backlog
-              <Badge variant="secondary" className="text-xs">
-                {sortedAndFilteredStories.length}/{stories.length}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  {sortedAndFilteredStories.length}/{stories.length}
+                </Badge>
+                <BacklogProgressDisplay 
+                  stories={stories}
+                  showProgressBar={false}
+                  className="border-l pl-2"
+                />
+              </div>
             </div>
             {isHost && (
               <div className="flex gap-1">
@@ -368,6 +376,15 @@ export const BacklogSidebar: React.FC<BacklogSidebarProps> = ({ stories }) => {
               정렬 및 필터는 호스트만 변경할 수 있습니다
             </div>
           )}
+          
+          {/* Detailed Progress View */}
+          <div className="mt-3 pt-3 border-t">
+            <BacklogProgressDisplay 
+              stories={stories}
+              showDetailed={true}
+              showProgressBar={true}
+            />
+          </div>
         </CardHeader>
       <CardContent className="flex-1 min-h-0 p-3">
         <div className="h-full overflow-y-auto">
