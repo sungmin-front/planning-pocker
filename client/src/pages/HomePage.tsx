@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { useRoom } from '@/contexts/RoomContext';
 import LanguageToggle from '@/components/LanguageToggle';
+import { PlanningPokerBentoGrid } from '@/components/landing/BentoGrid';
 
 export const HomePage: React.FC = () => {
   const [roomId, setRoomId] = useState('');
@@ -70,120 +71,126 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="absolute top-4 right-4">
-        <LanguageToggle />
-      </div>
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">{t('app.title')}</CardTitle>
-          <p className="text-muted-foreground">
-            {t('app.description')}
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!isConnected && (
-            <div className="text-center">
-              <Button onClick={handleConnect} className="w-full">
-                {t('connection.connectToServer')}
-              </Button>
-              <p className="text-sm text-muted-foreground mt-2">
-                {t('connection.connectToStart')}
-              </p>
-            </div>
-          )}
-          
-          {isConnected && (
-            <>
-              <form onSubmit={handleCreateRoom}>
-                <div className="space-y-2">
-                  <Label htmlFor="nickname">{t('user.yourNickname')}</Label>
-                  <Input
-                    id="nickname"
-                    type="text"
-                    placeholder={t('user.enterNickname')}
-                    value={nickname}
-                    onChange={(e) => {
-                      setNickname(e.target.value);
-                      if (joinError) clearJoinError();
-                    }}
-                    onKeyDown={handleKeyDown}
-                  />
-                </div>
-
-                <Button 
-                  type="submit"
-                  className="w-full mt-4"
-                  disabled={!nickname.trim() || isCreating}
-                >
-                  {isCreating ? t('room.creating') : t('room.createNewRoom')}
+    <>
+      {/* BentoGrid 쇼케이스 */}
+      <PlanningPokerBentoGrid />
+      
+      {/* 기존 홈페이지 */}
+      <div id="main-app" className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="absolute top-4 right-4">
+          <LanguageToggle />
+        </div>
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold">{t('app.title')}</CardTitle>
+            <p className="text-muted-foreground">
+              {t('app.description')}
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!isConnected && (
+              <div className="text-center">
+                <Button onClick={handleConnect} className="w-full">
+                  {t('connection.connectToServer')}
                 </Button>
-              </form>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    {t('room.orJoinExistingRoom')}
-                  </span>
-                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {t('connection.connectToStart')}
+                </p>
               </div>
+            )}
+            
+            {isConnected && (
+              <>
+                <form onSubmit={handleCreateRoom}>
+                  <div className="space-y-2">
+                    <Label htmlFor="nickname">{t('user.yourNickname')}</Label>
+                    <Input
+                      id="nickname"
+                      type="text"
+                      placeholder={t('user.enterNickname')}
+                      value={nickname}
+                      onChange={(e) => {
+                        setNickname(e.target.value);
+                        if (joinError) clearJoinError();
+                      }}
+                      onKeyDown={handleKeyDown}
+                    />
+                  </div>
 
-              <form onSubmit={handleJoinRoom}>
-                <div className="space-y-2">
-                  <Label htmlFor="roomId">{t('room.roomId')}</Label>
-                  <Input
-                    id="roomId"
-                    type="text"
-                    placeholder={t('room.enterRoomId')}
-                    value={roomId}
-                    onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-                    onKeyDown={handleKeyDown}
-                  />
+                  <Button 
+                    type="submit"
+                    className="w-full mt-4"
+                    disabled={!nickname.trim() || isCreating}
+                  >
+                    {isCreating ? t('room.creating') : t('room.createNewRoom')}
+                  </Button>
+                </form>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      {t('room.orJoinExistingRoom')}
+                    </span>
+                  </div>
                 </div>
 
-                <Button 
-                  type="submit"
-                  variant="outline" 
-                  className="w-full mt-4"
-                  disabled={!roomId.trim() || !nickname.trim()}
-                >
-                  {t('room.joinRoom')}
-                </Button>
-              </form>
+                <form onSubmit={handleJoinRoom}>
+                  <div className="space-y-2">
+                    <Label htmlFor="roomId">{t('room.roomId')}</Label>
+                    <Input
+                      id="roomId"
+                      type="text"
+                      placeholder={t('room.enterRoomId')}
+                      value={roomId}
+                      onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                      onKeyDown={handleKeyDown}
+                    />
+                  </div>
 
-              {/* Nickname conflict error and suggestions */}
-              {joinError?.includes('already taken') && (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md mt-4">
-                  <p className="text-sm text-yellow-800 mb-2">{joinError}</p>
-                  {nicknameSuggestions.length > 0 && (
-                    <div>
-                      <p className="text-sm text-yellow-700 mb-2">{t('user.tryTheseSuggestions')}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {nicknameSuggestions.map((suggestion, index) => (
-                          <button
-                            key={index}
-                            type="button"
-                            onClick={() => {
-                              setNickname(suggestion);
-                              clearJoinError();
-                            }}
-                            className="px-2 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 rounded transition-colors"
-                          >
-                            {suggestion}
-                          </button>
-                        ))}
+                  <Button 
+                    type="submit"
+                    variant="outline" 
+                    className="w-full mt-4"
+                    disabled={!roomId.trim() || !nickname.trim()}
+                  >
+                    {t('room.joinRoom')}
+                  </Button>
+                </form>
+
+                {/* Nickname conflict error and suggestions */}
+                {joinError?.includes('already taken') && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md mt-4">
+                    <p className="text-sm text-yellow-800 mb-2">{joinError}</p>
+                    {nicknameSuggestions.length > 0 && (
+                      <div>
+                        <p className="text-sm text-yellow-700 mb-2">{t('user.tryTheseSuggestions')}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {nicknameSuggestions.map((suggestion, index) => (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() => {
+                                setNickname(suggestion);
+                                clearJoinError();
+                              }}
+                              className="px-2 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 rounded transition-colors"
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 };
