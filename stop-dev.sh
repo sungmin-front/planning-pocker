@@ -6,8 +6,13 @@ echo "🛑 Planning Poker 개발 서버들을 종료합니다..."
 # 프로세스 종료
 echo "서버 프로세스 종료 중..."
 pkill -f "nodemon.*index.ts" 2>/dev/null
+pkill -f "node.*index.ts" 2>/dev/null
 echo "클라이언트 프로세스 종료 중..."
+pkill -f "vite" 2>/dev/null
 pkill -f "vite.*4000" 2>/dev/null
+pkill -f "vite.*4001" 2>/dev/null
+pkill -f "vite.*4002" 2>/dev/null
+pkill -f "vite.*4003" 2>/dev/null
 
 sleep 2
 
