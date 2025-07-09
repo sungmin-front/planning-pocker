@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Button } from './ui/button';
+import { Button } from './ui/shadcn/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from './ui/dropdown-menu';
+} from './ui/shadcn/dropdown-menu';
 import { Download, FileJson, FileSpreadsheet, FileText, ExternalLink } from 'lucide-react';
 import { exportUtils } from '@/utils/export';
 import { useToast } from '@/hooks/use-toast';

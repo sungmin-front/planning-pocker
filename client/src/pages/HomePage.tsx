@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/shadcn/label';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { useRoom } from '@/contexts/RoomContext';
 import LanguageToggle from '@/components/LanguageToggle';
-import { PlanningPokerBentoGrid } from '@/components/landing/BentoGrid';
 
 export const HomePage: React.FC = () => {
   const [roomId, setRoomId] = useState('');
@@ -72,9 +71,6 @@ export const HomePage: React.FC = () => {
 
   return (
     <>
-      {/* BentoGrid 쇼케이스 */}
-      <PlanningPokerBentoGrid />
-      
       {/* 기존 홈페이지 */}
       <div id="main-app" className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="absolute top-4 right-4">
