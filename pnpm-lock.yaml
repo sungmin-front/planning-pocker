@@ -81,13 +81,13 @@ importers:
         specifier: ^0.7.1
         version: 0.7.1
       clsx:
-        specifier: ^2.0.0
+        specifier: ^2.1.1
         version: 2.1.1
       dompurify:
         specifier: ^3.2.6
         version: 3.2.6
       framer-motion:
-        specifier: ^11.0.0
+        specifier: ^11.18.2
         version: 11.18.2(react-dom@18.3.1)(react@18.3.1)
       i18next:
         specifier: ^25.3.0
@@ -117,7 +117,7 @@ importers:
         specifier: ^3.0.2
         version: 3.0.2(@types/react@18.3.23)(react-dom@18.3.1)(react-is@19.1.0)(react@18.3.1)(redux@5.0.1)
       tailwind-merge:
-        specifier: ^2.0.0
+        specifier: ^2.6.0
         version: 2.6.0
     devDependencies:
       '@playwright/test':
