@@ -9,7 +9,7 @@
     "shared"
   ],
   "scripts": {
-    "dev": "pnpm run --parallel dev",
+    "dev": "./stop-dev.sh 2>/dev/null || true && pnpm run --parallel dev",
     "build": "pnpm run --recursive build",
     "test": "pnpm run --recursive test",
     "lint": "pnpm run --recursive lint",
