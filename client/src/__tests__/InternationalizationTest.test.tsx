@@ -147,4 +147,80 @@ describe('Internationalization Test', () => {
     expect(jaTranslations.language).toBeDefined();
     expect(jaTranslations.language.changeLanguage).toBeDefined();
   });
+
+  it('should have all toast notification messages internationalized', () => {
+    const koTranslations = require('../i18n/locales/ko.json');
+    const enTranslations = require('../i18n/locales/en.json');
+    const jaTranslations = require('../i18n/locales/ja.json');
+    
+    const toastKeys = [
+      'toast.storyCreated',
+      'toast.storySelected', 
+      'toast.votesRevealed',
+      'toast.votingRestarted',
+      'toast.storyFinalized',
+      'toast.failedToFinalizeStory',
+      'toast.storySkipped',
+      'toast.failedToSkipStory',
+      'toast.kickedFromRoom',
+      'toast.hostDelegationSuccessful',
+      'toast.hostDelegationFailed',
+      'toast.playerKicked',
+      'toast.kickFailed',
+      'toast.failedToSendMessage',
+      'toast.failedToLoadChatHistory',
+      'toast.connectionError',
+      'toast.cannotSendMessage',
+      'toast.cannotSendEmptyMessage',
+      'toast.messageTooLong',
+      'toast.cannotLoadChatHistory'
+    ];
+
+    toastKeys.forEach(key => {
+      const keyParts = key.split('.');
+      let koValue = koTranslations;
+      let enValue = enTranslations;
+      let jaValue = jaTranslations;
+      
+      for (const part of keyParts) {
+        koValue = koValue?.[part];
+        enValue = enValue?.[part];
+        jaValue = jaValue?.[part];
+      }
+      
+      expect(koValue, `Missing Korean translation for toast key: ${key}`).toBeDefined();
+      expect(enValue, `Missing English translation for toast key: ${key}`).toBeDefined();
+      expect(jaValue, `Missing Japanese translation for toast key: ${key}`).toBeDefined();
+    });
+  });
+
+  it('should have host delegation UI messages internationalized', () => {
+    const koTranslations = require('../i18n/locales/ko.json');
+    const enTranslations = require('../i18n/locales/en.json');
+    const jaTranslations = require('../i18n/locales/ja.json');
+    
+    const hostKeys = [
+      'host.selectPlayer',
+      'host.hostTransferred',
+      'host.transferHost',
+      'host.delegateHost'
+    ];
+
+    hostKeys.forEach(key => {
+      const keyParts = key.split('.');
+      let koValue = koTranslations;
+      let enValue = enTranslations;
+      let jaValue = jaTranslations;
+      
+      for (const part of keyParts) {
+        koValue = koValue?.[part];
+        enValue = enValue?.[part];
+        jaValue = jaValue?.[part];
+      }
+      
+      expect(koValue, `Missing Korean translation for host key: ${key}`).toBeDefined();
+      expect(enValue, `Missing English translation for host key: ${key}`).toBeDefined();
+      expect(jaValue, `Missing Japanese translation for host key: ${key}`).toBeDefined();
+    });
+  });
 });

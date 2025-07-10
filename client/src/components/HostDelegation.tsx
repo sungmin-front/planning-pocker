@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRoom } from '@/contexts/RoomContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -12,6 +13,7 @@ import {
 export const HostDelegation: React.FC = () => {
   const { room, currentPlayer, isHost, transferHost } = useRoom();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [selectedPlayer, setSelectedPlayer] = useState<string>('');
 
   // Only render if user is host and room exists
@@ -30,7 +32,7 @@ export const HostDelegation: React.FC = () => {
     
     // Show confirmation toast
     toast({
-      title: "Host Transferred",
+      title: t('host.hostTransferred'),
       description: `Host role has been transferred to ${playerNickname}`,
     });
     
@@ -40,14 +42,14 @@ export const HostDelegation: React.FC = () => {
 
   return (
     <div data-testid="host-delegation" className="flex items-center gap-2">
-      <span className="text-sm font-medium">Delegate host to:</span>
+      <span className="text-sm font-medium">{t('host.delegateHost')}:</span>
       <Select
         value={selectedPlayer}
         onValueChange={handlePlayerSelect}
         disabled={eligiblePlayers.length === 0}
       >
         <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Select player..." />
+          <SelectValue placeholder={t('host.selectPlayer')} />
         </SelectTrigger>
         <SelectContent>
           {eligiblePlayers.map((player) => (
