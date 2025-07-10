@@ -316,10 +316,19 @@ export class RoomSessionService {
       }).format(new Date(date));
     };
 
-    const generateVoteDistributionChart = (distribution: Record<string, number>): string => {
-      if (!distribution || typeof distribution !== 'object') return '';
+    const generateVoteDistributionChart = (distribution: Record<string, number> | Map<string, number>): string => {
+      if (!distribution) return '';
       
-      const entries = Object.entries(distribution);
+      // Handle both Map (MongoDB format) and plain object (legacy format)
+      let entries: [string, number][];
+      if (distribution instanceof Map) {
+        entries = Array.from(distribution.entries());
+      } else if (typeof distribution === 'object') {
+        entries = Object.entries(distribution);
+      } else {
+        return '';
+      }
+      
       if (entries.length === 0) return '<p class="no-data">투표 분포 데이터가 없습니다.</p>';
       
       const total = entries.reduce((sum, [, count]) => sum + count, 0);
