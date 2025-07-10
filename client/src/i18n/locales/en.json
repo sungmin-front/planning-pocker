@@ -30,13 +30,17 @@
     "connectToStart": "Connect to start playing",
     "serverConnected": "Connected to server",
     "serverDisconnected": "Disconnected from server",
-    "connectToServerFirst": "Connect to server first"
+    "connectToServerFirst": "Connect to server first",
+    "reconnectingToRoom": "Reconnecting to room..."
   },
   "user": {
     "nickname": "Nickname",
     "enterNickname": "Enter your nickname",
     "yourNickname": "Your Nickname",
-    "tryTheseSuggestions": "Try these suggestions:"
+    "tryTheseSuggestions": "Try these suggestions:",
+    "host": "Host",
+    "unknown": "Unknown",
+    "you": "You"
   },
   "room": {
     "roomId": "Room ID",
@@ -47,7 +51,11 @@
     "joining": "Joining...",
     "orJoinExistingRoom": "Or join existing room",
     "roomNotFound": "Room not found",
-    "roomFull": "Room is full"
+    "roomFull": "Room is full",
+    "joinRoomWithId": "Join Room {{roomId}}",
+    "waitingForPlayers": "Waiting for players to join...",
+    "leaveRoom": "Leave Room",
+    "leave": "Leave"
   },
   "voting": {
     "castYourVote": "Cast your vote",
@@ -61,14 +69,32 @@
     "mostVoted": "Most voted:",
     "unanimous": "Unanimous",
     "tied": "Tied",
-    "splitDecision": "Split Decision"
+    "splitDecision": "Split Decision",
+    "finalizeStoryPoints": "Finalize Story Points",
+    "selectFinalPoint": "Select Final Point:",
+    "finalizing": "Finalizing...",
+    "finalizePoints": "Finalize Points",
+    "resultsAndStatistics": "Voting Results & Statistics",
+    "voteDistribution": "Vote Distribution"
   },
   "story": {
     "story": "Story",
     "stories": "Stories",
     "noStories": "No stories",
     "addStory": "Add Story",
-    "selectAsVotingItem": "📋 Select as voting item"
+    "selectAsVotingItem": "📋 Select as voting item",
+    "title": "Title",
+    "enterTitle": "Enter story title",
+    "descriptionOptional": "Description (optional)",
+    "enterDetails": "Enter story details",
+    "adding": "Adding...",
+    "storyAdded": "Story Added",
+    "storyCreated": "Story \"{{title}}\" has been created",
+    "noStoriesYet": "No stories yet.",
+    "noStorySelected": "No story selected for voting",
+    "noStoriesInBacklog": "No stories in the backlog yet.",
+    "useAddStoryButton": "Use the \"Add Story\" button to create one.",
+    "backlog": "Backlog"
   },
   "issueTypes": {
     "story": "Story",
@@ -142,6 +168,90 @@
       "skipped": "Skipped",
       "ready": "Ready"
     },
-    "nextIssue": "Next Issue: {{title}}"
+    "nextIssue": "Next Issue: {{title}}",
+    "votingControls": "Voting Controls",
+    "startVoting": "Start Voting"
+  },
+  "navigation": {
+    "backToHome": "Back to Home"
+  },
+  "validation": {
+    "roomIdRequired": "Room ID is required",
+    "nicknameRequired": "Nickname is required",
+    "nicknameMinLength": "Nickname must be at least 2 characters",
+    "nicknameMaxLength": "Nickname must be less than 30 characters",
+    "storyTitleRequired": "Please ensure you're connected and enter a title"
+  },
+  "export": {
+    "export": "Export",
+    "exporting": "Exporting...",
+    "jsonComplete": "JSON Export Complete",
+    "csvComplete": "CSV Export Complete",
+    "htmlComplete": "HTML Report Complete",
+    "failed": "Export Failed",
+    "failedDescription": "Failed to export {{type}}. Please try again.",
+    "jsonDescription": "Session data has been downloaded as JSON.",
+    "csvDescription": "Session data has been downloaded as CSV.",
+    "htmlDescription": "Session report has been downloaded as HTML.",
+    "downloadHtmlReport": "Download HTML Report",
+    "viewReportNewTab": "View Report in New Tab",
+    "downloadJsonData": "Download JSON Data",
+    "downloadCsvData": "Download CSV Data"
+  },
+  "chat": {
+    "chat": "Chat",
+    "noMessages": "No messages yet. Start the conversation!",
+    "typeMessage": "Type your message...",
+    "typeMessageWithFormatting": "Type your message... (supports **bold**, *italic*, `code`)",
+    "send": "Send",
+    "isTyping": "{{name}} is typing...",
+    "areTyping": "{{name1}} and {{name2}} are typing...",
+    "multipleTyping": "{{names}} are typing...",
+    "minimizeChat": "Minimize chat",
+    "expandChat": "Expand chat",
+    "messageFormatting": "Message Formatting"
+  },
+  "status": {
+    "waitingToStart": "Waiting to start",
+    "votingInProgress": "Voting in progress",
+    "votesRevealed": "Votes revealed",
+    "finalized": "Finalized",
+    "skipped": "Skipped",
+    "storyCompleted": "Story Completed",
+    "storySkipped": "Story Skipped",
+    "storySkippedDesc": "This story has been skipped",
+    "finalPoints": "Final points: {{points}}",
+    "readyToStartVoting": "Ready to start voting",
+    "playersVoting": "Players are currently voting",
+    "allVotesVisible": "All votes are now visible to everyone"
+  },
+  "language": {
+    "english": "English",
+    "changeLanguage": "Change Language"
+  },
+  "layout": {
+    "circular": "Circular Layout",
+    "rectangular": "Rectangular Layout",
+    "circularDescription": "Players arranged in a circle around the center",
+    "rectangularDescription": "Players arranged in a rectangular grid"
+  },
+  "sync": {
+    "syncing": "Syncing...",
+    "sync": "🔄 Sync"
+  },
+  "statistics": {
+    "highest": "Highest",
+    "lowest": "Lowest",
+    "average": "Average"
+  },
+  "toast": {
+    "roomJoined": "Room Joined",
+    "joinRoomFailed": "Failed to Join Room",
+    "playerJoined": "Player Joined",
+    "hostChanged": "Host Changed"
+  },
+  "error": {
+    "joinRoomFailed": "Failed to join room. Please check the room ID and try again.",
+    "unexpectedError": "An unexpected error occurred. Please try again."
   }
 }

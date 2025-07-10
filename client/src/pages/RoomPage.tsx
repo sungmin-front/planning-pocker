@@ -27,8 +27,10 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import LanguageToggle from "@/components/LanguageToggle";
 import { useSessionPersistence } from "@/hooks/useSessionPersistence";
+import { useTranslation } from "react-i18next";
 
 export const RoomPage: React.FC = () => {
+  const { t } = useTranslation();
   const { roomId } = useParams<{ roomId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -234,7 +236,7 @@ export const RoomPage: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Reconnecting to room...</p>
+          <p className="text-gray-600">{t('connection.reconnectingToRoom')}</p>
         </div>
       </div>
     );
@@ -250,13 +252,13 @@ export const RoomPage: React.FC = () => {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-semibold leading-none tracking-tight">
-              Join Room {roomId}
+              {t('room.joinRoomWithId', { roomId })}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleJoinWithNickname} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="nickname">Your Nickname</Label>
+                <Label htmlFor="nickname">{t('user.yourNickname')}</Label>
                 <Input
                   id="nickname"
                   type="text"
@@ -265,7 +267,7 @@ export const RoomPage: React.FC = () => {
                     setNicknameInput(e.target.value);
                     if (joinError) clearJoinError();
                   }}
-                  placeholder="Enter your nickname"
+                  placeholder={t('user.enterNickname')}
                   disabled={!isConnected || isJoining}
                   className={
                     joinError?.includes("already taken") ? "border-red-500" : ""
@@ -281,7 +283,7 @@ export const RoomPage: React.FC = () => {
                   {nicknameSuggestions.length > 0 && (
                     <div>
                       <p className="text-sm text-yellow-700 mb-2">
-                        Try these suggestions:
+                        {t('user.tryTheseSuggestions')}
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {nicknameSuggestions.map((suggestion, index) => (
@@ -312,7 +314,7 @@ export const RoomPage: React.FC = () => {
               {!isConnected && (
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                   <p className="text-sm text-yellow-600">
-                    Connect to server first
+                    {t('connection.connectToServerFirst')}
                   </p>
                 </div>
               )}
@@ -325,14 +327,14 @@ export const RoomPage: React.FC = () => {
                   disabled={isJoining}
                   className="flex-1"
                 >
-                  Back to Home
+                  {t('navigation.backToHome')}
                 </Button>
                 <Button
                   type="submit"
                   disabled={!isConnected || !nicknameInput.trim() || isJoining}
                   className="flex-1"
                 >
-                  {isJoining ? "Joining..." : "Join Room"}
+                  {isJoining ? t('room.joining') : t('room.joinRoom')}
                 </Button>
               </div>
             </form>
@@ -373,12 +375,12 @@ export const RoomPage: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-4">
                   <Badge variant="outline">{room.id}</Badge>
-                    {isHost && <Badge variant="default">Host</Badge>}
+                    {isHost && <Badge variant="default">{t('user.host')}</Badge>}
                     <LanguageToggle />
                     <ExportButton roomId={room.id} />
                     <SyncButton />
                     <Button variant="outline" onClick={handleLeaveRoom}>
-                      Leave Room
+                      {t('room.leaveRoom')}
                     </Button>
                   </div>
                 </div>
@@ -442,7 +444,7 @@ export const RoomPage: React.FC = () => {
                     <Badge variant="outline" className="text-xs">{room.id}</Badge>
                     {isHost && (
                       <Badge variant="default" className="text-xs">
-                        Host
+                        {t('user.host')}
                       </Badge>
                     )}
                     <ExportButton roomId={room.id} size="sm" />
@@ -452,7 +454,7 @@ export const RoomPage: React.FC = () => {
                       size="sm"
                       onClick={handleLeaveRoom}
                     >
-                      Leave
+                      {t('room.leave')}
                     </Button>
                   </div>
                 </div>

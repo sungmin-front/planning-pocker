@@ -30,13 +30,17 @@
     "connectToStart": "플레이를 시작하려면 연결하세요",
     "serverConnected": "서버에 연결됨",
     "serverDisconnected": "서버 연결이 끊어짐",
-    "connectToServerFirst": "먼저 서버에 연결하세요"
+    "connectToServerFirst": "먼저 서버에 연결하세요",
+    "reconnectingToRoom": "세션에 재연결 중..."
   },
   "user": {
     "nickname": "닉네임",
     "enterNickname": "닉네임을 입력하세요",
     "yourNickname": "당신의 닉네임",
-    "tryTheseSuggestions": "이런 닉네임은 어떠세요:"
+    "tryTheseSuggestions": "이런 닉네임은 어떠세요:",
+    "host": "호스트",
+    "unknown": "알 수 없음",
+    "you": "당신"
   },
   "room": {
     "roomId": "세션 ID",
@@ -47,7 +51,11 @@
     "joining": "참가 중...",
     "orJoinExistingRoom": "또는 기존 세션에 참가",
     "roomNotFound": "세션을 찾을 수 없습니다",
-    "roomFull": "세션이 가득 찼습니다"
+    "roomFull": "세션이 가득 찼습니다",
+    "joinRoomWithId": "세션 {{roomId}} 참가",
+    "waitingForPlayers": "플레이어들이 참가하기를 기다리는 중...",
+    "leaveRoom": "세션 나가기",
+    "leave": "나가기"
   },
   "voting": {
     "castYourVote": "투표하세요",
@@ -60,14 +68,32 @@
     "mostVoted": "최다 득표:",
     "unanimous": "만장일치",
     "tied": "동점",
-    "splitDecision": "의견 분산"
+    "splitDecision": "의견 분산",
+    "finalizeStoryPoints": "스토리 포인트 확정",
+    "selectFinalPoint": "최종 포인트 선택:",
+    "finalizing": "확정 중...",
+    "finalizePoints": "포인트 확정",
+    "resultsAndStatistics": "투표 결과 및 통계",
+    "voteDistribution": "투표 분포"
   },
   "story": {
     "story": "스토리",
     "stories": "스토리들",
     "noStories": "스토리가 없습니다",
     "addStory": "스토리 추가",
-    "selectAsVotingItem": "📋 투표 안건으로 선택"
+    "selectAsVotingItem": "📋 투표 안건으로 선택",
+    "title": "제목",
+    "enterTitle": "스토리 제목을 입력하세요",
+    "descriptionOptional": "설명 (선택 사항)",
+    "enterDetails": "스토리 세부사항을 입력하세요",
+    "adding": "추가 중...",
+    "storyAdded": "스토리 추가됨",
+    "storyCreated": "스토리 \"{{title}}\"이(가) 생성되었습니다",
+    "noStoriesYet": "아직 스토리가 없습니다.",
+    "noStorySelected": "투표용 스토리가 선택되지 않았습니다",
+    "noStoriesInBacklog": "아직 백로그에 스토리가 없습니다.",
+    "useAddStoryButton": "\"스토리 추가\" 버튼을 사용하여 생성하세요.",
+    "backlog": "백로그"
   },
   "issueTypes": {
     "story": "스토리",
@@ -141,6 +167,90 @@
       "skipped": "건너뜀",
       "ready": "준비"
     },
-    "nextIssue": "다음 이슈: {{title}}"
+    "nextIssue": "다음 이슈: {{title}}",
+    "votingControls": "투표 컨트롤",
+    "startVoting": "투표 시작"
+  },
+  "navigation": {
+    "backToHome": "홈으로 돌아가기"
+  },
+  "validation": {
+    "roomIdRequired": "세션 ID가 필요합니다",
+    "nicknameRequired": "닉네임이 필요합니다",
+    "nicknameMinLength": "닉네임은 최소 2자 이상이어야 합니다",
+    "nicknameMaxLength": "닉네임은 30자 미만이어야 합니다",
+    "storyTitleRequired": "연결되어 있는지 확인하고 제목을 입력하세요"
+  },
+  "export": {
+    "export": "내보내기",
+    "exporting": "내보내는 중...",
+    "jsonComplete": "JSON 내보내기 완료",
+    "csvComplete": "CSV 내보내기 완료",
+    "htmlComplete": "HTML 리포트 완료",
+    "failed": "내보내기 실패",
+    "failedDescription": "{{type}} 내보내기에 실패했습니다. 다시 시도해주세요.",
+    "jsonDescription": "세션 데이터가 JSON으로 다운로드되었습니다.",
+    "csvDescription": "세션 데이터가 CSV로 다운로드되었습니다.",
+    "htmlDescription": "세션 리포트가 HTML로 다운로드되었습니다.",
+    "downloadHtmlReport": "HTML 리포트 다운로드",
+    "viewReportNewTab": "새 탭에서 리포트 보기",
+    "downloadJsonData": "JSON 데이터 다운로드",
+    "downloadCsvData": "CSV 데이터 다운로드"
+  },
+  "chat": {
+    "chat": "채팅",
+    "noMessages": "아직 메시지가 없습니다. 대화를 시작하세요!",
+    "typeMessage": "메시지를 입력하세요...",
+    "typeMessageWithFormatting": "메시지를 입력하세요... (**굵게**, *기울임*, `코드` 지원)",
+    "send": "전송",
+    "isTyping": "{{name}}님이 입력 중...",
+    "areTyping": "{{name1}}님과 {{name2}}님이 입력 중...",
+    "multipleTyping": "{{names}}님들이 입력 중...",
+    "minimizeChat": "채팅 최소화",
+    "expandChat": "채팅 확장",
+    "messageFormatting": "메시지 서식"
+  },
+  "status": {
+    "waitingToStart": "시작 대기 중",
+    "votingInProgress": "투표 진행 중",
+    "votesRevealed": "투표 공개됨",
+    "finalized": "완료됨",
+    "skipped": "건너뜀",
+    "storyCompleted": "스토리 완료",
+    "storySkipped": "스토리 건너뜀",
+    "storySkippedDesc": "이 스토리는 건너뛰었습니다",
+    "finalPoints": "최종 포인트: {{points}}",
+    "readyToStartVoting": "투표 시작 준비 완료",
+    "playersVoting": "플레이어들이 현재 투표 중입니다",
+    "allVotesVisible": "모든 투표가 모두에게 공개되었습니다"
+  },
+  "language": {
+    "english": "English",
+    "changeLanguage": "언어 변경"
+  },
+  "layout": {
+    "circular": "원형 레이아웃",
+    "rectangular": "사각형 레이아웃",
+    "circularDescription": "플레이어들을 중앙 주변으로 원형 배치",
+    "rectangularDescription": "플레이어들을 사각형 격자로 배치"
+  },
+  "sync": {
+    "syncing": "동기화 중...",
+    "sync": "🔄 동기화"
+  },
+  "statistics": {
+    "highest": "최고",
+    "lowest": "최저",
+    "average": "평균"
+  },
+  "toast": {
+    "roomJoined": "세션 참가됨",
+    "joinRoomFailed": "세션 참가 실패",
+    "playerJoined": "플레이어 참가됨",
+    "hostChanged": "호스트 변경됨"
+  },
+  "error": {
+    "joinRoomFailed": "세션 참가에 실패했습니다. 세션 ID를 확인하고 다시 시도하세요.",
+    "unexpectedError": "예상치 못한 오류가 발생했습니다. 다시 시도하세요."
   }
 }

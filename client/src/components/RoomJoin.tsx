@@ -62,17 +62,17 @@ export const RoomJoin: React.FC = () => {
     // Validate room ID
     const trimmedRoomId = formData.roomId.trim();
     if (!trimmedRoomId) {
-      newErrors.roomId = 'Room ID is required';
+      newErrors.roomId = t('validation.roomIdRequired');
     }
 
     // Validate nickname
     const trimmedNickname = formData.nickname.trim();
     if (!trimmedNickname) {
-      newErrors.nickname = 'Nickname is required';
+      newErrors.nickname = t('validation.nicknameRequired');
     } else if (trimmedNickname.length < 2) {
-      newErrors.nickname = 'Nickname must be at least 2 characters';
+      newErrors.nickname = t('validation.nicknameMinLength');
     } else if (trimmedNickname.length > 30) {
-      newErrors.nickname = 'Nickname must be less than 30 characters';
+      newErrors.nickname = t('validation.nicknameMaxLength');
     }
 
     setErrors(newErrors);
@@ -103,12 +103,12 @@ export const RoomJoin: React.FC = () => {
         navigate(`/room/${trimmedRoomId}?nickname=${encodeURIComponent(trimmedNickname)}`);
       } else {
         setErrors({
-          general: 'Failed to join room. Please check the room ID and try again.'
+          general: t('error.joinRoomFailed')
         });
       }
     } catch (error) {
       setErrors({
-        general: 'An unexpected error occurred. Please try again.'
+        general: t('error.unexpectedError')
       });
     } finally {
       setIsLoading(false);
