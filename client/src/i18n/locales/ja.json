@@ -1,0 +1,257 @@
+{
+  "app": {
+    "title": "Planning Poker",
+    "description": "チームでストーリーポイントを見積もりましょう"
+  },
+  "common": {
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "close": "閉じる",
+    "save": "保存",
+    "delete": "削除",
+    "edit": "編集",
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功",
+    "warning": "警告",
+    "info": "情報",
+    "retry": "再試行",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "all": "すべて",
+    "none": "なし",
+    "select": "選択",
+    "selectAll": "すべて選択",
+    "deselectAll": "すべて解除"
+  },
+  "connection": {
+    "connectToServer": "サーバーに接続",
+    "connectToStart": "プレイを開始するには接続してください",
+    "serverConnected": "サーバーに接続されました",
+    "serverDisconnected": "サーバー接続が切断されました",
+    "connectToServerFirst": "まずサーバーに接続してください",
+    "reconnectingToRoom": "セッションに再接続中..."
+  },
+  "user": {
+    "nickname": "ニックネーム",
+    "enterNickname": "ニックネームを入力してください",
+    "yourNickname": "あなたのニックネーム",
+    "tryTheseSuggestions": "こんなニックネームはいかがですか:",
+    "host": "ホスト",
+    "unknown": "不明",
+    "you": "あなた"
+  },
+  "room": {
+    "roomId": "セッションID",
+    "enterRoomId": "セッションIDを入力してください",
+    "createNewRoom": "新しいセッションを作成",
+    "creating": "作成中...",
+    "joinRoom": "セッションに参加",
+    "joining": "参加中...",
+    "orJoinExistingRoom": "または既存のセッションに参加",
+    "roomNotFound": "セッションが見つかりません",
+    "roomFull": "セッションが満員です",
+    "joinRoomWithId": "セッション {{roomId}} に参加",
+    "waitingForPlayers": "プレイヤーの参加を待っています...",
+    "leaveRoom": "セッションを離れる",
+    "leave": "離れる"
+  },
+  "voting": {
+    "castYourVote": "投票してください",
+    "noStoryToVoteOn": "投票するストーリーがありません",
+    "submittingVote": "投票を送信中...",
+    "clearVote": "投票をクリア",
+    "votingResults": "投票結果",
+    "noVotesCast": "投票がありません",
+    "totalVote": "合計{{count}}票",
+    "mostVoted": "最多得票:",
+    "unanimous": "全員一致",
+    "tied": "同票",
+    "splitDecision": "意見分散",
+    "finalizeStoryPoints": "ストーリーポイントを確定",
+    "selectFinalPoint": "最終ポイントを選択:",
+    "finalizing": "確定中...",
+    "finalizePoints": "ポイントを確定",
+    "resultsAndStatistics": "投票結果と統計",
+    "voteDistribution": "投票分布"
+  },
+  "story": {
+    "story": "ストーリー",
+    "stories": "ストーリー",
+    "noStories": "ストーリーがありません",
+    "addStory": "ストーリーを追加",
+    "selectAsVotingItem": "📋 投票項目として選択",
+    "title": "タイトル",
+    "enterTitle": "ストーリータイトルを入力してください",
+    "descriptionOptional": "説明（任意）",
+    "enterDetails": "ストーリーの詳細を入力してください",
+    "adding": "追加中...",
+    "storyAdded": "ストーリーが追加されました",
+    "storyCreated": "ストーリー「{{title}}」が作成されました",
+    "noStoriesYet": "まだストーリーがありません。",
+    "noStorySelected": "投票用のストーリーが選択されていません",
+    "noStoriesInBacklog": "まだバックログにストーリーがありません。",
+    "useAddStoryButton": "「ストーリーを追加」ボタンを使用して作成してください。",
+    "backlog": "バックログ"
+  },
+  "issueTypes": {
+    "story": "ストーリー",
+    "bug": "バグ", 
+    "task": "タスク",
+    "epic": "エピック",
+    "subtask": "サブタスク"
+  },
+  "backlog": {
+    "completed": "完了",
+    "clickToReopen": "完了した課題 - クリックして再開",
+    "reopenIssue": "課題を再開",
+    "selectAsVotingItem": "投票項目として選択",
+    "openJiraIssue": "Jira課題を開く",
+    "sort": "並び替え",
+    "filter": "フィルター",
+    "sortOptions": {
+      "newest": "新しい順",
+      "oldest": "古い順", 
+      "priorityHigh": "優先度高",
+      "priorityLow": "優先度低",
+      "ticketDesc": "チケット番号降順",
+      "ticketAsc": "チケット番号昇順"
+    },
+    "filterOptions": {
+      "all": "すべて",
+      "story": "ストーリー",
+      "task": "タスク",
+      "bug": "バグ"
+    },
+    "hostOnlyMessage": "並び替えとフィルターはホストのみが変更できます"
+  },
+  "jira": {
+    "integration": "Jira連携",
+    "connecting": "接続中...",
+    "connected": "接続済み",
+    "disconnected": "切断",
+    "retryConnection": "接続を再試行",
+    "checkAgain": "再確認",
+    "errors": {
+      "defaultProjectRequired": "Jiraデフォルトプロジェクト設定が必要",
+      "defaultProjectMessage": "サーバー環境変数にJIRA_DEFAULT_PROJECT_KEYを設定してください。",
+      "configurationRequired": "Jira設定が必要",
+      "connectionFailed": "Jira接続失敗",
+      "connectionFailedMessage": "Jiraサーバーに接続できません。",
+      "sprintLoadFailed": "スプリントリスト読み込み失敗",
+      "sprintLoadFailedMessage": "デフォルトプロジェクトのスプリントリストを読み込めません。",
+      "issueLoadFailed": "課題リスト読み込み失敗",
+      "issueLoadFailedMessage": "スプリントの課題を読み込めません。",
+      "noIssuesSelected": "課題選択が必要",
+      "noIssuesSelectedMessage": "インポートする課題を選択してください。",
+      "importFailed": "インポート失敗",
+      "importFailedMessage": "Jira課題のインポート中にエラーが発生しました。"
+    },
+    "success": {
+      "importSuccess": "Jira課題のインポートが成功しました"
+    },
+    "selectSprint": "スプリントを選択",
+    "selectSprintPlaceholder": "スプリントを選択してください",
+    "selectIssues": "課題を選択",
+    "assignee": "担当者:",
+    "importSelectedIssues": "選択した課題をストーリーとしてインポート",
+    "loadingSprints": "スプリントを読み込み中...",
+    "loadingIssues": "課題を読み込み中..."
+  },
+  "hostControls": {
+    "status": {
+      "voting": "投票中",
+      "revealed": "公開済み", 
+      "completed": "完了",
+      "skipped": "スキップ",
+      "ready": "準備完了"
+    },
+    "nextIssue": "次の課題: {{title}}",
+    "votingControls": "投票コントロール",
+    "startVoting": "投票開始"
+  },
+  "navigation": {
+    "backToHome": "ホームに戻る"
+  },
+  "validation": {
+    "roomIdRequired": "セッションIDが必要です",
+    "nicknameRequired": "ニックネームが必要です",
+    "nicknameMinLength": "ニックネームは2文字以上である必要があります",
+    "nicknameMaxLength": "ニックネームは30文字未満である必要があります",
+    "storyTitleRequired": "接続を確認してタイトルを入力してください"
+  },
+  "export": {
+    "export": "エクスポート",
+    "exporting": "エクスポート中...",
+    "jsonComplete": "JSONエクスポート完了",
+    "csvComplete": "CSVエクスポート完了",
+    "htmlComplete": "HTMLレポート完了",
+    "failed": "エクスポート失敗",
+    "jsonDescription": "セッションデータがJSONとしてダウンロードされました。",
+    "csvDescription": "セッションデータがCSVとしてダウンロードされました。",
+    "htmlDescription": "セッションレポートがHTMLとしてダウンロードされました。",
+    "downloadHtmlReport": "HTMLレポートをダウンロード",
+    "viewReportNewTab": "新しいタブでレポートを表示",
+    "downloadJsonData": "JSONデータをダウンロード",
+    "downloadCsvData": "CSVデータをダウンロード",
+    "failedDescription": "{{type}}のエクスポートに失敗しました。再試行してください。"
+  },
+  "chat": {
+    "chat": "チャット",
+    "noMessages": "まだメッセージがありません。会話を始めましょう！",
+    "typeMessage": "メッセージを入力してください...",
+    "typeMessageWithFormatting": "メッセージを入力してください...（**太字**、*斜体*、`コード`対応）",
+    "send": "送信",
+    "isTyping": "{{name}}さんが入力中...",
+    "areTyping": "{{name1}}さんと{{name2}}さんが入力中...",
+    "multipleTyping": "{{names}}さんたちが入力中...",
+    "minimizeChat": "チャットを最小化",
+    "expandChat": "チャットを展開",
+    "messageFormatting": "メッセージフォーマット"
+  },
+  "status": {
+    "waitingToStart": "開始待ち",
+    "votingInProgress": "投票進行中",
+    "votesRevealed": "投票公開済み",
+    "finalized": "確定済み",
+    "skipped": "スキップ済み",
+    "storyCompleted": "ストーリー完了",
+    "storySkipped": "ストーリーをスキップ",
+    "storySkippedDesc": "このストーリーはスキップされました",
+    "finalPoints": "最終ポイント: {{points}}",
+    "readyToStartVoting": "投票開始準備完了",
+    "playersVoting": "プレイヤーが現在投票中です",
+    "allVotesVisible": "すべての投票がみんなに公開されました"
+  },
+  "language": {
+    "english": "English",
+    "japanese": "日本語",
+    "changeLanguage": "言語を変更"
+  },
+  "layout": {
+    "circular": "円形レイアウト",
+    "rectangular": "長方形レイアウト",
+    "circularDescription": "プレイヤーを中央周りに円形配置",
+    "rectangularDescription": "プレイヤーを長方形グリッドに配置"
+  },
+  "sync": {
+    "syncing": "同期中...",
+    "sync": "🔄 同期"
+  },
+  "statistics": {
+    "highest": "最高",
+    "lowest": "最低",
+    "average": "平均"
+  },
+  "toast": {
+    "roomJoined": "セッションに参加しました",
+    "joinRoomFailed": "セッション参加に失敗",
+    "playerJoined": "プレイヤーが参加しました",
+    "hostChanged": "ホストが変更されました"
+  },
+  "error": {
+    "joinRoomFailed": "セッションへの参加に失敗しました。セッションIDを確認して再試行してください。",
+    "unexpectedError": "予期しないエラーが発生しました。再試行してください。"
+  }
+}

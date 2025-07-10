@@ -24,6 +24,7 @@ describe('Internationalization Test', () => {
   it('should have all required translation keys for common hardcoded strings', () => {
     const koTranslations = require('../i18n/locales/ko.json');
     const enTranslations = require('../i18n/locales/en.json');
+    const jaTranslations = require('../i18n/locales/ja.json');
     
     // Check for essential translation keys that should exist
     const requiredKeys = [
@@ -113,15 +114,37 @@ describe('Internationalization Test', () => {
       const keyParts = key.split('.');
       let koValue = koTranslations;
       let enValue = enTranslations;
+      let jaValue = jaTranslations;
       
       // Navigate through nested object
       for (const part of keyParts) {
         koValue = koValue?.[part];
         enValue = enValue?.[part];
+        jaValue = jaValue?.[part];
       }
       
       expect(koValue, `Missing Korean translation for key: ${key}`).toBeDefined();
       expect(enValue, `Missing English translation for key: ${key}`).toBeDefined();
+      expect(jaValue, `Missing Japanese translation for key: ${key}`).toBeDefined();
     });
+  });
+
+  it('should support Japanese language in language toggle', () => {
+    const jaTranslations = require('../i18n/locales/ja.json');
+    
+    // Verify basic app structure exists in Japanese
+    expect(jaTranslations.app).toBeDefined();
+    expect(jaTranslations.app.title).toBeDefined();
+    expect(jaTranslations.app.description).toBeDefined();
+    
+    // Verify room terminology uses appropriate Japanese terms
+    expect(jaTranslations.room).toBeDefined();
+    expect(jaTranslations.room.roomId).toBeDefined();
+    expect(jaTranslations.room.createNewRoom).toBeDefined();
+    expect(jaTranslations.room.joinRoom).toBeDefined();
+    
+    // Verify language selection works
+    expect(jaTranslations.language).toBeDefined();
+    expect(jaTranslations.language.changeLanguage).toBeDefined();
   });
 });

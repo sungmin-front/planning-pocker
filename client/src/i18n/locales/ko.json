@@ -226,6 +226,7 @@
   },
   "language": {
     "english": "English",
+    "japanese": "日本語", 
     "changeLanguage": "언어 변경"
   },
   "layout": {

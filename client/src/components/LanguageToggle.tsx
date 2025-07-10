@@ -15,6 +15,7 @@ const LanguageToggle: React.FC = () => {
   const languages = [
     { code: 'ko', name: '한국어', flag: '🇰🇷' },
     { code: 'en', name: t('language.english'), flag: '🇺🇸' },
+    { code: 'ja', name: '日本語', flag: '🇯🇵' },
   ];
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
