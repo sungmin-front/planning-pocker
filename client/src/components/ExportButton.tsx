@@ -9,6 +9,7 @@ import {
 import { Download, FileJson, FileSpreadsheet, FileText, ExternalLink } from 'lucide-react';
 import { exportUtils } from '@/utils/export';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface ExportButtonProps {
   roomId: string;
@@ -25,6 +26,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
 }) => {
   const [isExporting, setIsExporting] = useState<string | null>(null);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const handleExport = async (type: 'json' | 'csv' | 'html') => {
     if (isExporting) return;
@@ -35,29 +37,29 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
         case 'json':
           await exportUtils.downloadJson(roomId);
           toast({
-            title: 'JSON Export Complete',
-            description: 'Session data has been downloaded as JSON.',
+            title: t('export.jsonComplete'),
+            description: t('export.jsonDescription'),
           });
           break;
         case 'csv':
           await exportUtils.downloadCsv(roomId);
           toast({
-            title: 'CSV Export Complete',
-            description: 'Session data has been downloaded as CSV.',
+            title: t('export.csvComplete'),
+            description: t('export.csvDescription'),
           });
           break;
         case 'html':
           await exportUtils.downloadHtml(roomId);
           toast({
-            title: 'HTML Report Complete',
-            description: 'Session report has been downloaded as HTML.',
+            title: t('export.htmlComplete'),
+            description: t('export.htmlDescription'),
           });
           break;
       }
     } catch (error) {
       toast({
-        title: 'Export Failed',
-        description: `Failed to export ${type.toUpperCase()}. Please try again.`,
+        title: t('export.failed'),
+        description: t('export.failedDescription', { type: type.toUpperCase() }),
         variant: 'destructive',
       });
     } finally {
@@ -81,12 +83,12 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
           {isExporting ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
-              Exporting...
+              {t('export.exporting')}
             </>
           ) : (
             <>
               <Download className="h-4 w-4 mr-2" />
-              Export
+              {t('export.export')}
             </>
           )}
         </Button>
@@ -94,19 +96,19 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuItem onClick={() => handleExport('html')}>
           <FileText className="h-4 w-4 mr-2" />
-          Download HTML Report
+          {t('export.downloadHtmlReport')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleViewReport}>
           <ExternalLink className="h-4 w-4 mr-2" />
-          View Report in New Tab
+          {t('export.viewReportNewTab')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleExport('json')}>
           <FileJson className="h-4 w-4 mr-2" />
-          Download JSON Data
+          {t('export.downloadJsonData')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleExport('csv')}>
           <FileSpreadsheet className="h-4 w-4 mr-2" />
-          Download CSV Data
+          {t('export.downloadCsvData')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

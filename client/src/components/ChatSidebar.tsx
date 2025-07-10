@@ -7,6 +7,7 @@ import { MessageCircle, Send, X, ChevronRight } from 'lucide-react';
 import { ChatMessage, TypingIndicator } from '@planning-poker/shared';
 import { FormattedMessage } from '@/components/FormattedMessage';
 import { FormattingHelpTooltip } from '@/components/FormattingHelpTooltip';
+import { useTranslation } from 'react-i18next';
 
 interface ChatSidebarProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface ChatSidebarProps {
 }
 
 export const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const { room, currentPlayer, sendChatMessage, requestChatHistory, startTyping, stopTyping } = useRoom();
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -98,7 +100,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => 
   };
 
   const getCurrentPlayerName = () => {
-    return currentPlayer?.nickname || 'Unknown';
+    return currentPlayer?.nickname || t('user.unknown');
   };
 
   const TypingIndicators: React.FC = () => {
@@ -112,11 +114,11 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => 
 
     let displayText = '';
     if (typingNames.length === 1) {
-      displayText = `${typingNames[0]} is typing...`;
+      displayText = t('chat.isTyping', { name: typingNames[0] });
     } else if (typingNames.length === 2) {
-      displayText = `${typingNames[0]} and ${typingNames[1]} are typing...`;
+      displayText = t('chat.areTyping', { name1: typingNames[0], name2: typingNames[1] });
     } else {
-      displayText = `${typingNames.slice(0, -1).join(', ')} and ${typingNames[typingNames.length - 1]} are typing...`;
+      displayText = t('chat.multipleTyping', { names: typingNames.slice(0, -1).join(', ') + ' and ' + typingNames[typingNames.length - 1] });
     }
 
     return (
@@ -148,7 +150,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => 
         <div className="flex items-center justify-between p-4 border-b bg-gray-50">
           <div className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5" />
-            <h2 className="text-lg font-semibold">Chat</h2>
+            <h2 className="text-lg font-semibold">{t('chat.chat')}</h2>
             {chatMessages.length > 0 && (
               <Badge variant="secondary" className="ml-2">
                 {chatMessages.length}
@@ -170,7 +172,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => 
           {chatMessages.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
               <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>No messages yet. Start the conversation!</p>
+              <p>{t('chat.noMessages')}</p>
             </div>
           ) : (
             chatMessages.map((msg: ChatMessage, index: number) => {
@@ -189,7 +191,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => 
                       <span className="text-sm font-medium text-gray-900">
                         {msg.playerNickname}
                         {isOwnMessage && (
-                          <span className="text-xs text-gray-500 ml-1">(You)</span>
+                          <span className="text-xs text-gray-500 ml-1">({t('user.you')})</span>
                         )}
                       </span>
                       <span className="text-xs text-gray-500">
@@ -228,7 +230,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => 
               type="text"
               value={message}
               onChange={handleInputChange}
-              placeholder="Type your message..."
+              placeholder={t('chat.typeMessage')}
               className="flex-1"
               maxLength={1000}
             />

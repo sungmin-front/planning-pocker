@@ -10,11 +10,12 @@ import {
 import { Button } from '@/components/ui/shadcn/button';
 
 const LanguageToggle: React.FC = () => {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
 
   const languages = [
     { code: 'ko', name: '한국어', flag: '🇰🇷' },
-    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'en', name: t('language.english'), flag: '🇺🇸' },
+    { code: 'ja', name: '日本語', flag: '🇯🇵' },
   ];
 
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
@@ -30,7 +31,7 @@ const LanguageToggle: React.FC = () => {
           variant="ghost"
           size="sm"
           className="h-8 w-8 p-0"
-          title="Change Language"
+          title={t('language.changeLanguage')}
         >
           <Globe className="h-4 w-4" />
         </Button>

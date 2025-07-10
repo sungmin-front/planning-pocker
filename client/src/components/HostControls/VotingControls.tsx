@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/shadcn/button';
 import { Badge } from '@/components/ui/shadcn/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/shadcn/tooltip';
 import { Eye, RotateCcw, SkipForward, Play, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface VotingControlsProps {
   compact?: boolean;
 }
 
 export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false }) => {
+  const { t } = useTranslation();
   const { room, isHost, revealVotes, restartVoting, skipStory } = useRoom();
   const { send } = useWebSocket();
 
@@ -37,14 +39,14 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
     return (
       <div className="w-full bg-white rounded-lg border p-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-medium">Voting Controls</h3>
+          <h3 className="text-base font-medium">{t('hostControls.votingControls')}</h3>
           <Button
             onClick={handleStartVotingOnFirstStory}
             size="sm"
             className="h-8 text-sm"
           >
             <Play className="h-3 w-3 mr-2" />
-            Start Voting
+            {t('hostControls.startVoting')}
           </Button>
         </div>
       </div>
@@ -125,15 +127,15 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
   const getStatusBadge = () => {
     switch (currentStory.status) {
       case 'voting':
-        return <Badge variant="default" className="bg-blue-100 text-blue-800 text-xs">투표중</Badge>;
+        return <Badge variant="default" className="bg-blue-100 text-blue-800 text-xs">{t('hostControls.status.voting')}</Badge>;
       case 'revealed':
-        return <Badge variant="default" className="bg-green-100 text-green-800 text-xs">공개됨</Badge>;
+        return <Badge variant="default" className="bg-green-100 text-green-800 text-xs">{t('hostControls.status.revealed')}</Badge>;
       case 'closed':
-        return <Badge variant="default" className="bg-gray-100 text-gray-800 text-xs">완료</Badge>;
+        return <Badge variant="default" className="bg-gray-100 text-gray-800 text-xs">{t('hostControls.status.completed')}</Badge>;
       case 'skipped':
-        return <Badge variant="default" className="bg-yellow-100 text-yellow-800 text-xs">건너뜀</Badge>;
+        return <Badge variant="default" className="bg-yellow-100 text-yellow-800 text-xs">{t('hostControls.status.skipped')}</Badge>;
       default:
-        return <Badge variant="outline" className="text-xs">준비</Badge>;
+        return <Badge variant="outline" className="text-xs">{t('hostControls.status.ready')}</Badge>;
     }
   };
 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { RoomContextType, Room, Player, VoteValue } from '@/types';
 import { useWebSocket } from './WebSocketContext';
 import { useToast } from '@/hooks/use-toast';
@@ -32,6 +33,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   
   const { send, on, off, isConnected, getSocketId } = useWebSocket();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { session, hasValidSession, clearSession, saveSession } = useSessionPersistence();
 
@@ -107,7 +109,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           }
           
           toast({
-            title: "Room Joined",
+            title: t('toast.roomJoined'),
             description: `Successfully joined ${message.payload.room.name}`,
           });
           
@@ -131,7 +133,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           // Don't show toast for nickname conflicts - let the component handle it
           if (!error.includes('already taken')) {
             toast({
-              title: "Failed to Join Room",
+              title: t('toast.joinRoomFailed'),
               description: error,
               variant: "destructive",
             });
@@ -152,7 +154,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           // Show notification that someone joined
           if (message.payload.player) {
             toast({
-              title: "Player Joined",
+              title: t('toast.playerJoined'),
               description: `${message.payload.player.nickname} joined the room`,
             });
           }
@@ -213,7 +215,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           // Show notification
           const reasonText = reason === 'host_disconnected' ? ' (previous host disconnected)' : '';
           toast({
-            title: "Host Changed",
+            title: t('toast.hostChanged'),
             description: `${newHostNickname} is now the host${reasonText}`,
           });
           break;
@@ -235,7 +237,7 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             console.log('Updated room:', updatedRoom);
             setRoom(updatedRoom);
             toast({
-              title: "Story Created",
+              title: t('toast.storyCreated'),
               description: `Story "${message.payload.story.title}" has been added`,
             });
           } else {
@@ -261,8 +263,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             };
             setRoom(updatedRoom);
             toast({
-              title: "Story Selected",
-              description: "Voting has started for the selected story",
+              title: t('toast.storySelected'),
+              description: t('toast.votingStartedForStory'),
             });
           }
           break;
@@ -331,8 +333,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             setRoom(updatedRoom);
             
             toast({
-              title: "Votes Revealed",
-              description: "All votes are now visible to everyone",
+              title: t('toast.votesRevealed'),
+              description: t('status.allVotesVisible'),
             });
           }
           break;
@@ -361,8 +363,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             setRoom(updatedRoom);
             
             toast({
-              title: "Voting Restarted",
-              description: "Votes have been cleared and voting has started again",
+              title: t('toast.votingRestarted'),
+              description: t('toast.votesClearedAndRestarted'),
             });
           }
           break;
@@ -391,13 +393,13 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             setRoom(updatedRoom);
             
             toast({
-              title: "Story Finalized",
+              title: t('toast.storyFinalized'),
               description: `Story points set to ${story.final_point}. Story is now complete.`,
             });
           } else if (message.payload && !message.payload.success) {
             toast({
-              title: "Failed to Finalize Story",
-              description: message.payload.error || "Failed to set final story points",
+              title: t('toast.failedToFinalizeStory'),
+              description: message.payload.error || t('toast.failedToSetFinalPoints'),
               variant: "destructive",
             });
           }
@@ -447,13 +449,13 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             setRoom(updatedRoom);
             
             toast({
-              title: "Story Skipped",
+              title: t('toast.storySkipped'),
               description: `Story "${story.title}" has been skipped.`,
             });
           } else if (message.payload && !message.payload.success) {
             toast({
-              title: "Failed to Skip Story",
-              description: message.payload.error || "Failed to skip story",
+              title: t('toast.failedToSkipStory'),
+              description: message.payload.error || t('toast.failedToSkipStoryGeneric'),
               variant: "destructive",
             });
           }
@@ -483,8 +485,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             
             // Show notification for all players
             toast({
-              title: "Story Skipped",
-              description: `Story "${story.title}" has been skipped by the host.`,
+              title: t('toast.storySkipped'),
+              description: `Story "${story.title}" has been skipped by the host.`
             });
           }
           break;
@@ -492,8 +494,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
         case 'player:kicked':
           console.log('Received player:kicked message:', message.payload);
           toast({
-            title: "Kicked from Room",
-            description: "You have been removed from the room by the host",
+            title: t('toast.kickedFromRoom'),
+            description: t('toast.removedByHost'),
             variant: "destructive",
           });
           // Navigate back to home page
@@ -504,13 +506,13 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           console.log('Received host:delegated message:', message.payload);
           if (message.payload && message.payload.success) {
             toast({
-              title: "Host Delegation Successful",
-              description: "Host privileges have been transferred",
+              title: t('toast.hostDelegationSuccessful'),
+              description: t('toast.hostPrivilegesTransferred'),
             });
           } else {
             toast({
-              title: "Host Delegation Failed", 
-              description: message.payload?.error || "Failed to transfer host privileges",
+              title: t('toast.hostDelegationFailed'),
+              description: message.payload?.error || t('toast.failedToTransferHost'),
               variant: "destructive",
             });
           }
@@ -520,13 +522,13 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           console.log('Received player:kicked:response message:', message.payload);
           if (message.payload && message.payload.success) {
             toast({
-              title: "Player Kicked",
-              description: "Player has been removed from the room",
+              title: t('toast.playerKicked'),
+              description: t('toast.playerRemovedFromRoom'),
             });
           } else {
             toast({
-              title: "Kick Failed",
-              description: message.payload?.error || "Failed to kick player",
+              title: t('toast.kickFailed'),
+              description: message.payload?.error || t('toast.failedToKickPlayer'),
               variant: "destructive",
             });
           }
@@ -564,8 +566,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
           console.log('Received chat message response:', message.payload);
           if (message.payload && !message.payload.success) {
             toast({
-              title: "Failed to Send Message",
-              description: message.payload.error || "Failed to send chat message",
+              title: t('toast.failedToSendMessage'),
+              description: message.payload.error || t('toast.failedToSendChatMessage'),
               variant: "destructive",
             });
           }
@@ -589,8 +591,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
             }
           } else if (message.payload && !message.payload.success) {
             toast({
-              title: "Failed to Load Chat History",
-              description: message.payload.error || "Failed to load chat history",
+              title: t('toast.failedToLoadChatHistory'),
+              description: message.payload.error || t('toast.failedToLoadHistory'),
               variant: "destructive",
             });
           }
@@ -687,8 +689,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const joinRoom = useCallback(async (roomId: string, nickname: string) => {
     if (!isConnected) {
       toast({
-        title: "Connection Error",
-        description: "Please connect to the server first",
+        title: t('toast.connectionError'),
+        description: t('toast.connectToServerFirst'),
         variant: "destructive",
       });
       return Promise.reject(new Error("Not connected"));
@@ -760,8 +762,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
     if (!isConnected) {
       setIsRejoining(false);
       toast({
-        title: "Connection Error",
-        description: "Please connect to the server first",
+        title: t('toast.connectionError'),
+        description: t('toast.connectToServerFirst'),
         variant: "destructive",
       });
       return Promise.reject(new Error("Not connected"));
@@ -820,8 +822,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const createRoom = async (nickname: string): Promise<string | null> => {
     if (!isConnected) {
       toast({
-        title: "Connection Error",
-        description: "Please connect to the server first",
+        title: t('toast.connectionError'),
+        description: t('toast.connectToServerFirst'),
         variant: "destructive",
       });
       return null;
@@ -952,8 +954,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const sendChatMessage = useCallback((message: string) => {
     if (!room || !currentPlayer) {
       toast({
-        title: "Cannot Send Message",
-        description: "You must be in a room to send messages",
+        title: t('toast.cannotSendMessage'),
+        description: t('toast.mustBeInRoom'),
         variant: "destructive",
       });
       return;
@@ -961,8 +963,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
 
     if (!message.trim()) {
       toast({
-        title: "Cannot Send Empty Message",
-        description: "Please enter a message to send",
+        title: t('toast.cannotSendEmptyMessage'),
+        description: t('toast.pleaseEnterMessage'),
         variant: "destructive",
       });
       return;
@@ -970,8 +972,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
 
     if (message.length > 1000) {
       toast({
-        title: "Message Too Long",
-        description: "Messages must be 1000 characters or less",
+        title: t('toast.messageTooLong'),
+        description: t('toast.messageCharacterLimit'),
         variant: "destructive",
       });
       return;
@@ -991,8 +993,8 @@ export const RoomProvider: React.FC<RoomProviderProps> = ({ children }) => {
   const requestChatHistory = useCallback(() => {
     if (!room) {
       toast({
-        title: "Cannot Load Chat History",
-        description: "You must be in a room to load chat history",
+        title: t('toast.cannotLoadChatHistory'),
+        description: t('toast.mustBeInRoomForHistory'),
         variant: "destructive",
       });
       return;
