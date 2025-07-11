@@ -208,6 +208,61 @@ export class RoomSessionService {
   }
 
   /**
+   * 테스트용 다양한 투표 분포 데이터 생성 (현재 진행중인 투표에 추가)
+   */
+  public async createTestVoteDistribution(roomId: string): Promise<void> {
+    const session = await this.getActiveSession(roomId);
+    
+    // 현재 진행중인 투표 세션 찾기
+    let currentStory = null;
+    let currentVotingSession = null;
+    
+    for (const story of session.backlogs) {
+      const activeSession = story.votingSessions.find(vs => !vs.isRevealed);
+      if (activeSession) {
+        currentStory = story;
+        currentVotingSession = activeSession;
+        break;
+      }
+    }
+
+    if (!currentStory || !currentVotingSession) {
+      throw new Error('No active voting session found');
+    }
+
+    // 가짜 참여자들 추가
+    const testParticipants = [
+      { playerId: 'test-alice', nickname: 'Alice', isHost: false },
+      { playerId: 'test-bob', nickname: 'Bob', isHost: false },
+      { playerId: 'test-charlie', nickname: 'Charlie', isHost: false },
+      { playerId: 'test-diana', nickname: 'Diana', isHost: false },
+      { playerId: 'test-eve', nickname: 'Eve', isHost: false }
+    ];
+
+    // 참여자들을 세션에 추가
+    testParticipants.forEach(participant => {
+      (session as any).addParticipant(participant.playerId, participant.nickname, participant.isHost);
+    });
+
+    // 기존 투표를 포함하여 다양한 투표 생성 (분산된 투표)
+    const existingVotes = currentVotingSession.voteStats?.userVotes || [];
+    const testVotes: UserVote[] = [
+      ...existingVotes,
+      { playerId: 'test-alice', nickname: 'Alice', vote: '1', votedAt: new Date() },
+      { playerId: 'test-bob', nickname: 'Bob', vote: '2', votedAt: new Date() },
+      { playerId: 'test-charlie', nickname: 'Charlie', vote: '5', votedAt: new Date() },
+      { playerId: 'test-diana', nickname: 'Diana', vote: '8', votedAt: new Date() },
+      { playerId: 'test-eve', nickname: 'Eve', vote: '13', votedAt: new Date() }
+    ];
+
+    // 투표 공개
+    (session as any).revealVotes(currentStory.storyId, currentVotingSession.sessionId, testVotes);
+    await session.save();
+    
+    console.log(`🎯 [RoomSession] Test vote distribution created for story: ${currentStory.storyId}`);
+  }
+
+  /**
    * 참여자 이탈 처리
    */
   public async removeParticipant(roomId: string, playerId: string): Promise<void> {
@@ -316,10 +371,19 @@ export class RoomSessionService {
       }).format(new Date(date));
     };
 
-    const generateVoteDistributionChart = (distribution: Record<string, number>): string => {
-      if (!distribution || typeof distribution !== 'object') return '';
+    const generateVoteDistributionChart = (distribution: Record<string, number> | Map<string, number>): string => {
+      if (!distribution) return '';
       
-      const entries = Object.entries(distribution);
+      // Handle both Map (MongoDB format) and plain object (legacy format)
+      let entries: [string, number][];
+      if (distribution instanceof Map) {
+        entries = Array.from(distribution.entries());
+      } else if (typeof distribution === 'object') {
+        entries = Object.entries(distribution);
+      } else {
+        return '';
+      }
+      
       if (entries.length === 0) return '<p class="no-data">투표 분포 데이터가 없습니다.</p>';
       
       const total = entries.reduce((sum, [, count]) => sum + count, 0);
@@ -611,9 +675,10 @@ export class RoomSessionService {
             height: 24px;
         }
         .bar { 
-            background: #1a1a1a; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
             height: 100%; 
             min-width: 2px;
+            border-radius: 2px;
         }
         .vote-count { 
             position: absolute; 
