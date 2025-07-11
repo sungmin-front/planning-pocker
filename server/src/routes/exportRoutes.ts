@@ -205,4 +205,22 @@ router.get('/room/:roomId/session', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/export/room/:roomId/test-votes
+ * 테스트용 다양한 투표 분포 데이터 생성 (현재 진행중인 투표에 추가)
+ */
+router.post('/room/:roomId/test-votes', async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    
+    await RoomSessionService.createTestVoteDistribution(roomId);
+    
+    res.json({ success: true, message: 'Test vote distribution created' });
+    
+  } catch (error) {
+    console.error('Create test votes error:', error);
+    res.status(500).json({ error: 'Failed to create test vote distribution' });
+  }
+});
+
 export { router as exportRouter };
