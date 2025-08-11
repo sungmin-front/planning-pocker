@@ -1,7 +1,28 @@
 import React from 'react';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ResponsivePlayerLayout } from '../ResponsivePlayerLayout';
 import { Player, Story } from '@/types';
+
+// Mock the room context
+const mockRoomContext = {
+  room: null,
+  currentPlayer: null,
+  isHost: false,
+  joinRoom: vi.fn(),
+  leaveRoom: vi.fn(),
+  vote: vi.fn(),
+  syncRoom: vi.fn(),
+  createStory: vi.fn(),
+  revealVotes: vi.fn(),
+  restartVoting: vi.fn(),
+  setFinalPoint: vi.fn(),
+  transferHost: vi.fn()
+};
+
+vi.mock('@/contexts/RoomContext', () => ({
+  useRoom: () => mockRoomContext
+}));
 
 // Mock window.innerWidth for responsive behavior
 Object.defineProperty(window, 'innerWidth', {
@@ -33,6 +54,12 @@ const mockStoryVoting: Story = {
 const mockStoryRevealed: Story = {
   ...mockStoryVoting,
   status: 'revealed',
+};
+
+const mockStoryFinalized: Story = {
+  ...mockStoryVoting,
+  status: 'closed',
+  finalPoint: '5',
 };
 
 describe('ResponsivePlayerLayout', () => {
@@ -87,7 +114,7 @@ describe('ResponsivePlayerLayout', () => {
   });
 
   it('shows "View Statistics" button when votes are revealed', () => {
-    const mockOnOpenStatsModal = jest.fn();
+    const mockOnOpenStatsModal = vi.fn();
     
     render(
       <ResponsivePlayerLayout
@@ -132,5 +159,32 @@ describe('ResponsivePlayerLayout', () => {
     );
 
     expect(screen.getByText('Ready to start voting')).toBeInTheDocument();
+  });
+
+  it('shows votes revealed when story is finalized (closed status)', () => {
+    render(
+      <ResponsivePlayerLayout
+        players={mockPlayers}
+        currentStory={mockStoryFinalized}
+      />
+    );
+
+    // Should show "Votes revealed!" even when story is finalized
+    expect(screen.getByText('Votes revealed!')).toBeInTheDocument();
+  });
+
+  it('shows "View Statistics" button when story is finalized', () => {
+    const mockOnOpenStatsModal = vi.fn();
+    
+    render(
+      <ResponsivePlayerLayout
+        players={mockPlayers}
+        currentStory={mockStoryFinalized}
+        onOpenStatsModal={mockOnOpenStatsModal}
+      />
+    );
+
+    // Statistics button should be visible for finalized stories
+    expect(screen.getByText('View Statistics')).toBeInTheDocument();
   });
 });

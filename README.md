@@ -26,8 +26,8 @@
 
 ```bash
 # 저장소 클론
-git clone https://github.com/your-username/pocker_v3.git
-cd pocker_v3
+git clone https://github.com/sungmin-front/planning-pocker
+cd planning-pocker
 
 # 원클릭 설치 및 실행 🚀
 pnpm run quickstart
@@ -60,8 +60,8 @@ make quickstart-docker
 
 #### 1. 저장소 클론
 ```bash
-git clone https://github.com/your-username/pocker_v3.git
-cd pocker_v3
+git clone https://github.com/sungmin-front/planning-pocker
+cd planning-pocker
 ```
 
 #### 2. 환경변수 설정
