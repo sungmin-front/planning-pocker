@@ -31,8 +31,8 @@ export const ResponsivePlayerLayout: React.FC<ResponsivePlayerLayoutProps> = ({
     );
   }
 
-  // Determine if votes are revealed
-  const isRevealed = currentStory?.status === 'revealed';
+  // Determine if votes are revealed (revealed or closed after finalization)
+  const isRevealed = currentStory?.status === 'revealed' || currentStory?.status === 'closed';
 
   // Get vote status for a player
   const getPlayerVoteStatus = (player: Player) => {
