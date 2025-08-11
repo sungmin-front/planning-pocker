@@ -329,36 +329,37 @@ export const JiraIntegration: React.FC<JiraIntegrationProps> = ({ roomId, onStor
                   {selectedIssues.size === issues.length ? '전체 해제' : '전체 선택'}
                 </Button>
               </div>
-              <div className="max-h-60 overflow-y-auto border rounded-md p-2 space-y-2">
+              <div className="max-h-96 overflow-y-auto border rounded-md p-2 space-y-2">
                 {issues.map(issue => (
                   <div
                     key={issue.id}
-                    className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-md"
+                    className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-md border-b border-gray-100 last:border-b-0"
                   >
                     <Checkbox
                       checked={selectedIssues.has(issue.id)}
                       onCheckedChange={() => toggleIssueSelection(issue.id)}
+                      className="mt-1 flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-sm">{issue.key}</span>
-                        <Badge variant="outline" className="text-xs">
+                      <div className="flex items-center flex-wrap gap-2 mb-2">
+                        <span className="font-medium text-sm flex-shrink-0">{issue.key}</span>
+                        <Badge variant="outline" className="text-xs flex-shrink-0">
                           {issue.issueType.name}
                         </Badge>
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs flex-shrink-0">
                           {issue.status.name}
                         </Badge>
                         {issue.storyPoints && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs flex-shrink-0">
                             {issue.storyPoints}SP
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 truncate" title={issue.summary}>
+                      <p className="text-sm text-gray-800 break-words mb-1" title={issue.summary}>
                         {issue.summary}
                       </p>
                       {issue.assignee && (
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 break-words">
                           담당자: {issue.assignee.displayName}
                         </p>
                       )}

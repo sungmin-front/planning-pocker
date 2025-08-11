@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/shadcn/button';
 import { Input } from '@/components/ui/shadcn/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/shadcn/card';
 import { Badge } from '@/components/ui/shadcn/badge';
-import { MessageCircle, Send, X, Minus, ChevronUp, ChevronDown } from 'lucide-react';
-import { ChatMessage, TypingIndicator } from '@planning-poker/shared';
+import { MessageCircle, Send, ChevronUp, ChevronDown } from 'lucide-react';
+import { ChatMessage } from '@planning-poker/shared';
 import { FormattedMessage } from '@/components/FormattedMessage';
 import { FormattingHelpTooltip } from '@/components/FormattingHelpTooltip';
 
@@ -152,7 +152,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ className = '' }) => {
   };
 
   const handleTogglePanel = useCallback(() => {
-    setIsOpen(prev => !prev);
+    setIsOpen((prev: boolean) => !prev);
   }, []);
 
   const TypingIndicators: React.FC = () => {

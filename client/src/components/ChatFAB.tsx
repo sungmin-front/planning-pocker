@@ -2,7 +2,6 @@ import React from 'react';
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/shadcn/button';
 import { Badge } from '@/components/ui/shadcn/badge';
-import { useRoom } from '@/contexts/RoomContext';
 
 interface ChatFABProps {
   onClick: () => void;

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/shadcn/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/shadcn/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/shadcn/select';
 import { useRoom } from '@/contexts/RoomContext';
+import { VoteValue } from '@planning-poker/shared';
 
 // Default Fibonacci sequence vote options
 const VOTE_OPTIONS = ['0', '1', '2', '3', '5', '8', '13', '21', '?', '☕'];
@@ -45,7 +46,7 @@ export const FinalizePoints: React.FC = () => {
     
     setIsLoading(true);
     try {
-      await setFinalPoint(room.currentStoryId, selectedPoint);
+      await setFinalPoint(room.currentStoryId, selectedPoint as VoteValue);
       setSelectedPoint('');
     } catch (error) {
       console.error('Failed to finalize points:', error);
