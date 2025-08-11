@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRoom } from '@/contexts/RoomContext';
 import { Button } from '@/components/ui/shadcn/button';
 import { Input } from '@/components/ui/shadcn/input';
 import { Badge } from '@/components/ui/shadcn/badge';
-import { MessageCircle, Send, X, ChevronRight } from 'lucide-react';
-import { ChatMessage, TypingIndicator } from '@planning-poker/shared';
+import { MessageCircle, Send, X } from 'lucide-react';
+import { ChatMessage } from '@planning-poker/shared';
 import { FormattedMessage } from '@/components/FormattedMessage';
 import { FormattingHelpTooltip } from '@/components/FormattingHelpTooltip';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +16,7 @@ interface ChatSidebarProps {
 
 export const ChatSidebar: React.FC<ChatSidebarProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  const { room, currentPlayer, sendChatMessage, requestChatHistory, startTyping, stopTyping } = useRoom();
+  const { room, currentPlayer, sendChatMessage, startTyping, stopTyping } = useRoom();
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);

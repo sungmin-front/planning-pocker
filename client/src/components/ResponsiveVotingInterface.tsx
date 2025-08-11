@@ -3,12 +3,13 @@ import { useRoom } from '@/contexts/RoomContext';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { Button } from '@/components/ui/shadcn/button';
 import { cn } from '@/lib/utils';
+import { VoteValue } from '@planning-poker/shared';
 
 const VOTE_OPTIONS = ['1', '2', '3', '5', '8', '13', '21', '?', '☕'];
 
 export const ResponsiveVotingInterface: React.FC = () => {
   const { room, currentPlayer, vote } = useRoom();
-  const { isMobile, isTablet, currentBreakpoint, screenSize } = useBreakpoint();
+  const { isMobile, isTablet } = useBreakpoint();
 
   if (!room || !room.currentStoryId) {
     return null;
@@ -22,7 +23,7 @@ export const ResponsiveVotingInterface: React.FC = () => {
 
   const currentVote = currentPlayer ? currentStory.votes[currentPlayer.id] : null;
 
-  const handleVote = (voteValue: string) => {
+  const handleVote = (voteValue: VoteValue) => {
     if (currentStory) {
       vote(currentStory.id, voteValue);
     }
@@ -106,7 +107,7 @@ export const ResponsiveVotingInterface: React.FC = () => {
               <Button
                 key={option}
                 type="button"
-                onClick={() => handleVote(option)}
+                onClick={() => handleVote(option as VoteValue)}
                 aria-label={`Vote for ${option} points`}
                 className={cn(
                   'font-bold text-lg rounded shadow transition-all duration-200',

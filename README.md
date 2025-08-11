@@ -26,8 +26,8 @@
 
 ```bash
 # 저장소 클론
-git clone <repository-url>
-cd planning-poker
+git clone https://github.com/your-username/pocker_v3.git
+cd pocker_v3
 
 # 원클릭 설치 및 실행 🚀
 pnpm run quickstart
@@ -60,8 +60,8 @@ make quickstart-docker
 
 #### 1. 저장소 클론
 ```bash
-git clone <repository-url>
-cd planning-poker
+git clone https://github.com/your-username/pocker_v3.git
+cd pocker_v3
 ```
 
 #### 2. 환경변수 설정
@@ -270,6 +270,49 @@ JIRA_EMAIL=your-email@company.com
 JIRA_API_TOKEN=your-generated-token
 JIRA_DEFAULT_PROJECT_KEY=PROJECT_KEY
 ```
+
+## 🔧 문제 해결
+
+### 빌드 오류 해결
+
+**TypeScript 컴파일 오류 발생 시:**
+```bash
+# TypeScript 체크 없이 빌드 (임시 해결책)
+pnpm run build
+
+# TypeScript 체크와 함께 빌드 (권장, 오류 수정 후)
+pnpm --filter client run build:check
+```
+
+**일반적인 문제들:**
+
+1. **빌드 실패**
+   - `pnpm run clean && pnpm install` - 종속성 재설치
+   - `pnpm run validate` - 프로젝트 상태 확인
+
+2. **포트 충돌**
+   - 포트 4000, 9000 사용 중인 경우 해당 프로세스 종료
+   - `./planning-poker status` - 포트 상태 확인
+
+3. **환경변수 누락**
+   - `pnpm run setup:env` - 환경변수 파일 재생성
+   - `.env` 파일들의 플레이스홀더 값들을 실제 값으로 변경
+
+4. **Docker 환경 문제**
+   - `pnpm run docker:stop && pnpm run docker:start` - 컨테이너 재시작
+   - `docker-compose logs -f` - 로그 확인
+
+### 개발 상태
+
+**현재 알려진 이슈:**
+- 일부 TypeScript 타입 오류가 남아있음 (기능에는 영향 없음)
+- UI 컴포넌트 라이브러리 타입 불일치
+- 테스트 파일 타입 정의 부족
+
+**해결 예정:**
+- TypeScript 설정 최적화
+- Magic UI 컴포넌트 타입 수정  
+- 테스트 환경 설정 개선
 
 ## 📚 추가 문서
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
 import { Button } from '@/components/ui/shadcn/button';
@@ -68,7 +68,6 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
   const votes = currentStory.votes || {};
   const totalVotes = Object.keys(votes).length;
   const totalPlayers = room.players.filter(p => !p.isSpectator).length;
-  const votingProgress = totalPlayers > 0 ? Math.round((totalVotes / totalPlayers) * 100) : 0;
 
   const handleRevealVotes = () => {
     if (room.currentStoryId) {
@@ -100,7 +99,7 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
     });
     
     const pendingStories = room.stories.filter(story => 
-      (story.status === 'pending' || story.status === 'voting') && 
+      story.status === 'voting' && 
       (story.final_point === undefined || story.final_point === null)
     );
     
@@ -124,20 +123,6 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
     }
   };
 
-  const getStatusBadge = () => {
-    switch (currentStory.status) {
-      case 'voting':
-        return <Badge variant="default" className="bg-blue-100 text-blue-800 text-xs">{t('hostControls.status.voting')}</Badge>;
-      case 'revealed':
-        return <Badge variant="default" className="bg-green-100 text-green-800 text-xs">{t('hostControls.status.revealed')}</Badge>;
-      case 'closed':
-        return <Badge variant="default" className="bg-gray-100 text-gray-800 text-xs">{t('hostControls.status.completed')}</Badge>;
-      case 'skipped':
-        return <Badge variant="default" className="bg-yellow-100 text-yellow-800 text-xs">{t('hostControls.status.skipped')}</Badge>;
-      default:
-        return <Badge variant="outline" className="text-xs">{t('hostControls.status.ready')}</Badge>;
-    }
-  };
 
   // Compact version for poker table
   if (compact) {
@@ -240,7 +225,6 @@ export const VotingControls: React.FC<VotingControlsProps> = ({ compact = false 
     }
   };
 
-  const status = getStatusDisplay();
   const nextStory = getNextPendingStory();
 
   // Debug logs

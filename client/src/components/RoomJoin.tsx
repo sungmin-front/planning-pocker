@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useRoom } from '@/contexts/RoomContext';
 import { useWebSocket } from '@/contexts/WebSocketContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/shadcn/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/shadcn/card';
 import { Button } from '@/components/ui/shadcn/button';
 import { Input } from '@/components/ui/shadcn/input';
 import { Label } from '@/components/ui/shadcn/label';
@@ -97,15 +97,8 @@ export const RoomJoin: React.FC = () => {
       const trimmedRoomId = formData.roomId.trim().toUpperCase();
       const trimmedNickname = formData.nickname.trim();
 
-      const success = await joinRoom(trimmedRoomId, trimmedNickname);
-      
-      if (success) {
-        navigate(`/room/${trimmedRoomId}?nickname=${encodeURIComponent(trimmedNickname)}`);
-      } else {
-        setErrors({
-          general: t('error.joinRoomFailed')
-        });
-      }
+      await joinRoom(trimmedRoomId, trimmedNickname);
+      navigate(`/room/${trimmedRoomId}?nickname=${encodeURIComponent(trimmedNickname)}`);
     } catch (error) {
       setErrors({
         general: t('error.unexpectedError')

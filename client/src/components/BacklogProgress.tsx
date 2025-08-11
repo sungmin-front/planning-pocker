@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
 import { Badge } from '@/components/ui/shadcn/badge';
 import { Progress } from '@/components/ui/shadcn/progress';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipPortal, TooltipArrow } from '@/components/ui/shadcn/tooltip';
-import { BacklogTracker, BacklogProgress } from '@/utils/BacklogTracker';
+import { Tooltip, TooltipArrow, TooltipContent, TooltipPortal, TooltipProvider, TooltipTrigger } from '@/components/ui/shadcn/tooltip';
+import { BacklogTracker } from '@/utils/BacklogTracker';
 import type { Story } from '@planning-poker/shared';
+import React, { useMemo } from 'react';
 
 interface BacklogProgressProps {
   stories: Story[];
